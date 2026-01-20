@@ -825,14 +825,14 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-16 text-center bg-white rounded-3xl p-12 shadow-xl border-2 border-purple-100"
+            className="mt-12 md:mt-16 text-center bg-white rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 shadow-xl border-2 border-purple-100 mx-2 sm:mx-0"
           >
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">Don't See Your Subject?</h3>
-            <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Don't See Your Subject?</h3>
+            <p className="text-gray-600 text-sm sm:text-base md:text-lg mb-6 md:mb-8 max-w-2xl mx-auto px-2">
               We offer personalized tutoring for many other subjects. Contact us to discuss your specific learning needs.
             </p>
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-10 py-6 rounded-full text-lg font-bold">
-              <Mail className="w-5 h-5 mr-2" />
+            <Button size="lg" className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-6 sm:px-10 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold">
+              <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Request a Subject
             </Button>
           </motion.div>
@@ -1031,16 +1031,16 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-16 text-center bg-white rounded-3xl p-12 shadow-xl border-2 border-purple-100"
+            className="mt-12 md:mt-16 text-center bg-white rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 shadow-xl border-2 border-purple-100 mx-2 sm:mx-0"
           >
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Sparkles className="w-6 h-6 text-purple-600" />
-              <h3 className="text-2xl font-bold text-gray-900">Need Custom Study Material?</h3>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-3 md:mb-4">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center">Need Custom Study Material?</h3>
             </div>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 text-sm sm:text-base mb-5 md:mb-6 px-2">
               We can create personalized study guides tailored to your specific needs and learning style.
             </p>
-            <Button size="lg" variant="outline" className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-6 rounded-full text-lg font-bold">
+            <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-purple-600 text-purple-600 hover:bg-purple-50 px-6 sm:px-8 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold">
               Request Custom Material
             </Button>
           </motion.div>
