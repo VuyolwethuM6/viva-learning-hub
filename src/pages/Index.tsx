@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
-  GraduationCap, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin,
+  GraduationCap, Phone, Mail, MapPin,
   ChevronRight, Star, Check, ArrowRight, Play, BookOpen, Users, 
-  Award, Clock, Calendar, Search, Menu, X, Laptop, Sparkles
-} from 'lucide-react';
+  Award, Clock, Calendar, Search, Menu, X, Laptop, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import Footer from '@/components/Footer';
+import { FaYoutube, FaFacebook, FaTiktok } from "react-icons/fa6";
+
 
 // --- Theme Components ---
 
@@ -18,7 +20,7 @@ const TopBar = () => (
     <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
       <div className="flex items-center gap-3 lg:gap-6 overflow-x-auto">
         <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer whitespace-nowrap">
-          <Phone className="w-3.5 h-3.5" /> <span className="hidden sm:inline">+27 (0) 123 456 789</span>
+          <Phone className="w-3.5 h-3.5 animate-[wiggle_1s_ease-in-out_infinite]" /> <span className="hidden sm:inline">+27 (0) 123 456 789</span>
         </span>
         <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer whitespace-nowrap hidden sm:flex">
           <Mail className="w-3.5 h-3.5" /> info@vivatutorials.com
@@ -30,10 +32,9 @@ const TopBar = () => (
       <div className="flex items-center gap-2 lg:gap-4">
         <span className="text-white/60 hidden lg:inline">Follow Us:</span>
         <div className="flex items-center gap-3">
-          <Facebook className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
-          <Twitter className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
-          <Instagram className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
-          <Linkedin className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors hidden sm:block" />
+          <FaFacebook className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
+          <FaYoutube className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
+          <FaTiktok className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors hidden sm:block" />
         </div>
       </div>
     </div>
@@ -305,7 +306,7 @@ export default function Home() {
                 <div className="mt-8 pt-8 border-t border-gray-200">
                   <p className="text-sm font-semibold text-gray-500 mb-4">Follow Us</p>
                   <div className="flex gap-4">
-                    {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
+                    {[FaFacebook, FaTiktok, FaYoutube].map((Icon, i) => (
                       <div key={i} className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 hover:bg-purple-600 hover:text-white transition-all cursor-pointer">
                         <Icon className="w-5 h-5" />
                       </div>
@@ -331,19 +332,64 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="inline-flex items-center gap-2 bg-white border border-purple-100 rounded-full px-4 py-1.5 shadow-sm mb-6">
-                <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-bold text-purple-900 tracking-wide uppercase">New: Available Online & Physical</span>
+
+
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-100 border border-violet-200"
+            >
+              <Sparkles className="w-4 h-4 text-violet-600" />
+              <span className="text-sm font-medium text-violet-700">STEM Education Excellence</span>
+            </motion.div>
+
+              {/* Headline */}
+              <div className="space-y-4 mb-6">
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight">
+                  <span className="text-slate-900">Unlock Your</span>
+                  <br />
+
+                  <span className="relative inline-block">
+                    <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-700 bg-clip-text text-transparent">
+                      Academic
+                    </span>
+
+                    <motion.svg
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ delay: 1, duration: 1 }}
+                      className="absolute -bottom-2 left-0 w-full"
+                      viewBox="0 0 200 12"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <motion.path
+                        d="M2 10C50 2 150 2 198 10"
+                        stroke="url(#gradient)"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                      />
+                      <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="200" y2="0">
+                          <stop stopColor="#7C3AED" />
+                          <stop offset="1" stopColor="#8B5CF6" />
+                        </linearGradient>
+                      </defs>
+                    </motion.svg>
+                  </span>
+
+                  <br />
+                  <span className="text-slate-900">Potential</span>
+                </h1>
+
+                <p className="text-lg sm:text-xl text-slate-600 max-w-xl leading-relaxed">
+                  Empowering Grade 8–12 learners across South Africa with personalized STEM tutoring,
+                  comprehensive mentorship, and innovative mobile learning solutions.
+                </p>
               </div>
-              
-              <h1 className="text-5xl lg:text-7xl font-extrabold text-[#1a0b2e] leading-[1.1] mb-6 tracking-tight">
-                STEM
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-fuchsia-600">&nbsp;Education Center</span>
-              </h1>
-              
-              <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-lg">
-                Empowering students through personalized learning and expert guidance. Achieve academic excellence with tailored STEM education programs designed for success.
-              </p>
+
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" className="h-14 px-8 text-base bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-xl shadow-purple-200 hover:shadow-2xl hover:scale-105 transition-all duration-300">
@@ -362,10 +408,10 @@ export default function Home() {
                     </div>
                   ))}
                   <div className="w-10 h-10 rounded-full border-2 border-white bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold">
-                    +100
+                    +2k
                   </div>
                 </div>
-                <p>Trusted by 100+ students & parents</p>
+                <p>Trusted by 2,000+ students & parents</p>
               </div>
             </motion.div>
 
@@ -374,93 +420,93 @@ export default function Home() {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative hidden md:block" // Added hidden md:block to hide on mobile
+              className="relative hidden md:block"
             >
               <div className="absolute inset-0 bg-purple-600 rounded-[3rem] rotate-3 opacity-10 scale-95 blur-2xl transform translate-y-8" />
               
               <div className="relative bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden">
-              {/* Dashboard Header */}
-              <div className="bg-gradient-to-r from-[#7c3aed] to-[#9333ea] p-6 text-white">
-                <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h3 className="font-bold text-lg">Student Portal</h3>
-                  <p className="text-purple-200 text-sm">Welcome back, Sarah!</p>
-                </div>
-                <div className="w-10 h-10 bg-white/20 rounded-full backdrop-blur-sm flex items-center justify-center">
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                </div>
-                
-                {/* Progress Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                  <div className="text-2xl font-bold mb-1">92%</div>
-                  <div className="text-xs text-purple-100">Math Average</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                  <div className="text-2xl font-bold mb-1">A+</div>
-                  <div className="text-xs text-purple-100">Recent Grade</div>
-                </div>
-                </div>
-              </div>
-
-              {/* Dashboard Body */}
-              <div className="p-6 bg-gray-50/50">
-                <div className="mb-2 flex justify-between items-center">
-                <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Upcoming Sessions</h4>
-                <span className="text-xs text-purple-600 font-semibold cursor-pointer">View All</span>
-                </div>
-                
-                <div className="space-y-3">
-                {[
-                  { subject: "Advanced Physics", time: "Today, 14:00", icon: Sparkles, color: "text-blue-500", bg: "bg-blue-100" },
-                  { subject: "Calculus II", time: "Tomorrow, 10:00", icon: Laptop, color: "text-purple-500", bg: "bg-purple-100" },
-                  { subject: "Chemistry Lab", time: "Wed, 15:30", icon:  BookOpen, color: "text-pink-500", bg: "bg-pink-100" },
-                ].map((item, idx) => (
-                  <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className={`w-12 h-12 ${item.bg} rounded-full flex items-center justify-center flex-shrink-0`}>
-                    <item.icon className={`w-5 h-5 ${item.color}`} />
+                {/* Dashboard Header */}
+                <div className="bg-gradient-to-r from-[#7c3aed] to-[#9333ea] p-6 text-white">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 className="font-bold text-lg">Student Portal</h3>
+                      <p className="text-purple-200 text-sm">Welcome back, Sarah!</p>
+                    </div>
+                    <div className="w-10 h-10 bg-white/20 rounded-full backdrop-blur-sm flex items-center justify-center">
+                      <Users className="w-5 h-5 text-white" />
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h5 className="font-bold text-gray-900 text-sm">{item.subject}</h5>
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {item.time}
-                    </p>
+                  
+                  {/* Progress Cards */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                      <div className="text-2xl font-bold mb-1">92%</div>
+                      <div className="text-xs text-purple-100">Math Average</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                      <div className="text-2xl font-bold mb-1">A+</div>
+                      <div className="text-xs text-purple-100">Recent Grade</div>
+                    </div>
                   </div>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full">
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                  </Button>
-                  </div>
-                ))}
                 </div>
 
-                <div className="mt-6 bg-purple-50 rounded-xl p-4 border border-purple-100 flex items-center gap-4">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-purple-600">
-                  <Star className="w-5 h-5 fill-purple-600" />
+                {/* Dashboard Body */}
+                <div className="p-6 bg-gray-50/50">
+                  <div className="mb-2 flex justify-between items-center">
+                    <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Upcoming Sessions</h4>
+                    <span className="text-xs text-purple-600 font-semibold cursor-pointer">View All</span>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {[
+                      { subject: "Advanced Physics", time: "Today, 14:00", icon: Sparkles, color: "text-blue-500", bg: "bg-blue-100" },
+                      { subject: "Calculus II", time: "Tomorrow, 10:00", icon: Laptop, color: "text-purple-500", bg: "bg-purple-100" },
+                      { subject: "Chemistry Lab", time: "Wed, 15:30", icon:  BookOpen, color: "text-pink-500", bg: "bg-pink-100" },
+                    ].map((item, idx) => (
+                      <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
+                        <div className={`w-12 h-12 ${item.bg} rounded-full flex items-center justify-center flex-shrink-0`}>
+                          <item.icon className={`w-5 h-5 ${item.color}`} />
+                        </div>
+                        <div className="flex-1">
+                          <h5 className="font-bold text-gray-900 text-sm">{item.subject}</h5>
+                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> {item.time}
+                          </p>
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full">
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 bg-purple-50 rounded-xl p-4 border border-purple-100 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-purple-600">
+                      <Star className="w-5 h-5 fill-purple-600" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 text-sm">Course Completed!</div>
+                      <div className="text-xs text-gray-600">You finished "Biology 101"</div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-bold text-gray-900 text-sm">Course Completed!</div>
-                  <div className="text-xs text-gray-600">You finished "Biology 101"</div>
-                </div>
-                </div>
-              </div>
               </div>
               
               {/* Floating elements */}
               <motion.div 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="absolute -right-8 top-20 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 z-20 hidden md:block"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                className="absolute -right-8 top-20 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 z-20 hidden md:block"
               >
-              <div className="flex items-center gap-3">
-                <div className="bg-green-100 p-2 rounded-full">
-                <Check className="w-5 h-5 text-green-600" />
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 p-2 rounded-full">
+                    <Check className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold">Homework Done</div>
+                    <div className="text-xs text-gray-500">Just now</div>
+                  </div>
                 </div>
-                <div>
-                <div className="text-sm font-bold">Homework Done</div>
-                <div className="text-xs text-gray-500">Just now</div>
-                </div>
-              </div>
               </motion.div>
             </motion.div>
           </div>
@@ -1128,14 +1174,16 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button className="bg-white text-purple-900 hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">Enroll Now</Button>
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 py-6 px-10 rounded-full text-lg font-bold">Contact Us</Button>
+              <Button variant="outline" className="border-white/20  hover:bg-white/10 py-6 px-10 rounded-full text-lg font-bold">Contact Us</Button>
             </div>
           </div>
         </div>
       </section>
 
+      <Footer />
+
       {/* Footer (Detailed WP Style) */}
-      <footer className="bg-white pt-20 pb-10 border-t border-gray-100">
+      {/* <footer className="bg-white pt-20 pb-10 border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-1">
@@ -1195,7 +1243,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </footer>
+      </footer> */}
     </div>
   );
 }
