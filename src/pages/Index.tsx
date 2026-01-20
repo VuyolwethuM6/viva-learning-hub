@@ -1,14 +1,878 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin,
+  ChevronRight, Star, Check, ArrowRight, BookOpen, Users, 
+  Clock, Menu, X, Laptop, Sparkles
+} from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 
-const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+// --- Theme Components ---
+
+const TopBar = () => (
+  <div className="bg-[#1a0b2e] text-white py-2.5 text-xs font-medium hidden lg:block border-b border-white/10">
+    <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+      <div className="flex items-center gap-6">
+        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer">
+          <Phone className="w-3.5 h-3.5" /> +27 (0) 123 456 789
+        </span>
+        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer">
+          <Mail className="w-3.5 h-3.5" /> info@vivatutorials.com
+        </span>
+        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer">
+          <MapPin className="w-3.5 h-3.5" /> Cape Town, South Africa
+        </span>
+      </div>
+      <div className="flex items-center gap-4">
+        <span className="text-white/60">Follow Us:</span>
+        <div className="flex items-center gap-3">
+          <Facebook className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
+          <Twitter className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
+          <Instagram className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
+          <Linkedin className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
+        </div>
       </div>
     </div>
+  </div>
+);
+
+interface SectionHeadingProps {
+  subtitle: string;
+  title: string;
+  align?: "center" | "left";
+  light?: boolean;
+}
+
+const SectionHeading = ({ subtitle, title, align = "center", light = false }: SectionHeadingProps) => (
+  <div className={`mb-16 ${align === "center" ? "text-center" : "text-left"}`}>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className={`inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-4 ${light ? "bg-white/10 text-white" : "bg-purple-100 text-purple-700"}`}
+    >
+      {subtitle}
+    </motion.div>
+    <motion.h2 
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.1 }}
+      className={`text-3xl md:text-4xl lg:text-5xl font-bold ${light ? "text-white" : "text-[#1a0b2e]"} tracking-tight leading-tight`}
+    >
+      {title}
+    </motion.h2>
+    <motion.div 
+      initial={{ opacity: 0, width: 0 }}
+      whileInView={{ opacity: 1, width: 80 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.2, duration: 0.8 }}
+      className={`h-1.5 mt-6 rounded-full ${align === "center" ? "mx-auto" : ""} ${light ? "bg-purple-400" : "bg-gradient-to-r from-purple-600 to-fuchsia-500"}`}
+    />
+  </div>
+);
+
+interface AnimatedCounterProps {
+  value: string;
+  label: string;
+}
+
+const AnimatedCounter = ({ value, label }: AnimatedCounterProps) => {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.5 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      className="text-center p-6"
+    >
+      <div className="text-4xl md:text-5xl font-extrabold text-purple-600 mb-2 font-mono tracking-tighter">
+        {value}
+      </div>
+      <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">{label}</div>
+    </motion.div>
   );
 };
 
-export default Index;
+// --- Page Sections ---
+
+export default function Home() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-white font-sans selection:bg-purple-200 selection:text-purple-900 overflow-x-hidden">
+      <TopBar />
+      
+      {/* Sticky Header */}
+      <header 
+        className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
+          isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg py-3 border-gray-100' : 'bg-white py-5 border-transparent'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-tr from-purple-600 to-fuchsia-500 rounded-lg flex items-center justify-center text-white shadow-lg shadow-purple-200">
+              <span className="text-xl font-bold font-mono">V</span>
+            </div>
+            <div className="leading-none">
+              <span className="block text-xl font-extrabold text-[#1a0b2e] tracking-tight">Viva<span className="text-purple-600">.</span></span>
+              <span className="block text-[10px] font-bold text-gray-400 tracking-widest uppercase">Education</span>
+            </div>
+          </div>
+
+          <nav className="hidden lg:flex items-center gap-8 font-medium text-sm text-gray-600">
+            {['Home', 'About', 'Services', 'Pricing', 'Contact'].map((item) => (
+              <a 
+                key={item} 
+                href={`#${item.toLowerCase()}`}
+                className="hover:text-purple-600 transition-colors relative group py-2"
+              >
+                {item}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-purple-600 transition-all duration-300 group-hover:w-full" />
+              </a>
+            ))}
+          </nav>
+
+          <div className="hidden lg:flex items-center gap-4">
+            <span className="text-sm font-semibold text-purple-600 hover:underline cursor-pointer">Login</span>
+            <Button className="bg-[#1a0b2e] hover:bg-purple-700 text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-purple-200">
+              Book a Tutor
+            </Button>
+          </div>
+
+          <button 
+            className="lg:hidden p-2 text-gray-600"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X /> : <Menu />}
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-white border-b fixed top-[70px] left-0 right-0 z-40 overflow-hidden shadow-xl"
+          >
+            <div className="p-6 flex flex-col gap-4">
+              {['Home', 'About', 'Services', 'Pricing', 'Contact'].map((item) => (
+                <a 
+                  key={item} 
+                  href={`#${item.toLowerCase()}`}
+                  className="text-lg font-semibold text-gray-800 py-2 border-b border-gray-100"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item}
+                </a>
+              ))}
+              <Button className="w-full bg-purple-600 mt-4">Get Started</Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Hero Section */}
+      <section id="home" className="relative pt-12 pb-20 lg:pt-24 lg:pb-32 overflow-hidden bg-gradient-to-b from-purple-50/50 to-white">
+        {/* Decorative blobs */}
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-purple-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-fuchsia-50/40 rounded-full blur-3xl translate-y-1/4 -translate-x-1/4" />
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="inline-flex items-center gap-2 bg-white border border-purple-100 rounded-full px-4 py-1.5 shadow-sm mb-6">
+                <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-xs font-bold text-purple-900 tracking-wide uppercase">New: Online Workshops Available</span>
+              </div>
+              
+              <h1 className="text-5xl lg:text-7xl font-extrabold text-[#1a0b2e] leading-[1.1] mb-6 tracking-tight">
+                Viva Tutorials <br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-fuchsia-600">STEM Education Center</span>
+              </h1>
+              
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-lg">
+                Empowering students through personalized learning and expert guidance. Achieve academic excellence with tailored STEM education programs designed for success.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" className="h-14 px-8 text-base bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-xl shadow-purple-200 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+                  Get Started Now
+                </Button>
+                <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-[#1a0b2e] text-[#1a0b2e] hover:bg-purple-50 rounded-full font-bold">
+                  More Info
+                </Button>
+              </div>
+
+              <div className="mt-12 flex items-center gap-4 text-sm font-medium text-gray-500">
+                <div className="flex -space-x-3">
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
+                       <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Student" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                  <div className="w-10 h-10 rounded-full border-2 border-white bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold">
+                    +2k
+                  </div>
+                </div>
+                <p>Trusted by 2,000+ students & parents</p>
+              </div>
+            </motion.div>
+
+            {/* Custom Dashboard Graphic */}
+            <motion.div 
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="absolute inset-0 bg-purple-600 rounded-[3rem] rotate-3 opacity-10 scale-95 blur-2xl transform translate-y-8" />
+              
+              <div className="relative bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden">
+                {/* Dashboard Header */}
+                <div className="bg-gradient-to-r from-[#7c3aed] to-[#9333ea] p-6 text-white">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 className="font-bold text-lg">Student Portal</h3>
+                      <p className="text-purple-200 text-sm">Welcome back, Sarah!</p>
+                    </div>
+                    <div className="w-10 h-10 bg-white/20 rounded-full backdrop-blur-sm flex items-center justify-center">
+                      <Users className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  
+                  {/* Progress Cards */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                      <div className="text-2xl font-bold mb-1">92%</div>
+                      <div className="text-xs text-purple-100">Math Average</div>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                      <div className="text-2xl font-bold mb-1">A+</div>
+                      <div className="text-xs text-purple-100">Recent Grade</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dashboard Body */}
+                <div className="p-6 bg-gray-50/50">
+                  <div className="mb-2 flex justify-between items-center">
+                    <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Upcoming Sessions</h4>
+                    <span className="text-xs text-purple-600 font-semibold cursor-pointer">View All</span>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {[
+                      { subject: "Advanced Physics", time: "Today, 14:00", icon: Sparkles, color: "text-blue-500", bg: "bg-blue-100" },
+                      { subject: "Calculus II", time: "Tomorrow, 10:00", icon: Laptop, color: "text-purple-500", bg: "bg-purple-100" },
+                      { subject: "Chemistry Lab", time: "Wed, 15:30", icon:  BookOpen, color: "text-pink-500", bg: "bg-pink-100" },
+                    ].map((item, idx) => (
+                      <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
+                        <div className={`w-12 h-12 ${item.bg} rounded-full flex items-center justify-center flex-shrink-0`}>
+                          <item.icon className={`w-5 h-5 ${item.color}`} />
+                        </div>
+                        <div className="flex-1">
+                          <h5 className="font-bold text-gray-900 text-sm">{item.subject}</h5>
+                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> {item.time}
+                          </p>
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full">
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 bg-purple-50 rounded-xl p-4 border border-purple-100 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-purple-600">
+                      <Star className="w-5 h-5 fill-purple-600" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 text-sm">Course Completed!</div>
+                      <div className="text-xs text-gray-600">You finished "Biology 101"</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Floating elements */}
+              <motion.div 
+                animate={{ y: [0, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                className="absolute -right-8 top-20 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 z-20 hidden md:block"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 p-2 rounded-full">
+                    <Check className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold">Homework Done</div>
+                    <div className="text-xs text-gray-500">Just now</div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Ribbon */}
+      <div className="bg-[#1a0b2e] text-white py-12 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
+          <AnimatedCounter value="20+" label="Expert Tutors" />
+          <AnimatedCounter value="5" label="Years of Excellence" />
+          <AnimatedCounter value="95%" label="Success Rate" />
+          <AnimatedCounter value="3+" label="Locations" />
+        </div>
+      </div>
+
+      {/* Services Grid (WordPress Style) */}
+      <section id="services" className="py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <SectionHeading 
+            subtitle="What We Offer" 
+            title="Our Services" 
+          />
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { 
+                icon: Users, 
+                title: "In-Person Tutoring", 
+                desc: "Personalized one-on-one sessions at your home or our learning centers, tailored to your pace and learning style.",
+                color: "text-blue-600",
+                bg: "bg-blue-50"
+              },
+              { 
+                icon: Laptop, 
+                title: "Hybrid/Combined Learning", 
+                desc: "Flexible combination of in-person and online tutoring designed to fit your schedule and maximize results.",
+                color: "text-purple-600",
+                bg: "bg-purple-50"
+              },
+              { 
+                icon: BookOpen, 
+                title: "Comprehensive Study Material", 
+                desc: "Access to curated notes, practice tests, and resources aligned with the CAPS curriculum.",
+                color: "text-pink-600",
+                bg: "bg-pink-50"
+              }
+            ].map((service, idx) => (
+              <motion.div 
+                key={idx}
+                whileHover={{ y: -10 }}
+                className="bg-white p-10 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 group"
+              >
+                <div className={`w-20 h-20 ${service.bg} rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300`}>
+                  <service.icon className={`w-10 h-10 ${service.color}`} />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">{service.title}</h3>
+                <p className="text-gray-600 leading-relaxed mb-8">{service.desc}</p>
+                <a href="#" className="inline-flex items-center font-bold text-[#1a0b2e] hover:text-purple-600 transition-colors uppercase text-sm tracking-wide">
+                  Learn More <ArrowRight className="w-4 h-4 ml-2" />
+                </a>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Subjects - Enhanced */}
+      <section id="subjects" className="py-24 bg-gradient-to-b from-white to-purple-50 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <SectionHeading 
+            subtitle="Our Curriculum" 
+            title="Subjects We Excel In" 
+          />
+
+          <Tabs defaultValue="stem" className="w-full">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-12 bg-white border border-gray-200 p-1 rounded-full shadow-sm">
+              <TabsTrigger value="stem" className="rounded-full data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold">STEM</TabsTrigger>
+              <TabsTrigger value="languages" className="rounded-full data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold">Languages</TabsTrigger>
+              <TabsTrigger value="commerce" className="rounded-full data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold">Commerce</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="stem" className="mt-0">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[
+                  { 
+                    title: "Mathematics", 
+                    icon: "🔢",
+                    gradient: "from-blue-500 to-cyan-500",
+                    description: "Pure & Applied Mathematics from Grade 8-12",
+                    topics: ["Algebra", "Calculus", "Trigonometry", "Statistics"],
+                    students: "850+ students"
+                  },
+                  { 
+                    title: "Physical Sciences", 
+                    icon: "⚛️",
+                    gradient: "from-purple-500 to-pink-500",
+                    description: "Physics & Chemistry combined curriculum",
+                    topics: ["Mechanics", "Waves", "Organic Chemistry", "Electrostatics"],
+                    students: "720+ students"
+                  },
+                  { 
+                    title: "Life Sciences", 
+                    icon: "🧬",
+                    gradient: "from-green-500 to-emerald-500",
+                    description: "Biology & Life Sciences for all grades",
+                    topics: ["Genetics", "Ecology", "Human Biology", "Evolution"],
+                    students: "680+ students"
+                  },
+                  { 
+                    title: "Computer Science", 
+                    icon: "💻",
+                    gradient: "from-indigo-500 to-blue-500",
+                    description: "IT, CAT & Programming fundamentals",
+                    topics: ["Algorithms", "Python", "Web Dev", "Data Structures"],
+                    students: "420+ students"
+                  },
+                  { 
+                    title: "Engineering Graphics", 
+                    icon: "📐",
+                    gradient: "from-orange-500 to-red-500",
+                    description: "Technical drawing & design principles",
+                    topics: ["Projections", "CAD", "Drafting", "3D Modeling"],
+                    students: "280+ students"
+                  },
+                  { 
+                    title: "Geography", 
+                    icon: "🌍",
+                    gradient: "from-teal-500 to-cyan-500",
+                    description: "Physical & Human Geography studies",
+                    topics: ["Climatology", "Geomorphology", "Urban Studies", "GIS"],
+                    students: "510+ students"
+                  }
+                ].map((subject, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ y: -8 }}
+                    className="group"
+                  >
+                    <Card className="h-full border-2 border-gray-100 hover:border-purple-300 transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
+                      <div className={`h-2 bg-gradient-to-r ${subject.gradient}`} />
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${subject.gradient} flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
+                            {subject.icon}
+                          </div>
+                          <Badge variant="secondary" className="bg-purple-50 text-purple-700 border border-purple-200">
+                            <Users className="w-3 h-3 mr-1" />
+                            {subject.students}
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                          {subject.title}
+                        </CardTitle>
+                        <CardDescription className="text-gray-600 text-base">
+                          {subject.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <BookOpen className="w-4 h-4 text-purple-600" />
+                            Key Topics:
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {subject.topics.map((topic, tIdx) => (
+                              <span key={tIdx} className="px-3 py-1 bg-gray-50 text-gray-700 rounded-full text-xs font-medium border border-gray-200">
+                                {topic}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="pt-4 border-t">
+                        <Button variant="ghost" className="w-full text-purple-600 hover:text-purple-700 hover:bg-purple-50 font-bold group">
+                          View Syllabus 
+                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="languages" className="mt-0">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[
+                  { 
+                    title: "English", 
+                    icon: "📚",
+                    gradient: "from-rose-500 to-pink-500",
+                    description: "Language, Literature & Comprehension",
+                    topics: ["Poetry", "Prose", "Grammar", "Essay Writing"],
+                    students: "920+ students"
+                  },
+                  { 
+                    title: "Afrikaans", 
+                    icon: "🗣️",
+                    gradient: "from-amber-500 to-orange-500",
+                    description: "First & Additional Language courses",
+                    topics: ["Begrip", "Taal", "Letterkunde", "Skrif"],
+                    students: "640+ students"
+                  },
+                  { 
+                    title: "isiZulu", 
+                    icon: "🌟",
+                    gradient: "from-yellow-500 to-amber-500",
+                    description: "Home Language & FAL",
+                    topics: ["Ulimi", "Ukufunda", "Ukubhala", "Inkulumo"],
+                    students: "380+ students"
+                  }
+                ].map((subject, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ y: -8 }}
+                    className="group"
+                  >
+                    <Card className="h-full border-2 border-gray-100 hover:border-purple-300 transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
+                      <div className={`h-2 bg-gradient-to-r ${subject.gradient}`} />
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${subject.gradient} flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
+                            {subject.icon}
+                          </div>
+                          <Badge variant="secondary" className="bg-purple-50 text-purple-700 border border-purple-200">
+                            <Users className="w-3 h-3 mr-1" />
+                            {subject.students}
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                          {subject.title}
+                        </CardTitle>
+                        <CardDescription className="text-gray-600 text-base">
+                          {subject.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <BookOpen className="w-4 h-4 text-purple-600" />
+                            Key Topics:
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {subject.topics.map((topic, tIdx) => (
+                              <span key={tIdx} className="px-3 py-1 bg-gray-50 text-gray-700 rounded-full text-xs font-medium border border-gray-200">
+                                {topic}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="pt-4 border-t">
+                        <Button variant="ghost" className="w-full text-purple-600 hover:text-purple-700 hover:bg-purple-50 font-bold group">
+                          View Syllabus 
+                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="commerce" className="mt-0">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[
+                  { 
+                    title: "Accounting", 
+                    icon: "💰",
+                    gradient: "from-emerald-500 to-teal-500",
+                    description: "Financial & Management Accounting",
+                    topics: ["Balance Sheets", "Income Statements", "Cost Accounting", "Budgets"],
+                    students: "560+ students"
+                  },
+                  { 
+                    title: "Business Studies", 
+                    icon: "📊",
+                    gradient: "from-blue-500 to-indigo-500",
+                    description: "Business principles & entrepreneurship",
+                    topics: ["Marketing", "Management", "HR", "Economics"],
+                    students: "490+ students"
+                  },
+                  { 
+                    title: "Economics", 
+                    icon: "📈",
+                    gradient: "from-violet-500 to-purple-500",
+                    description: "Micro & Macroeconomics studies",
+                    topics: ["Supply & Demand", "Markets", "GDP", "Fiscal Policy"],
+                    students: "410+ students"
+                  }
+                ].map((subject, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ y: -8 }}
+                    className="group"
+                  >
+                    <Card className="h-full border-2 border-gray-100 hover:border-purple-300 transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
+                      <div className={`h-2 bg-gradient-to-r ${subject.gradient}`} />
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${subject.gradient} flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
+                            {subject.icon}
+                          </div>
+                          <Badge variant="secondary" className="bg-purple-50 text-purple-700 border border-purple-200">
+                            <Users className="w-3 h-3 mr-1" />
+                            {subject.students}
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                          {subject.title}
+                        </CardTitle>
+                        <CardDescription className="text-gray-600 text-base">
+                          {subject.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <BookOpen className="w-4 h-4 text-purple-600" />
+                            Key Topics:
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {subject.topics.map((topic, tIdx) => (
+                              <span key={tIdx} className="px-3 py-1 bg-gray-50 text-gray-700 rounded-full text-xs font-medium border border-gray-200">
+                                {topic}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="pt-4 border-t">
+                        <Button variant="ghost" className="w-full text-purple-600 hover:text-purple-700 hover:bg-purple-50 font-bold group">
+                          View Syllabus 
+                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* Bottom CTA */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 text-center bg-white rounded-3xl p-12 shadow-xl border-2 border-purple-100"
+          >
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">Don't See Your Subject?</h3>
+            <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
+              We offer personalized tutoring for many other subjects. Contact us to discuss your specific learning needs.
+            </p>
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-10 py-6 rounded-full text-lg font-bold">
+              <Mail className="w-5 h-5 mr-2" />
+              Request a Subject
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Pricing Tables */}
+      <section id="pricing" className="py-24 bg-white relative">
+        <div className="max-w-7xl mx-auto px-6">
+          <SectionHeading subtitle="Pricing Plans" title="Affordable Learning Packages" />
+          
+          <div className="flex justify-center mb-12">
+             <div className="bg-gray-100 p-1 rounded-full inline-flex">
+               <Button variant="ghost" className="rounded-full bg-white shadow-sm text-purple-900 font-bold px-6">Monthly</Button>
+               <Button variant="ghost" className="rounded-full text-gray-500 font-medium px-6 hover:text-purple-900">Quarterly (Save 15%)</Button>
+             </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 items-start">
+            {[
+              { name: "Basic", price: "R500", color: "border-gray-200", features: ["4 sessions per month", "Group classes (max 6)", "Digital study materials", "Email support", "Progress tracking"] },
+              { name: "Standard", price: "R850", color: "border-purple-600", popular: true, features: ["8 sessions per month", "Small group (max 3)", "Printed & digital materials", "WhatsApp support", "Monthly assessments", "Parent-teacher meetings"] },
+              { name: "Premium", price: "R1200", color: "border-gray-200", features: ["12 sessions per month", "One-on-one tutoring", "Complete resource library", "24/7 tutor access", "Weekly progress reports", "Exam preparation workshops", "University application guidance"] }
+            ].map((plan, idx) => (
+              <div 
+                key={idx} 
+                className={`relative bg-white rounded-3xl p-8 border-2 ${plan.popular ? 'border-purple-600 shadow-2xl scale-105 z-10' : 'border-gray-100 shadow-lg'} transition-all`}
+              >
+                {plan.popular && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-purple-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
+                    Most Popular
+                  </div>
+                )}
+                <div className="text-center mb-8">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-4xl font-extrabold text-[#1a0b2e]">{plan.price}</span>
+                    <span className="text-gray-500 font-medium text-sm">/month</span>
+                  </div>
+                </div>
+                <div className="space-y-4 mb-8">
+                  {plan.features.map((feat, fIdx) => (
+                    <div key={fIdx} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3 text-green-600" />
+                      </div>
+                      <span className="text-gray-600 text-sm">{feat}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button className={`w-full py-6 rounded-xl font-bold ${plan.popular ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+                  Choose {plan.name}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonial Carousel Style */}
+      <section className="py-24 bg-gray-50 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+           <div className="grid md:grid-cols-2 gap-16 items-center">
+             <div>
+               <SectionHeading align="left" subtitle="Testimonials" title="What Our Learners Say" />
+               <p className="text-gray-600 text-lg mb-8 leading-relaxed">
+                 Hear from our students and parents about their transformative learning experiences with Viva Tutorials.
+               </p>
+               <Button className="bg-[#1a0b2e] text-white px-8 py-6 rounded-full text-lg">Read More Stories</Button>
+             </div>
+             
+             <div className="relative">
+               {/* Abstract background shapes */}
+               <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+               <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+               
+               <Card className="relative bg-white border-none shadow-2xl p-8 rounded-[2rem]">
+                 <div className="text-purple-600 mb-6">
+                   {[1,2,3,4,5].map(i => <Star key={i} className="inline-block w-5 h-5 fill-current" />)}
+                 </div>
+                 <blockquote className="text-xl text-gray-800 font-medium leading-relaxed mb-6">
+                   "Viva Tutorials helped me improve my Maths from 45% to 78% in just one term! The tutors are patient and explain concepts in a way I can understand."
+                 </blockquote>
+                 <div className="flex items-center gap-4">
+                   <img src="https://i.pravatar.cc/100?img=32" alt="User" className="w-12 h-12 rounded-full object-cover" />
+                   <div>
+                     <div className="font-bold text-gray-900">Thabo M.</div>
+                     <div className="text-sm text-purple-600">Grade 11 Student</div>
+                   </div>
+                 </div>
+               </Card>
+             </div>
+           </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-7xl mx-auto bg-[#1a0b2e] rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+          <div className="relative z-10">
+            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">Ready to Transform Your Learning?</h2>
+            <p className="text-purple-200 text-lg md:text-xl max-w-2xl mx-auto mb-10">
+              Take the first step towards academic excellence. Join hundreds of students achieving their goals with Viva Tutorials.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button className="bg-white text-purple-900 hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">Enroll Now</Button>
+              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 py-6 px-10 rounded-full text-lg font-bold">Contact Us</Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer (Detailed WP Style) */}
+      <footer className="bg-white pt-20 pb-10 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-12 mb-16">
+            <div className="col-span-1 md:col-span-1">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white">
+                  <span className="font-bold font-mono">V</span>
+                </div>
+                <span className="text-2xl font-extrabold text-[#1a0b2e]">Viva.</span>
+              </div>
+              <p className="text-gray-500 mb-6 leading-relaxed">
+                Empowering students to achieve academic excellence through personalized STEM education and expert guidance.
+              </p>
+              <div className="flex gap-4">
+                {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
+                  <div key={i} className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 hover:bg-purple-600 hover:text-white transition-all cursor-pointer">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-bold text-gray-900 mb-6">Quick Links</h4>
+              <ul className="space-y-3 text-gray-600">
+                {['Home', 'About Us', 'Our Tutors', 'Success Stories', 'Pricing', 'Contact'].map(item => (
+                  <li key={item}><a href="#" className="hover:text-purple-600 transition-colors">{item}</a></li>
+                ))}
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-bold text-gray-900 mb-6">Subjects</h4>
+              <ul className="space-y-3 text-gray-600">
+                {['Mathematics', 'Physical Science', 'Life Sciences', 'Accounting', 'Information Tech', 'Geography'].map(item => (
+                  <li key={item}><a href="#" className="hover:text-purple-600 transition-colors">{item}</a></li>
+                ))}
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-bold text-gray-900 mb-6">Newsletter</h4>
+              <p className="text-gray-500 mb-4 text-sm">Subscribe to get study tips and updates.</p>
+              <div className="flex gap-2">
+                <Input placeholder="Email Address" className="rounded-full bg-gray-50 border-gray-200" />
+                <Button className="rounded-full bg-purple-600 hover:bg-purple-700 w-12 h-10 p-0 flex items-center justify-center">
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+            <p>&copy; 2024 Viva Tutorial Services. All rights reserved.</p>
+            <div className="flex gap-6 mt-4 md:mt-0">
+              <a href="#" className="hover:text-purple-600">Privacy Policy</a>
+              <a href="#" className="hover:text-purple-600">Terms of Service</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
