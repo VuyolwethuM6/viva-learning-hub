@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
-  Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin,
-  ChevronRight, Star, Check, ArrowRight, BookOpen, Users, 
-  Clock, Menu, X, Laptop, Sparkles
+  GraduationCap, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin,
+  ChevronRight, Star, Check, ArrowRight, Play, BookOpen, Users, 
+  Award, Clock, Calendar, Search, Menu, X, Laptop, Sparkles
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,40 +14,33 @@ import { Input } from "@/components/ui/input";
 // --- Theme Components ---
 
 const TopBar = () => (
-  <div className="bg-[#1a0b2e] text-white py-2.5 text-xs font-medium hidden lg:block border-b border-white/10">
+  <div className="fixed top-0 left-0 right-0 z-50 bg-[#1a0b2e] text-white py-2.5 text-xs font-medium border-b border-white/10">
     <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-      <div className="flex items-center gap-6">
-        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer">
-          <Phone className="w-3.5 h-3.5" /> +27 (0) 123 456 789
+      <div className="flex items-center gap-3 lg:gap-6 overflow-x-auto">
+        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer whitespace-nowrap">
+          <Phone className="w-3.5 h-3.5" /> <span className="hidden sm:inline">+27 (0) 123 456 789</span>
         </span>
-        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer">
+        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer whitespace-nowrap hidden sm:flex">
           <Mail className="w-3.5 h-3.5" /> info@vivatutorials.com
         </span>
-        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer">
+        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer whitespace-nowrap hidden md:flex">
           <MapPin className="w-3.5 h-3.5" /> Cape Town, South Africa
         </span>
       </div>
-      <div className="flex items-center gap-4">
-        <span className="text-white/60">Follow Us:</span>
+      <div className="flex items-center gap-2 lg:gap-4">
+        <span className="text-white/60 hidden lg:inline">Follow Us:</span>
         <div className="flex items-center gap-3">
           <Facebook className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
           <Twitter className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
           <Instagram className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
-          <Linkedin className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
+          <Linkedin className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors hidden sm:block" />
         </div>
       </div>
     </div>
   </div>
 );
 
-interface SectionHeadingProps {
-  subtitle: string;
-  title: string;
-  align?: "center" | "left";
-  light?: boolean;
-}
-
-const SectionHeading = ({ subtitle, title, align = "center", light = false }: SectionHeadingProps) => (
+const SectionHeading = ({ subtitle, title, align = "center", light = false }) => (
   <div className={`mb-16 ${align === "center" ? "text-center" : "text-left"}`}>
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
@@ -76,12 +69,7 @@ const SectionHeading = ({ subtitle, title, align = "center", light = false }: Se
   </div>
 );
 
-interface AnimatedCounterProps {
-  value: string;
-  label: string;
-}
-
-const AnimatedCounter = ({ value, label }: AnimatedCounterProps) => {
+const AnimatedCounter = ({ value, label }) => {
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.5 }}
@@ -94,6 +82,104 @@ const AnimatedCounter = ({ value, label }: AnimatedCounterProps) => {
       </div>
       <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">{label}</div>
     </motion.div>
+  );
+};
+
+const TestimonialCarousel = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  const testimonials = [
+    {
+      name: "Thabo M.",
+      role: "Grade 11 Student",
+      image: 32,
+      text: "Viva Tutorials helped me improve my Maths from 45% to 78% in just one term! The tutors are patient and explain concepts in a way I can understand."
+    },
+    {
+      name: "Sarah K.",
+      role: "Parent of Grade 9 Student",
+      image: 45,
+      text: "My daughter's confidence in Physical Sciences has skyrocketed. The personalized attention and structured approach make all the difference."
+    },
+    {
+      name: "Lebo N.",
+      role: "Grade 12 Student",
+      image: 28,
+      text: "Thanks to Viva, I got accepted into my dream university! The exam preparation workshops and one-on-one tutoring were invaluable."
+    }
+  ];
+
+  const nextTestimonial = () => {
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+  };
+
+  const prevTestimonial = () => {
+    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
+
+  return (
+    <div className="relative">
+      {/* Abstract background shapes */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+      
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -100 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="relative bg-white border-none shadow-2xl p-8 rounded-[2rem]">
+            <div className="text-purple-600 mb-6">
+              {[1,2,3,4,5].map(i => <Star key={i} className="inline-block w-5 h-5 fill-current" />)}
+            </div>
+            <blockquote className="text-xl text-gray-800 font-medium leading-relaxed mb-6">
+              "{testimonials[currentIndex].text}"
+            </blockquote>
+            <div className="flex items-center gap-4">
+              <img src={`https://i.pravatar.cc/100?img=${testimonials[currentIndex].image}`} alt={testimonials[currentIndex].name} className="w-12 h-12 rounded-full object-cover" />
+              <div>
+                <div className="font-bold text-gray-900">{testimonials[currentIndex].name}</div>
+                <div className="text-sm text-purple-600">{testimonials[currentIndex].role}</div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Navigation */}
+      <div className="flex justify-center gap-4 mt-6">
+        <Button 
+          onClick={prevTestimonial}
+          variant="outline" 
+          size="icon" 
+          className="rounded-full h-10 w-10"
+        >
+          <ChevronRight className="w-5 h-5 rotate-180" />
+        </Button>
+        <div className="flex items-center gap-2">
+          {testimonials.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`h-2 rounded-full transition-all ${
+                idx === currentIndex ? 'w-8 bg-purple-600' : 'w-2 bg-gray-300'
+              }`}
+            />
+          ))}
+        </div>
+        <Button 
+          onClick={nextTestimonial}
+          variant="outline" 
+          size="icon" 
+          className="rounded-full h-10 w-10"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </Button>
+      </div>
+    </div>
   );
 };
 
@@ -115,7 +201,7 @@ export default function Home() {
       
       {/* Sticky Header */}
       <header 
-        className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
+        className={`fixed top-[37px] left-0 right-0 z-40 transition-all duration-300 border-b ${
           isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg py-3 border-gray-100' : 'bg-white py-5 border-transparent'
         }`}
       >
@@ -162,31 +248,80 @@ export default function Home() {
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-white border-b fixed top-[70px] left-0 right-0 z-40 overflow-hidden shadow-xl"
-          >
-            <div className="p-6 flex flex-col gap-4">
-              {['Home', 'About', 'Services', 'Pricing', 'Contact'].map((item) => (
-                <a 
-                  key={item} 
-                  href={`#${item.toLowerCase()}`}
-                  className="text-lg font-semibold text-gray-800 py-2 border-b border-gray-100"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item}
-                </a>
-              ))}
-              <Button className="w-full bg-purple-600 mt-4">Get Started</Button>
-            </div>
-          </motion.div>
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="lg:hidden fixed inset-0 bg-black/50 z-50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            
+            {/* Slide-in Menu */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'tween', duration: 0.3 }}
+              className="lg:hidden fixed top-0 right-0 bottom-0 w-[80%] max-w-sm bg-white z-50 shadow-2xl overflow-y-auto"
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-8">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-tr from-purple-600 to-fuchsia-500 rounded-lg flex items-center justify-center text-white">
+                      <span className="text-lg font-bold font-mono">V</span>
+                    </div>
+                    <span className="text-lg font-extrabold text-[#1a0b2e]">Viva<span className="text-purple-600">.</span></span>
+                  </div>
+                  <button 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full"
+                  >
+                    <X className="w-6 h-6 text-gray-600" />
+                  </button>
+                </div>
+
+                <nav className="flex flex-col gap-2">
+                  {['Home', 'About', 'Services', 'Pricing', 'Contact'].map((item) => (
+                    <a 
+                      key={item} 
+                      href={`#${item.toLowerCase()}`}
+                      className="text-lg font-semibold text-gray-800 py-4 px-4 hover:bg-purple-50 rounded-lg transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item}
+                    </a>
+                  ))}
+                </nav>
+
+                <div className="mt-8 pt-8 border-t border-gray-200 space-y-4">
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700 py-6 rounded-full text-lg">
+                    Book a Tutor
+                  </Button>
+                  <Button variant="outline" className="w-full border-2 border-gray-200 py-6 rounded-full text-lg">
+                    Login
+                  </Button>
+                </div>
+
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <p className="text-sm font-semibold text-gray-500 mb-4">Follow Us</p>
+                  <div className="flex gap-4">
+                    {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
+                      <div key={i} className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 hover:bg-purple-600 hover:text-white transition-all cursor-pointer">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section id="home" className="relative pt-12 pb-20 lg:pt-24 lg:pb-32 overflow-hidden bg-gradient-to-b from-purple-50/50 to-white">
+      <section id="home" className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden bg-gradient-to-b from-purple-50/50 to-white">
         {/* Decorative blobs */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-purple-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-fuchsia-50/40 rounded-full blur-3xl translate-y-1/4 -translate-x-1/4" />
@@ -704,6 +839,149 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Study Materials Section */}
+      <section id="materials" className="py-24 bg-gradient-to-b from-purple-50 to-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <SectionHeading 
+            subtitle="Study Resources" 
+            title="Premium Study Materials" 
+          />
+          <p className="text-center text-gray-600 text-lg mb-12 max-w-2xl mx-auto">
+            Get access to expertly crafted study guides, past papers, and revision notes to excel in your exams.
+          </p>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Grade 12 Maths Study Pack",
+                description: "Complete revision notes, practice questions, and exam strategies for Grade 12 Mathematics",
+                price: "R299",
+                icon: "📐",
+                gradient: "from-blue-500 to-cyan-500",
+                pages: "250+ pages",
+                includes: ["Full syllabus coverage", "100+ practice problems", "Past exam papers", "Video explanations"]
+              },
+              {
+                title: "Physical Sciences Bundle",
+                description: "Comprehensive Physics & Chemistry study material for Grades 10-12",
+                price: "R399",
+                icon: "⚗️",
+                gradient: "from-purple-500 to-pink-500",
+                pages: "400+ pages",
+                popular: true,
+                includes: ["Physics & Chemistry", "Practical experiments", "Formula sheets", "Exam tips & tricks"]
+              },
+              {
+                title: "Life Sciences Guide",
+                description: "Detailed notes and diagrams covering all Grade 12 Life Sciences topics",
+                price: "R249",
+                icon: "🧬",
+                gradient: "from-green-500 to-emerald-500",
+                pages: "180+ pages",
+                includes: ["Detailed diagrams", "Summary notes", "Past papers", "Mnemonics & tips"]
+              },
+              {
+                title: "Accounting Mastery Pack",
+                description: "Step-by-step guides to mastering Grade 11-12 Accounting concepts",
+                price: "R279",
+                icon: "💰",
+                gradient: "from-emerald-500 to-teal-500",
+                pages: "200+ pages",
+                includes: ["Financial statements", "Practice exercises", "Case studies", "Calculator tips"]
+              },
+              {
+                title: "Complete Exam Prep Kit",
+                description: "All subjects combined - everything you need for final exams",
+                price: "R899",
+                icon: "🎓",
+                gradient: "from-orange-500 to-red-500",
+                pages: "1000+ pages",
+                includes: ["All major subjects", "Exam strategies", "Time management tips", "Bonus resources"]
+              },
+              {
+                title: "English Literature Pack",
+                description: "Comprehensive guides for all prescribed books and poetry",
+                price: "R229",
+                icon: "📚",
+                gradient: "from-rose-500 to-pink-500",
+                pages: "150+ pages",
+                includes: ["Character analysis", "Themes & symbols", "Essay guides", "Sample answers"]
+              }
+            ].map((material, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="relative group"
+              >
+                {material.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
+                    Best Seller
+                  </div>
+                )}
+                <Card className={`h-full border-2 ${material.popular ? 'border-purple-300 shadow-2xl' : 'border-gray-100'} hover:border-purple-400 transition-all duration-300 hover:shadow-xl bg-white overflow-hidden group-hover:-translate-y-2`}>
+                  <div className={`h-2 bg-gradient-to-r ${material.gradient}`} />
+                  <CardHeader>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${material.gradient} flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
+                        {material.icon}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-bold text-[#1a0b2e]">{material.price}</div>
+                        <Badge variant="secondary" className="mt-1 text-xs">
+                          {material.pages}
+                        </Badge>
+                      </div>
+                    </div>
+                    <CardTitle className="text-xl font-bold text-gray-900 mb-2">
+                      {material.title}
+                    </CardTitle>
+                    <CardDescription className="text-gray-600">
+                      {material.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="text-sm font-semibold text-gray-700 mb-2">Includes:</div>
+                    {material.includes.map((item, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        {item}
+                      </div>
+                    ))}
+                  </CardContent>
+                  <CardFooter className="pt-4">
+                    <Button className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white py-6 rounded-xl font-bold group-hover:shadow-lg transition-all">
+                      Download Now
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 text-center bg-white rounded-3xl p-12 shadow-xl border-2 border-purple-100"
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Sparkles className="w-6 h-6 text-purple-600" />
+              <h3 className="text-2xl font-bold text-gray-900">Need Custom Study Material?</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              We can create personalized study guides tailored to your specific needs and learning style.
+            </p>
+            <Button size="lg" variant="outline" className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-6 rounded-full text-lg font-bold">
+              Request Custom Material
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Pricing Tables */}
       <section id="pricing" className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-6">
@@ -769,27 +1047,7 @@ export default function Home() {
                <Button className="bg-[#1a0b2e] text-white px-8 py-6 rounded-full text-lg">Read More Stories</Button>
              </div>
              
-             <div className="relative">
-               {/* Abstract background shapes */}
-               <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-               <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-               
-               <Card className="relative bg-white border-none shadow-2xl p-8 rounded-[2rem]">
-                 <div className="text-purple-600 mb-6">
-                   {[1,2,3,4,5].map(i => <Star key={i} className="inline-block w-5 h-5 fill-current" />)}
-                 </div>
-                 <blockquote className="text-xl text-gray-800 font-medium leading-relaxed mb-6">
-                   "Viva Tutorials helped me improve my Maths from 45% to 78% in just one term! The tutors are patient and explain concepts in a way I can understand."
-                 </blockquote>
-                 <div className="flex items-center gap-4">
-                   <img src="https://i.pravatar.cc/100?img=32" alt="User" className="w-12 h-12 rounded-full object-cover" />
-                   <div>
-                     <div className="font-bold text-gray-900">Thabo M.</div>
-                     <div className="text-sm text-purple-600">Grade 11 Student</div>
-                   </div>
-                 </div>
-               </Card>
-             </div>
+             <TestimonialCarousel />
            </div>
         </div>
       </section>
@@ -865,7 +1123,7 @@ export default function Home() {
           </div>
           
           <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-            <p>&copy; 2024 Viva Tutorial Services. All rights reserved.</p>
+            <p>&copy; 2026 Viva Tutorial Services. All rights reserved.</p>
             <div className="flex gap-6 mt-4 md:mt-0">
               <a href="#" className="hover:text-purple-600">Privacy Policy</a>
               <a href="#" className="hover:text-purple-600">Terms of Service</a>
