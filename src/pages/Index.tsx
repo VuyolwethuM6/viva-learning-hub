@@ -844,20 +844,55 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <SectionHeading 
             subtitle="Study Resources" 
-            title="Premium Study Materials" 
+            title="Study Materials & Resources" 
           />
           <p className="text-center text-gray-600 text-lg mb-12 max-w-2xl mx-auto">
-            Get access to expertly crafted study guides, past papers, and revision notes to excel in your exams.
+            Access our collection of study guides, past papers, video lessons, and revision notes. Some resources are completely free!
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
+                title: "Grade 10 Maths Basics",
+                description: "Introduction to Grade 10 Mathematics with essential concepts and practice questions",
+                price: "Free",
+                isFree: true,
+                icon: "📊",
+                gradient: "from-green-500 to-emerald-500",
+                type: "PDF Notes",
+                pages: "45 pages",
+                includes: ["Basic algebra", "Number patterns", "Intro to functions", "Practice exercises"]
+              },
+              {
+                title: "Past Exam Papers 2023",
+                description: "Free collection of past matric exam papers with memo answers",
+                price: "Free",
+                isFree: true,
+                icon: "📝",
+                gradient: "from-teal-500 to-cyan-500",
+                type: "Practice Tests",
+                pages: "12 papers",
+                includes: ["Maths Paper 1 & 2", "Physical Sciences", "Life Sciences", "Answer memos"]
+              },
+              {
+                title: "Study Tips Video Series",
+                description: "Free video lessons on effective study techniques and exam strategies",
+                price: "Free",
+                isFree: true,
+                icon: "🎬",
+                gradient: "from-blue-400 to-blue-600",
+                type: "Video Lessons",
+                pages: "8 videos",
+                includes: ["Time management", "Memory techniques", "Exam strategies", "Note-taking tips"]
+              },
+              {
                 title: "Grade 12 Maths Study Pack",
                 description: "Complete revision notes, practice questions, and exam strategies for Grade 12 Mathematics",
                 price: "R299",
+                isFree: false,
                 icon: "📐",
                 gradient: "from-blue-500 to-cyan-500",
+                type: "PDF Notes",
                 pages: "250+ pages",
                 includes: ["Full syllabus coverage", "100+ practice problems", "Past exam papers", "Video explanations"]
               },
@@ -865,8 +900,10 @@ export default function Home() {
                 title: "Physical Sciences Bundle",
                 description: "Comprehensive Physics & Chemistry study material for Grades 10-12",
                 price: "R399",
+                isFree: false,
                 icon: "⚗️",
                 gradient: "from-purple-500 to-pink-500",
+                type: "PDF Notes",
                 pages: "400+ pages",
                 popular: true,
                 includes: ["Physics & Chemistry", "Practical experiments", "Formula sheets", "Exam tips & tricks"]
@@ -875,8 +912,10 @@ export default function Home() {
                 title: "Life Sciences Guide",
                 description: "Detailed notes and diagrams covering all Grade 12 Life Sciences topics",
                 price: "R249",
+                isFree: false,
                 icon: "🧬",
                 gradient: "from-green-500 to-emerald-500",
+                type: "PDF Notes",
                 pages: "180+ pages",
                 includes: ["Detailed diagrams", "Summary notes", "Past papers", "Mnemonics & tips"]
               },
@@ -884,8 +923,10 @@ export default function Home() {
                 title: "Accounting Mastery Pack",
                 description: "Step-by-step guides to mastering Grade 11-12 Accounting concepts",
                 price: "R279",
+                isFree: false,
                 icon: "💰",
                 gradient: "from-emerald-500 to-teal-500",
+                type: "PDF Notes",
                 pages: "200+ pages",
                 includes: ["Financial statements", "Practice exercises", "Case studies", "Calculator tips"]
               },
@@ -893,8 +934,10 @@ export default function Home() {
                 title: "Complete Exam Prep Kit",
                 description: "All subjects combined - everything you need for final exams",
                 price: "R899",
+                isFree: false,
                 icon: "🎓",
                 gradient: "from-orange-500 to-red-500",
+                type: "Practice Tests",
                 pages: "1000+ pages",
                 includes: ["All major subjects", "Exam strategies", "Time management tips", "Bonus resources"]
               },
@@ -902,8 +945,10 @@ export default function Home() {
                 title: "English Literature Pack",
                 description: "Comprehensive guides for all prescribed books and poetry",
                 price: "R229",
+                isFree: false,
                 icon: "📚",
                 gradient: "from-rose-500 to-pink-500",
+                type: "PDF Notes",
                 pages: "150+ pages",
                 includes: ["Character analysis", "Themes & symbols", "Essay guides", "Sample answers"]
               }
@@ -913,7 +958,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
+                transition={{ delay: idx * 0.05 }}
                 className="relative group"
               >
                 {material.popular && (
@@ -921,7 +966,7 @@ export default function Home() {
                     Best Seller
                   </div>
                 )}
-                <Card className={`h-full border-2 ${material.popular ? 'border-purple-300 shadow-2xl' : 'border-gray-100'} hover:border-purple-400 transition-all duration-300 hover:shadow-xl bg-white overflow-hidden group-hover:-translate-y-2`}>
+                <Card className={`h-full border-2 ${material.popular ? 'border-purple-300 shadow-2xl' : material.isFree ? 'border-green-200' : 'border-gray-100'} hover:border-purple-400 transition-all duration-300 hover:shadow-xl bg-white overflow-hidden group-hover:-translate-y-2`}>
                   <div className={`h-2 bg-gradient-to-r ${material.gradient}`} />
                   <CardHeader>
                     <div className="flex items-start justify-between mb-4">
@@ -929,11 +974,27 @@ export default function Home() {
                         {material.icon}
                       </div>
                       <div className="text-right">
-                        <div className="text-3xl font-bold text-[#1a0b2e]">{material.price}</div>
-                        <Badge variant="secondary" className="mt-1 text-xs">
-                          {material.pages}
-                        </Badge>
+                        {material.isFree ? (
+                          <Badge className="bg-green-100 text-green-700 border border-green-300 text-sm font-bold px-3 py-1">
+                            Free
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-purple-100 text-purple-700 border border-purple-300 text-sm font-bold px-3 py-1">
+                            Premium
+                          </Badge>
+                        )}
+                        <div className={`text-2xl font-bold mt-2 ${material.isFree ? 'text-green-600' : 'text-[#1a0b2e]'}`}>
+                          {material.price}
+                        </div>
                       </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">
+                        {material.type}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">
+                        {material.pages}
+                      </Badge>
                     </div>
                     <CardTitle className="text-xl font-bold text-gray-900 mb-2">
                       {material.title}
@@ -952,8 +1013,12 @@ export default function Home() {
                     ))}
                   </CardContent>
                   <CardFooter className="pt-4">
-                    <Button className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white py-6 rounded-xl font-bold group-hover:shadow-lg transition-all">
-                      Download Now
+                    <Button className={`w-full py-6 rounded-xl font-bold group-hover:shadow-lg transition-all ${
+                      material.isFree 
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white' 
+                        : 'bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-700 hover:to-fuchsia-700 text-white'
+                    }`}>
+                      {material.isFree ? 'Download Free' : 'Purchase Now'}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </CardFooter>
