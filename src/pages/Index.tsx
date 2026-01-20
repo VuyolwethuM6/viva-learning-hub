@@ -206,15 +206,13 @@ export default function Home() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-tr from-purple-600 to-fuchsia-500 rounded-lg flex items-center justify-center text-white shadow-lg shadow-purple-200">
-              <span className="text-xl font-bold font-mono">V</span>
-            </div>
-            <div className="leading-none">
-              <span className="block text-xl font-extrabold text-[#1a0b2e] tracking-tight">Viva<span className="text-purple-600">.</span></span>
-              <span className="block text-[10px] font-bold text-gray-400 tracking-widest uppercase">Education</span>
-            </div>
-          </div>
+            <a href="#" className="flex items-center gap-2">
+            <img 
+              src="/viva-tutorials-logo.png" 
+              alt="Viva Tutorials Logo" 
+              className="h-10 w-auto"
+            />
+            </a>
 
           <nav className="hidden lg:flex items-center gap-8 font-medium text-sm text-gray-600">
             {['Home', 'About', 'Services', 'Pricing', 'Contact'].map((item) => (
@@ -335,12 +333,12 @@ export default function Home() {
             >
               <div className="inline-flex items-center gap-2 bg-white border border-purple-100 rounded-full px-4 py-1.5 shadow-sm mb-6">
                 <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-bold text-purple-900 tracking-wide uppercase">New: Online Workshops Available</span>
+                <span className="text-xs font-bold text-purple-900 tracking-wide uppercase">New: Available Online & Physical</span>
               </div>
               
               <h1 className="text-5xl lg:text-7xl font-extrabold text-[#1a0b2e] leading-[1.1] mb-6 tracking-tight">
-                Viva Tutorials <br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-fuchsia-600">STEM Education Center</span>
+                STEM
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-fuchsia-600">&nbsp;Education Center</span>
               </h1>
               
               <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-lg">
@@ -364,10 +362,10 @@ export default function Home() {
                     </div>
                   ))}
                   <div className="w-10 h-10 rounded-full border-2 border-white bg-purple-100 flex items-center justify-center text-purple-700 text-xs font-bold">
-                    +2k
+                    +100
                   </div>
                 </div>
-                <p>Trusted by 2,000+ students & parents</p>
+                <p>Trusted by 100+ students & parents</p>
               </div>
             </motion.div>
 
@@ -376,93 +374,93 @@ export default function Home() {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative"
+              className="relative hidden md:block" // Added hidden md:block to hide on mobile
             >
               <div className="absolute inset-0 bg-purple-600 rounded-[3rem] rotate-3 opacity-10 scale-95 blur-2xl transform translate-y-8" />
               
               <div className="relative bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden">
-                {/* Dashboard Header */}
-                <div className="bg-gradient-to-r from-[#7c3aed] to-[#9333ea] p-6 text-white">
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h3 className="font-bold text-lg">Student Portal</h3>
-                      <p className="text-purple-200 text-sm">Welcome back, Sarah!</p>
-                    </div>
-                    <div className="w-10 h-10 bg-white/20 rounded-full backdrop-blur-sm flex items-center justify-center">
-                      <Users className="w-5 h-5 text-white" />
-                    </div>
+              {/* Dashboard Header */}
+              <div className="bg-gradient-to-r from-[#7c3aed] to-[#9333ea] p-6 text-white">
+                <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="font-bold text-lg">Student Portal</h3>
+                  <p className="text-purple-200 text-sm">Welcome back, Sarah!</p>
+                </div>
+                <div className="w-10 h-10 bg-white/20 rounded-full backdrop-blur-sm flex items-center justify-center">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                </div>
+                
+                {/* Progress Cards */}
+                <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                  <div className="text-2xl font-bold mb-1">92%</div>
+                  <div className="text-xs text-purple-100">Math Average</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
+                  <div className="text-2xl font-bold mb-1">A+</div>
+                  <div className="text-xs text-purple-100">Recent Grade</div>
+                </div>
+                </div>
+              </div>
+
+              {/* Dashboard Body */}
+              <div className="p-6 bg-gray-50/50">
+                <div className="mb-2 flex justify-between items-center">
+                <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Upcoming Sessions</h4>
+                <span className="text-xs text-purple-600 font-semibold cursor-pointer">View All</span>
+                </div>
+                
+                <div className="space-y-3">
+                {[
+                  { subject: "Advanced Physics", time: "Today, 14:00", icon: Sparkles, color: "text-blue-500", bg: "bg-blue-100" },
+                  { subject: "Calculus II", time: "Tomorrow, 10:00", icon: Laptop, color: "text-purple-500", bg: "bg-purple-100" },
+                  { subject: "Chemistry Lab", time: "Wed, 15:30", icon:  BookOpen, color: "text-pink-500", bg: "bg-pink-100" },
+                ].map((item, idx) => (
+                  <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
+                  <div className={`w-12 h-12 ${item.bg} rounded-full flex items-center justify-center flex-shrink-0`}>
+                    <item.icon className={`w-5 h-5 ${item.color}`} />
                   </div>
-                  
-                  {/* Progress Cards */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                      <div className="text-2xl font-bold mb-1">92%</div>
-                      <div className="text-xs text-purple-100">Math Average</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                      <div className="text-2xl font-bold mb-1">A+</div>
-                      <div className="text-xs text-purple-100">Recent Grade</div>
-                    </div>
+                  <div className="flex-1">
+                    <h5 className="font-bold text-gray-900 text-sm">{item.subject}</h5>
+                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> {item.time}
+                    </p>
                   </div>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full">
+                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                  </Button>
+                  </div>
+                ))}
                 </div>
 
-                {/* Dashboard Body */}
-                <div className="p-6 bg-gray-50/50">
-                  <div className="mb-2 flex justify-between items-center">
-                    <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Upcoming Sessions</h4>
-                    <span className="text-xs text-purple-600 font-semibold cursor-pointer">View All</span>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {[
-                      { subject: "Advanced Physics", time: "Today, 14:00", icon: Sparkles, color: "text-blue-500", bg: "bg-blue-100" },
-                      { subject: "Calculus II", time: "Tomorrow, 10:00", icon: Laptop, color: "text-purple-500", bg: "bg-purple-100" },
-                      { subject: "Chemistry Lab", time: "Wed, 15:30", icon:  BookOpen, color: "text-pink-500", bg: "bg-pink-100" },
-                    ].map((item, idx) => (
-                      <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
-                        <div className={`w-12 h-12 ${item.bg} rounded-full flex items-center justify-center flex-shrink-0`}>
-                          <item.icon className={`w-5 h-5 ${item.color}`} />
-                        </div>
-                        <div className="flex-1">
-                          <h5 className="font-bold text-gray-900 text-sm">{item.subject}</h5>
-                          <p className="text-xs text-gray-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> {item.time}
-                          </p>
-                        </div>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full">
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-6 bg-purple-50 rounded-xl p-4 border border-purple-100 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-purple-600">
-                      <Star className="w-5 h-5 fill-purple-600" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900 text-sm">Course Completed!</div>
-                      <div className="text-xs text-gray-600">You finished "Biology 101"</div>
-                    </div>
-                  </div>
+                <div className="mt-6 bg-purple-50 rounded-xl p-4 border border-purple-100 flex items-center gap-4">
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-purple-600">
+                  <Star className="w-5 h-5 fill-purple-600" />
                 </div>
+                <div>
+                  <div className="font-bold text-gray-900 text-sm">Course Completed!</div>
+                  <div className="text-xs text-gray-600">You finished "Biology 101"</div>
+                </div>
+                </div>
+              </div>
               </div>
               
               {/* Floating elements */}
               <motion.div 
-                animate={{ y: [0, -10, 0] }}
-                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                className="absolute -right-8 top-20 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 z-20 hidden md:block"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+              className="absolute -right-8 top-20 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 z-20 hidden md:block"
               >
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-full">
-                    <Check className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold">Homework Done</div>
-                    <div className="text-xs text-gray-500">Just now</div>
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className="bg-green-100 p-2 rounded-full">
+                <Check className="w-5 h-5 text-green-600" />
                 </div>
+                <div>
+                <div className="text-sm font-bold">Homework Done</div>
+                <div className="text-xs text-gray-500">Just now</div>
+                </div>
+              </div>
               </motion.div>
             </motion.div>
           </div>
@@ -540,10 +538,12 @@ export default function Home() {
           />
 
           <Tabs defaultValue="stem" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-12 bg-white border border-gray-200 p-1 rounded-full shadow-sm">
-              <TabsTrigger value="stem" className="rounded-full data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold">STEM</TabsTrigger>
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-1 mb-12 bg-white border border-gray-200 p-1 rounded-full shadow-sm">
+              <TabsTrigger value="stem" className="rounded-full data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold">Maths & Science</TabsTrigger>
+              {/* 
               <TabsTrigger value="languages" className="rounded-full data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold">Languages</TabsTrigger>
               <TabsTrigger value="commerce" className="rounded-full data-[state=active]:bg-purple-600 data-[state=active]:text-white font-bold">Commerce</TabsTrigger>
+              */}
             </TabsList>
 
             <TabsContent value="stem" className="mt-0">
@@ -573,30 +573,30 @@ export default function Home() {
                     topics: ["Genetics", "Ecology", "Human Biology", "Evolution"],
                     students: "680+ students"
                   },
-                  { 
-                    title: "Computer Science", 
-                    icon: "💻",
-                    gradient: "from-indigo-500 to-blue-500",
-                    description: "IT, CAT & Programming fundamentals",
-                    topics: ["Algorithms", "Python", "Web Dev", "Data Structures"],
-                    students: "420+ students"
-                  },
-                  { 
-                    title: "Engineering Graphics", 
-                    icon: "📐",
-                    gradient: "from-orange-500 to-red-500",
-                    description: "Technical drawing & design principles",
-                    topics: ["Projections", "CAD", "Drafting", "3D Modeling"],
-                    students: "280+ students"
-                  },
-                  { 
-                    title: "Geography", 
-                    icon: "🌍",
-                    gradient: "from-teal-500 to-cyan-500",
-                    description: "Physical & Human Geography studies",
-                    topics: ["Climatology", "Geomorphology", "Urban Studies", "GIS"],
-                    students: "510+ students"
-                  }
+                  // { 
+                  //   title: "Computer Science", 
+                  //   icon: "💻",
+                  //   gradient: "from-indigo-500 to-blue-500",
+                  //   description: "IT, CAT & Programming fundamentals",
+                  //   topics: ["Algorithms", "Python", "Web Dev", "Data Structures"],
+                  //   students: "420+ students"
+                  // },
+                  // { 
+                  //   title: "Engineering Graphics", 
+                  //   icon: "📐",
+                  //   gradient: "from-orange-500 to-red-500",
+                  //   description: "Technical drawing & design principles",
+                  //   topics: ["Projections", "CAD", "Drafting", "3D Modeling"],
+                  //   students: "280+ students"
+                  // },
+                  // { 
+                  //   title: "Geography", 
+                  //   icon: "🌍",
+                  //   gradient: "from-teal-500 to-cyan-500",
+                  //   description: "Physical & Human Geography studies",
+                  //   topics: ["Climatology", "Geomorphology", "Urban Studies", "GIS"],
+                  //   students: "510+ students"
+                  // }
                 ].map((subject, idx) => (
                   <motion.div
                     key={idx}
