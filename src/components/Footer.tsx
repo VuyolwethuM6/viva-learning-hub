@@ -12,7 +12,7 @@ export default function Footer() {
       { name: "In-Person Tutoring", href: "#" },
       { name: "Mobile Learning", href: "#" },
       { name: "Mentor Support", href: "#" },
-      { name: "Exam Prep", href: "#" },
+      { name: "Exam Prep", href: "exams" },
       { name: "Holiday Classes", href: "#" }
     ],
     subjects: [
