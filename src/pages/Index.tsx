@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import Footer from '@/components/Footer';
 import { FaYoutube, FaFacebook, FaTiktok } from "react-icons/fa6";
-
+import Maths from '/maths.png'
 
 // --- Theme Components ---
 
@@ -597,27 +597,27 @@ export default function Home() {
                 {[
                   { 
                     title: "Mathematics", 
-                    icon: "🔢",
+                    icon: "/integration.png",
                     gradient: "from-blue-500 to-cyan-500",
-                    description: "Pure & Applied Mathematics from Grade 8-12",
+                    description: "Pure Maths & Maths Literacy from Grade 8-12",
                     topics: ["Algebra", "Calculus", "Trigonometry", "Statistics"],
-                    students: "850+ students"
+                    students: "150+ students"
                   },
                   { 
                     title: "Physical Sciences", 
-                    icon: "⚛️",
+                    icon: "/physics.png",
                     gradient: "from-purple-500 to-pink-500",
                     description: "Physics & Chemistry combined curriculum",
                     topics: ["Mechanics", "Waves", "Organic Chemistry", "Electrostatics"],
-                    students: "720+ students"
+                    students: "120+ students"
                   },
                   { 
                     title: "Life Sciences", 
-                    icon: "🧬",
+                    icon: "/genetic-engineering.png",
                     gradient: "from-green-500 to-emerald-500",
                     description: "Biology & Life Sciences for all grades",
                     topics: ["Genetics", "Ecology", "Human Biology", "Evolution"],
-                    students: "680+ students"
+                    students: "80+ students"
                   },
                   // { 
                   //   title: "Computer Science", 
@@ -657,8 +657,12 @@ export default function Home() {
                       <div className={`h-2 bg-gradient-to-r ${subject.gradient}`} />
                       <CardHeader className="pb-4">
                         <div className="flex items-start justify-between mb-4">
-                          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${subject.gradient} flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
-                            {subject.icon}
+                          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
+                            <img
+                              src={subject.icon}
+                              alt={subject.title}
+                              className="w-12 h-12 object-contain"
+                            />
                           </div>
                           <Badge variant="secondary" className="bg-purple-50 text-purple-700 border border-purple-200">
                             <Users className="w-3 h-3 mr-1" />
