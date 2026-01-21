@@ -48,7 +48,7 @@ const NotFound = () => {
           animate={{ y: [0, -10, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
-          <h1 className="text-8xl md:text-9xl font-black bg-gradient-to-r from-[#6C5CE7] to-[#FF7A45] bg-clip-text text-transparent drop-shadow-lg">
+          <h1 className="text-8xl md:text-9xl font-black bg-gradient-to-r from-[#7949fe] to-[#ff7849] bg-clip-text text-transparent drop-shadow-lg">
             404
           </h1>
         </motion.div>
@@ -60,7 +60,7 @@ const NotFound = () => {
           transition={{ delay: 0.2, duration: 0.8 }}
           className="mb-4"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-[#6C5CE7] mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#7949fe] mb-4">
             Page Not Found
           </h2>
           <p className="text-base md:text-lg text-gray-700 mb-2">
@@ -76,7 +76,7 @@ const NotFound = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.8 }}
-          className="my-8 px-4 py-3 bg-gray-50 backdrop-blur-md rounded-lg border border-[#6C5CE7]/20 inline-block"
+          className="my-8 px-4 py-3 bg-gray-50 backdrop-blur-md rounded-lg border border-[#7949fe]/20 inline-block"
         >
           <p className="text-gray-600 text-sm flex items-center justify-center gap-2">
             <Search className="w-4 h-4" />
@@ -94,7 +94,7 @@ const NotFound = () => {
           <a href="/">
             <Button
               size="lg"
-              className="bg-[#6C5CE7] hover:bg-[#5a4ecf] text-white font-semibold rounded-lg group w-full sm:w-auto"
+              className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white font-semibold rounded-lg group w-full sm:w-auto"
             >
               <Home className="w-4 h-4 mr-2" />
               Return Home
@@ -104,7 +104,7 @@ const NotFound = () => {
           <a href="/">
             <Button
               size="lg"
-              className="border-2 border-[#FF7A45] text-[#FF7A45] hover:bg-[#FF7A45]/10 font-semibold rounded-lg w-full sm:w-auto bg-white"
+              className="border-2 border-[#ff7849] text-[#ff7849] hover:bg-[#ff7849]/10 font-semibold rounded-lg w-full sm:w-auto bg-white"
             >
               Continue Learning
             </Button>
@@ -118,7 +118,7 @@ const NotFound = () => {
           transition={{ delay: 0.8, duration: 0.8 }}
           className="mt-12 text-gray-500 text-sm"
         >
-          Need help? Contact us at <span className="text-[#FF7A45] font-semibold">info@vivatutorials.com</span>
+          Need help? Contact us at <span className="text-[#ff7849] font-semibold">info@vivatutorials.com</span>
         </motion.p>
       </motion.div>
     </div>

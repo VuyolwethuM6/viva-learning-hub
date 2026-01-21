@@ -47,7 +47,7 @@ const SectionHeading = ({ subtitle, title, align = "center", light = false }) =>
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className={`inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-4 ${light ? "bg-white/10 text-white" : "bg-[#6C5CE7]/10 text-[#6C5CE7]"}`}
+      className={`inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-4 ${light ? "bg-white/10 text-white" : "bg-[#7949fe]/10 text-[#7949fe]"}`}
     >
       {subtitle}
     </motion.div>
@@ -65,7 +65,7 @@ const SectionHeading = ({ subtitle, title, align = "center", light = false }) =>
       whileInView={{ opacity: 1, width: 80 }}
       viewport={{ once: true }}
       transition={{ delay: 0.2, duration: 0.8 }}
-      className={`h-1.5 mt-6 rounded-full ${align === "center" ? "mx-auto" : ""} ${light ? "bg-[#FF7A45]" : "bg-gradient-to-r from-[#6C5CE7] to-[#FF7A45]"}`}
+      className={`h-1.5 mt-6 rounded-full ${align === "center" ? "mx-auto" : ""} ${light ? "bg-[#ff7849]" : "bg-gradient-to-r from-[#7949fe] to-[#ff7849]"}`}
     />
   </div>
 );
@@ -78,7 +78,7 @@ const AnimatedCounter = ({ value, label }) => {
       viewport={{ once: true }}
       className="text-center p-6"
     >
-      <div className="text-4xl md:text-5xl font-extrabold text-[#6C5CE7] mb-2 font-mono tracking-tighter">
+      <div className="text-4xl md:text-5xl font-extrabold text-[#7949fe] mb-2 font-mono tracking-tighter">
         {value}
       </div>
       <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">{label}</div>
@@ -121,7 +121,7 @@ const TestimonialCarousel = () => {
   return (
     <div className="relative">
       {/* Abstract background shapes */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#6C5CE7]/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#7949fe]/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
       <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
       
       <AnimatePresence mode="wait">
@@ -133,7 +133,7 @@ const TestimonialCarousel = () => {
           transition={{ duration: 0.3 }}
         >
           <Card className="relative bg-white border-none shadow-2xl p-8 rounded-[2rem]">
-            <div className="text-[#6C5CE7] mb-6">
+            <div className="text-[#7949fe] mb-6">
               {[1,2,3,4,5].map(i => <Star key={i} className="inline-block w-5 h-5 fill-current" />)}
             </div>
             <blockquote className="text-xl text-gray-800 font-medium leading-relaxed mb-6">
@@ -143,7 +143,7 @@ const TestimonialCarousel = () => {
               <img src={`https://i.pravatar.cc/100?img=${testimonials[currentIndex].image}`} alt={testimonials[currentIndex].name} className="w-12 h-12 rounded-full object-cover" />
               <div>
                 <div className="font-bold text-gray-900">{testimonials[currentIndex].name}</div>
-                <div className="text-sm text-[#6C5CE7]">{testimonials[currentIndex].role}</div>
+                <div className="text-sm text-[#7949fe]">{testimonials[currentIndex].role}</div>
               </div>
             </div>
           </Card>
@@ -166,7 +166,7 @@ const TestimonialCarousel = () => {
               key={idx}
               onClick={() => setCurrentIndex(idx)}
               className={`h-2 rounded-full transition-all ${
-                idx === currentIndex ? 'w-8 bg-[#6C5CE7]' : 'w-2 bg-gray-300'
+                idx === currentIndex ? 'w-8 bg-[#7949fe]' : 'w-2 bg-gray-300'
               }`}
             />
           ))}
@@ -197,7 +197,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white font-sans selection:bg-[#6C5CE7]/20 selection:text-[#6C5CE7] overflow-x-hidden">
+    <div className="min-h-screen bg-white font-sans selection:bg-[#7949fe]/20 selection:text-[#7949fe] overflow-x-hidden">
       <TopBar />
       
       {/* Sticky Header */}
@@ -220,17 +220,17 @@ export default function Home() {
               <a 
                 key={item} 
                 href={`#${item.toLowerCase()}`}
-                className="hover:text-[#6C5CE7] transition-colors relative group py-2"
+                className="hover:text-[#7949fe] transition-colors relative group py-2"
               >
                 {item}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#6C5CE7] transition-all duration-300 group-hover:w-full" />
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#7949fe] transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
           </nav>
 
           <div className="hidden lg:flex items-center gap-4">
-            <span className="text-sm font-semibold text-[#6C5CE7] hover:underline cursor-pointer">Login</span>
-            <Button className="bg-[#6C5CE7] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#6C5CE7]/20">
+            <span className="text-sm font-semibold text-[#7949fe] hover:underline cursor-pointer">Login</span>
+            <Button className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
               Book a Tutor
             </Button>
           </div>
@@ -268,10 +268,10 @@ export default function Home() {
               <div className="p-6">
                 <div className="flex justify-between items-center mb-8">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-tr from-[#6C5CE7] to-[#FF7A45] rounded-lg flex items-center justify-center text-white">
+                    <div className="w-8 h-8 bg-gradient-to-tr from-[#7949fe] to-[#ff7849] rounded-lg flex items-center justify-center text-white">
                       <span className="text-lg font-bold font-mono">V</span>
                     </div>
-                    <span className="text-lg font-extrabold text-[#1a0b2e]">Viva<span className="text-[#FF7A45]">.</span></span>
+                    <span className="text-lg font-extrabold text-[#1a0b2e]">Viva<span className="text-[#ff7849]">.</span></span>
                   </div>
                   <button 
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -286,7 +286,7 @@ export default function Home() {
                     <a 
                       key={item} 
                       href={`#${item.toLowerCase()}`}
-                      className="text-lg font-semibold text-gray-800 py-4 px-4 hover:bg-[#6C5CE7]/10 rounded-lg transition-colors"
+                      className="text-lg font-semibold text-gray-800 py-4 px-4 hover:bg-[#7949fe]/10 rounded-lg transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {item}
@@ -295,7 +295,7 @@ export default function Home() {
                 </nav>
 
                 <div className="mt-8 pt-8 border-t border-gray-200 space-y-4">
-                  <Button className="w-full bg-[#6C5CE7] hover:bg-[#5a4ecf] py-6 rounded-full text-lg">
+                  <Button className="w-full bg-[#7949fe] hover:bg-[#5a4ecf] py-6 rounded-full text-lg">
                     Book a Tutor
                   </Button>
                   <Button variant="outline" className="w-full border-2 border-gray-200 py-6 rounded-full text-lg">
@@ -307,7 +307,7 @@ export default function Home() {
                   <p className="text-sm font-semibold text-gray-500 mb-4">Follow Us</p>
                   <div className="flex gap-4">
                     {[FaFacebook, FaTiktok, FaYoutube].map((Icon, i) => (
-                      <div key={i} className="w-10 h-10 rounded-full bg-[#6C5CE7]/10 flex items-center justify-center text-[#6C5CE7] hover:bg-[#6C5CE7] hover:text-white transition-all cursor-pointer">
+                      <div key={i} className="w-10 h-10 rounded-full bg-[#7949fe]/10 flex items-center justify-center text-[#7949fe] hover:bg-[#7949fe] hover:text-white transition-all cursor-pointer">
                         <Icon className="w-5 h-5" />
                       </div>
                     ))}
@@ -339,10 +339,10 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#6C5CE7]/10 border border-[#6C5CE7]/30"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7949fe]/10 border border-[#7949fe]/30"
             >
-              <Sparkles className="w-4 h-4 text-[#6C5CE7]" />
-              <span className="text-sm font-medium text-[#6C5CE7]">STEM Education Excellence</span>
+              <Sparkles className="w-4 h-4 text-[#7949fe]" />
+              <span className="text-sm font-medium text-[#7949fe]">STEM Education Excellence</span>
             </motion.div>
 
               {/* Headline */}
@@ -352,7 +352,7 @@ export default function Home() {
                   <br />
 
                   <span className="relative inline-block">
-                    <span className="bg-gradient-to-r from-[#6C5CE7] via-[#FF7A45] to-[#6C5CE7] bg-clip-text text-transparent">
+                    <span className="bg-gradient-to-r from-[#7949fe] via-[#ff7849] to-[#7949fe] bg-clip-text text-transparent">
                       Academic
                     </span>
 
@@ -373,8 +373,8 @@ export default function Home() {
                       />
                       <defs>
                         <linearGradient id="gradient" x1="0" y1="0" x2="200" y2="0">
-                          <stop stopColor="#6C5CE7" />
-                          <stop offset="1" stopColor="#FF7A45" />
+                          <stop stopColor="#7949fe" />
+                          <stop offset="1" stopColor="#ff7849" />
                         </linearGradient>
                       </defs>
                     </motion.svg>
@@ -392,10 +392,10 @@ export default function Home() {
 
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="h-14 px-8 text-base bg-[#6C5CE7] hover:bg-[#5a4ecf] text-white rounded-full shadow-xl shadow-[#6C5CE7]/30 hover:shadow-2xl hover:scale-105 transition-all duration-300">
+                <Button size="lg" className="h-14 px-8 text-base bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full shadow-xl shadow-[#7949fe]/30 hover:shadow-2xl hover:scale-105 transition-all duration-300">
                   Get Started Now
                 </Button>
-                <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-[#6C5CE7] text-[#6C5CE7] hover:bg-[#6C5CE7]/10 rounded-full font-bold">
+                <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-[#7949fe] text-[#7949fe] hover:bg-[#7949fe]/10 rounded-full font-bold">
                   More Info
                 </Button>
               </div>
@@ -407,7 +407,7 @@ export default function Home() {
                        <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Student" className="w-full h-full object-cover" />
                     </div>
                   ))}
-                  <div className="w-10 h-10 rounded-full border-2 border-white bg-[#6C5CE7]/20 flex items-center justify-center text-[#6C5CE7] text-xs font-bold">
+                  <div className="w-10 h-10 rounded-full border-2 border-white bg-[#7949fe]/20 flex items-center justify-center text-[#7949fe] text-xs font-bold">
                     +2k
                   </div>
                 </div>
@@ -422,7 +422,7 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative hidden md:block"
             >
-              <div className="absolute inset-0 bg-[#6C5CE7] rounded-[3rem] rotate-3 opacity-10 scale-95 blur-2xl transform translate-y-8" />
+              <div className="absolute inset-0 bg-[#7949fe] rounded-[3rem] rotate-3 opacity-10 scale-95 blur-2xl transform translate-y-8" />
               
               <div className="relative bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden">
                 {/* Dashboard Header */}
@@ -430,7 +430,7 @@ export default function Home() {
                   <div className="flex justify-between items-center mb-6">
                     <div>
                       <h3 className="font-bold text-lg">Student Portal</h3>
-                      <p className="text-[#6C5CE7]/40 text-sm">Welcome back, Sarah!</p>
+                      <p className="text-[#7949fe]/40 text-sm">Welcome back, Sarah!</p>
                     </div>
                     <div className="w-10 h-10 bg-white/20 rounded-full backdrop-blur-sm flex items-center justify-center">
                       <Users className="w-5 h-5 text-white" />
@@ -441,11 +441,11 @@ export default function Home() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
                       <div className="text-2xl font-bold mb-1">92%</div>
-                      <div className="text-xs text-[#6C5CE7]/60">Math Average</div>
+                      <div className="text-xs text-[#7949fe]/60">Math Average</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
                       <div className="text-2xl font-bold mb-1">A+</div>
-                      <div className="text-xs text-[#6C5CE7]/60">Recent Grade</div>
+                      <div className="text-xs text-[#7949fe]/60">Recent Grade</div>
                     </div>
                   </div>
                 </div>
@@ -454,13 +454,13 @@ export default function Home() {
                 <div className="p-6 bg-gray-50/50">
                   <div className="mb-2 flex justify-between items-center">
                     <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Upcoming Sessions</h4>
-                    <span className="text-xs text-[#FF7A45] font-semibold cursor-pointer">View All</span>
+                    <span className="text-xs text-[#ff7849] font-semibold cursor-pointer">View All</span>
                   </div>
                   
                   <div className="space-y-3">
                     {[
                       { subject: "Advanced Physics", time: "Today, 14:00", icon: Sparkles, color: "text-blue-500", bg: "bg-blue-100" },
-                      { subject: "Calculus II", time: "Tomorrow, 10:00", icon: Laptop, color: "text-[#6C5CE7]", bg: "bg-[#6C5CE7]/10" },
+                      { subject: "Calculus II", time: "Tomorrow, 10:00", icon: Laptop, color: "text-[#7949fe]", bg: "bg-[#7949fe]/10" },
                       { subject: "Chemistry Lab", time: "Wed, 15:30", icon:  BookOpen, color: "text-pink-500", bg: "bg-pink-100" },
                     ].map((item, idx) => (
                       <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
@@ -480,9 +480,9 @@ export default function Home() {
                     ))}
                   </div>
 
-                  <div className="mt-6 bg-[#6C5CE7]/10 rounded-xl p-4 border border-[#6C5CE7]/20 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-[#6C5CE7]">
-                      <Star className="w-5 h-5 fill-[#6C5CE7]" />
+                  <div className="mt-6 bg-[#7949fe]/10 rounded-xl p-4 border border-[#7949fe]/20 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-[#7949fe]">
+                      <Star className="w-5 h-5 fill-[#7949fe]" />
                     </div>
                     <div>
                       <div className="font-bold text-gray-900 text-sm">Course Completed!</div>
@@ -545,8 +545,8 @@ export default function Home() {
                 icon: Laptop, 
                 title: "Hybrid/Combined Learning", 
                 desc: "Flexible combination of in-person and online tutoring designed to fit your schedule and maximize results.",
-                color: "text-[#6C5CE7]",
-                bg: "bg-[#6C5CE7]/10"
+                color: "text-[#7949fe]",
+                bg: "bg-[#7949fe]/10"
               },
               { 
                 icon: BookOpen, 
@@ -566,7 +566,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">{service.title}</h3>
                 <p className="text-gray-600 leading-relaxed mb-8">{service.desc}</p>
-                <a href="#" className="inline-flex items-center font-bold text-[#1a0b2e] hover:text-[#6C5CE7] transition-colors uppercase text-sm tracking-wide">
+                <a href="#" className="inline-flex items-center font-bold text-[#1a0b2e] hover:text-[#7949fe] transition-colors uppercase text-sm tracking-wide">
                   Learn More <ArrowRight className="w-4 h-4 ml-2" />
                 </a>
               </motion.div>
@@ -585,10 +585,10 @@ export default function Home() {
 
           <Tabs defaultValue="stem" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-1 mb-12 bg-white border border-gray-200 p-1 rounded-full shadow-sm">
-              <TabsTrigger value="stem" className="rounded-full data-[state=active]:bg-[#6C5CE7] data-[state=active]:text-white font-bold">Maths & Science</TabsTrigger>
+              <TabsTrigger value="stem" className="rounded-full data-[state=active]:bg-[#7949fe] data-[state=active]:text-white font-bold">Maths & Science</TabsTrigger>
               {/* 
-              <TabsTrigger value="languages" className="rounded-full data-[state=active]:bg-[#6C5CE7] data-[state=active]:text-white font-bold">Languages</TabsTrigger>
-              <TabsTrigger value="commerce" className="rounded-full data-[state=active]:bg-[#6C5CE7] data-[state=active]:text-white font-bold">Commerce</TabsTrigger>
+              <TabsTrigger value="languages" className="rounded-full data-[state=active]:bg-[#7949fe] data-[state=active]:text-white font-bold">Languages</TabsTrigger>
+              <TabsTrigger value="commerce" className="rounded-full data-[state=active]:bg-[#7949fe] data-[state=active]:text-white font-bold">Commerce</TabsTrigger>
               */}
             </TabsList>
 
@@ -606,7 +606,7 @@ export default function Home() {
                   { 
                     title: "Physical Sciences", 
                     icon: "/physics.png",
-                    gradient: "from-[#6C5CE7] to-[#FF7A45]",
+                    gradient: "from-[#7949fe] to-[#ff7849]",
                     description: "Physics & Chemistry combined curriculum",
                     topics: ["Mechanics", "Waves", "Organic Chemistry", "Electrostatics"],
                     students: "120+ students"
@@ -653,7 +653,7 @@ export default function Home() {
                     whileHover={{ y: -8 }}
                     className="group"
                   >
-                    <Card className="h-full border-2 border-gray-100 hover:border-[#6C5CE7]/30 transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
+                    <Card className="h-full border-2 border-gray-100 hover:border-[#7949fe]/30 transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
                       <div className={`h-2 bg-gradient-to-r ${subject.gradient}`} />
                       <CardHeader className="pb-4">
                         <div className="flex items-start justify-between mb-4">
@@ -664,12 +664,12 @@ export default function Home() {
                               className="w-12 h-12 object-contain"
                             />
                           </div>
-                          <Badge variant="secondary" className="bg-[#6C5CE7]/10 text-[#6C5CE7] border border-[#6C5CE7]/20">
+                          <Badge variant="secondary" className="bg-[#7949fe]/10 text-[#7949fe] border border-[#7949fe]/20">
                             <Users className="w-3 h-3 mr-1" />
                             {subject.students}
                           </Badge>
                         </div>
-                        <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-[#6C5CE7] transition-colors">
+                        <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-[#7949fe] transition-colors">
                           {subject.title}
                         </CardTitle>
                         <CardDescription className="text-gray-600 text-base">
@@ -679,7 +679,7 @@ export default function Home() {
                       <CardContent className="pt-0">
                         <div className="space-y-3">
                           <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                            <BookOpen className="w-4 h-4 text-[#6C5CE7]" />
+                            <BookOpen className="w-4 h-4 text-[#7949fe]" />
                             Key Topics:
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -692,7 +692,7 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
-                        <Button variant="ghost" className="w-full text-[#FF7A45] hover:text-[#FF7A45] hover:bg-[#FF7A45]/10 font-bold group">
+                        <Button variant="ghost" className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group">
                           View Syllabus 
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
@@ -740,19 +740,19 @@ export default function Home() {
                     whileHover={{ y: -8 }}
                     className="group"
                   >
-                    <Card className="h-full border-2 border-gray-100 hover:border-[#6C5CE7]/30 transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
+                    <Card className="h-full border-2 border-gray-100 hover:border-[#7949fe]/30 transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
                       <div className={`h-2 bg-gradient-to-r ${subject.gradient}`} />
                       <CardHeader className="pb-4">
                         <div className="flex items-start justify-between mb-4">
                           <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${subject.gradient} flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
                             {subject.icon}
                           </div>
-                          <Badge variant="secondary" className="bg-[#6C5CE7]/10 text-[#6C5CE7] border border-[#6C5CE7]/20">
+                          <Badge variant="secondary" className="bg-[#7949fe]/10 text-[#7949fe] border border-[#7949fe]/20">
                             <Users className="w-3 h-3 mr-1" />
                             {subject.students}
                           </Badge>
                         </div>
-                        <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-[#6C5CE7] transition-colors">
+                        <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-[#7949fe] transition-colors">
                           {subject.title}
                         </CardTitle>
                         <CardDescription className="text-gray-600 text-base">
@@ -762,7 +762,7 @@ export default function Home() {
                       <CardContent className="pt-0">
                         <div className="space-y-3">
                           <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                            <BookOpen className="w-4 h-4 text-[#6C5CE7]" />
+                            <BookOpen className="w-4 h-4 text-[#7949fe]" />
                             Key Topics:
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -775,7 +775,7 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
-                        <Button variant="ghost" className="w-full text-[#FF7A45] hover:text-[#FF7A45] hover:bg-[#FF7A45]/10 font-bold group">
+                        <Button variant="ghost" className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group">
                           View Syllabus 
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
@@ -808,7 +808,7 @@ export default function Home() {
                   { 
                     title: "Economics", 
                     icon: "📈",
-                    gradient: "from-[#6C5CE7] to-[#FF7A45]",
+                    gradient: "from-[#7949fe] to-[#ff7849]",
                     description: "Micro & Macroeconomics studies",
                     topics: ["Supply & Demand", "Markets", "GDP", "Fiscal Policy"],
                     students: "410+ students"
@@ -823,19 +823,19 @@ export default function Home() {
                     whileHover={{ y: -8 }}
                     className="group"
                   >
-                    <Card className="h-full border-2 border-gray-100 hover:border-[#6C5CE7]/30 transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
+                    <Card className="h-full border-2 border-gray-100 hover:border-[#7949fe]/30 transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
                       <div className={`h-2 bg-gradient-to-r ${subject.gradient}`} />
                       <CardHeader className="pb-4">
                         <div className="flex items-start justify-between mb-4">
                           <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${subject.gradient} flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
                             {subject.icon}
                           </div>
-                          <Badge variant="secondary" className="bg-[#6C5CE7]/10 text-[#6C5CE7] border border-[#6C5CE7]/20">
+                          <Badge variant="secondary" className="bg-[#7949fe]/10 text-[#7949fe] border border-[#7949fe]/20">
                             <Users className="w-3 h-3 mr-1" />
                             {subject.students}
                           </Badge>
                         </div>
-                        <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-[#6C5CE7] transition-colors">
+                        <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-[#7949fe] transition-colors">
                           {subject.title}
                         </CardTitle>
                         <CardDescription className="text-gray-600 text-base">
@@ -845,7 +845,7 @@ export default function Home() {
                       <CardContent className="pt-0">
                         <div className="space-y-3">
                           <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                            <BookOpen className="w-4 h-4 text-[#6C5CE7]" />
+                            <BookOpen className="w-4 h-4 text-[#7949fe]" />
                             Key Topics:
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -858,7 +858,7 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
-                        <Button variant="ghost" className="w-full text-[#FF7A45] hover:text-[#FF7A45] hover:bg-[#FF7A45]/10 font-bold group">
+                        <Button variant="ghost" className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group">
                           View Syllabus 
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
@@ -875,13 +875,13 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-12 md:mt-16 text-center bg-white rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 shadow-xl border-2 border-[#6C5CE7]/20 mx-2 sm:mx-0"
+            className="mt-12 md:mt-16 text-center bg-white rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 shadow-xl border-2 border-[#7949fe]/20 mx-2 sm:mx-0"
           >
             <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Don't See Your Subject?</h3>
             <p className="text-gray-600 text-sm sm:text-base md:text-lg mb-6 md:mb-8 max-w-2xl mx-auto px-2">
               We offer personalized tutoring for many other subjects. Contact us to discuss your specific learning needs.
             </p>
-            <Button size="lg" className="w-full sm:w-auto bg-[#6C5CE7] hover:bg-[#5a4ecf] text-white px-6 sm:px-10 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold">
+            <Button size="lg" className="w-full sm:w-auto bg-[#7949fe] hover:bg-[#5a4ecf] text-white px-6 sm:px-10 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold">
               <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Request a Subject
             </Button>
@@ -952,7 +952,7 @@ export default function Home() {
                 price: "R399",
                 isFree: false,
                 icon: "⚗️",
-                gradient: "from-[#6C5CE7] to-[#FF7A45]",
+                gradient: "from-[#7949fe] to-[#ff7849]",
                 type: "PDF Notes",
                 pages: "400+ pages",
                 popular: true,
@@ -1012,11 +1012,11 @@ export default function Home() {
                 className="relative group"
               >
                 {material.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 bg-gradient-to-r from-[#6C5CE7] to-[#FF7A45] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 bg-gradient-to-r from-[#7949fe] to-[#ff7849] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
                     Best Seller
                   </div>
                 )}
-                <Card className={`h-full border-2 ${material.popular ? 'border-[#6C5CE7] shadow-2xl' : material.isFree ? 'border-green-200' : 'border-gray-100'} hover:border-[#6C5CE7]/50 transition-all duration-300 hover:shadow-xl bg-white overflow-hidden group-hover:-translate-y-2`}>
+                <Card className={`h-full border-2 ${material.popular ? 'border-[#7949fe] shadow-2xl' : material.isFree ? 'border-green-200' : 'border-gray-100'} hover:border-[#7949fe]/50 transition-all duration-300 hover:shadow-xl bg-white overflow-hidden group-hover:-translate-y-2`}>
                   <div className={`h-2 bg-gradient-to-r ${material.gradient}`} />
                   <CardHeader>
                     <div className="flex items-start justify-between mb-4">
@@ -1029,7 +1029,7 @@ export default function Home() {
                             Free
                           </Badge>
                         ) : (
-                          <Badge className="bg-[#6C5CE7]/10 text-[#6C5CE7] border border-[#6C5CE7]/30 text-sm font-bold px-3 py-1">
+                          <Badge className="bg-[#7949fe]/10 text-[#7949fe] border border-[#7949fe]/30 text-sm font-bold px-3 py-1">
                             Premium
                           </Badge>
                         )}
@@ -1066,7 +1066,7 @@ export default function Home() {
                     <Button className={`w-full py-6 rounded-xl font-bold group-hover:shadow-lg transition-all ${
                       material.isFree 
                         ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white' 
-                        : 'bg-gradient-to-r from-[#6C5CE7] to-[#FF7A45] hover:from-[#5a4ecf] hover:to-[#ff6b35] text-white'
+                        : 'bg-gradient-to-r from-[#7949fe] to-[#ff7849] hover:from-[#5a4ecf] hover:to-[#ff6b35] text-white'
                     }`}>
                       {material.isFree ? 'Download Free' : 'Purchase Now'}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -1081,16 +1081,16 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-12 md:mt-16 text-center bg-white rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 shadow-xl border-2 border-[#6C5CE7]/20 mx-2 sm:mx-0"
+            className="mt-12 md:mt-16 text-center bg-white rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 shadow-xl border-2 border-[#7949fe]/20 mx-2 sm:mx-0"
           >
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-3 md:mb-4">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#6C5CE7]" />
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#7949fe]" />
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center">Need Custom Study Material?</h3>
             </div>
             <p className="text-gray-600 text-sm sm:text-base mb-5 md:mb-6 px-2">
               We can create personalized study guides tailored to your specific needs and learning style.
             </p>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-[#6C5CE7] text-[#6C5CE7] hover:bg-[#6C5CE7]/10 px-6 sm:px-8 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold">
+            <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-[#7949fe] text-[#7949fe] hover:bg-[#7949fe]/10 px-6 sm:px-8 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold">
               Request Custom Material
             </Button>
           </motion.div>
@@ -1112,15 +1112,15 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8 items-start">
             {[
               { name: "Basic", price: "R500", color: "border-gray-200", features: ["4 sessions per month", "Group classes (max 6)", "Digital study materials", "Email support", "Progress tracking"] },
-              { name: "Standard", price: "R850", color: "border-[#6C5CE7]", popular: true, features: ["8 sessions per month", "Small group (max 3)", "Printed & digital materials", "WhatsApp support", "Monthly assessments", "Parent-teacher meetings"] },
+              { name: "Standard", price: "R850", color: "border-[#7949fe]", popular: true, features: ["8 sessions per month", "Small group (max 3)", "Printed & digital materials", "WhatsApp support", "Monthly assessments", "Parent-teacher meetings"] },
               { name: "Premium", price: "R1200", color: "border-gray-200", features: ["12 sessions per month", "One-on-one tutoring", "Complete resource library", "24/7 tutor access", "Weekly progress reports", "Exam preparation workshops", "University application guidance"] }
             ].map((plan, idx) => (
               <div 
                 key={idx} 
-                className={`relative bg-white rounded-3xl p-8 border-2 ${plan.popular ? 'border-[#6C5CE7] shadow-2xl scale-105 z-10' : 'border-gray-100 shadow-lg'} transition-all`}
+                className={`relative bg-white rounded-3xl p-8 border-2 ${plan.popular ? 'border-[#7949fe] shadow-2xl scale-105 z-10' : 'border-gray-100 shadow-lg'} transition-all`}
               >
                 {plan.popular && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#6C5CE7] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#7949fe] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
                     Most Popular
                   </div>
                 )}
@@ -1141,7 +1141,7 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <Button className={`w-full py-6 rounded-xl font-bold ${plan.popular ? 'bg-[#6C5CE7] hover:bg-[#5a4ecf]' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+                <Button className={`w-full py-6 rounded-xl font-bold ${plan.popular ? 'bg-[#7949fe] hover:bg-[#5a4ecf]' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
                   Choose {plan.name}
                 </Button>
               </div>
@@ -1192,7 +1192,7 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-1">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-[#6C5CE7] rounded-lg flex items-center justify-center text-white">
+                <div className="w-8 h-8 bg-[#7949fe] rounded-lg flex items-center justify-center text-white">
                   <span className="font-bold font-mono">V</span>
                 </div>
                 <span className="text-2xl font-extrabold text-[#1a0b2e]">Viva.</span>
@@ -1202,7 +1202,7 @@ export default function Home() {
               </p>
               <div className="flex gap-4">
                 {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-[#6C5CE7]/10 flex items-center justify-center text-[#6C5CE7] hover:bg-[#6C5CE7] hover:text-white transition-all cursor-pointer">
+                  <div key={i} className="w-8 h-8 rounded-full bg-[#7949fe]/10 flex items-center justify-center text-[#7949fe] hover:bg-[#7949fe] hover:text-white transition-all cursor-pointer">
                     <Icon className="w-4 h-4" />
                   </div>
                 ))}
@@ -1213,7 +1213,7 @@ export default function Home() {
               <h4 className="font-bold text-gray-900 mb-6">Quick Links</h4>
               <ul className="space-y-3 text-gray-600">
                 {['Home', 'About Us', 'Our Tutors', 'Success Stories', 'Pricing', 'Contact'].map(item => (
-                  <li key={item}><a href="#" className="hover:text-[#6C5CE7] transition-colors">{item}</a></li>
+                  <li key={item}><a href="#" className="hover:text-[#7949fe] transition-colors">{item}</a></li>
                 ))}
               </ul>
             </div>
@@ -1222,7 +1222,7 @@ export default function Home() {
               <h4 className="font-bold text-gray-900 mb-6">Subjects</h4>
               <ul className="space-y-3 text-gray-600">
                 {['Mathematics', 'Physical Science', 'Life Sciences', 'Accounting', 'Information Tech', 'Geography'].map(item => (
-                  <li key={item}><a href="#" className="hover:text-[#6C5CE7] transition-colors">{item}</a></li>
+                  <li key={item}><a href="#" className="hover:text-[#7949fe] transition-colors">{item}</a></li>
                 ))}
               </ul>
             </div>
@@ -1232,7 +1232,7 @@ export default function Home() {
               <p className="text-gray-500 mb-4 text-sm">Subscribe to get study tips and updates.</p>
               <div className="flex gap-2">
                 <Input placeholder="Email Address" className="rounded-full bg-gray-50 border-gray-200" />
-                <Button className="rounded-full bg-[#6C5CE7] hover:bg-[#5a4ecf] w-12 h-10 p-0 flex items-center justify-center">
+                <Button className="rounded-full bg-[#7949fe] hover:bg-[#5a4ecf] w-12 h-10 p-0 flex items-center justify-center">
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -1242,8 +1242,8 @@ export default function Home() {
           <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
             <p>&copy; 2026 Viva Tutorial Services. All rights reserved.</p>
             <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="hover:text-[#6C5CE7]">Privacy Policy</a>
-              <a href="#" className="hover:text-[#6C5CE7]">Terms of Service</a>
+              <a href="#" className="hover:text-[#7949fe]">Privacy Policy</a>
+              <a href="#" className="hover:text-[#7949fe]">Terms of Service</a>
             </div>
           </div>
         </div>
