@@ -19,22 +19,22 @@ const TopBar = () => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-[#1a0b2e] text-white py-2.5 text-xs font-medium border-b border-white/10">
     <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
       <div className="flex items-center gap-3 lg:gap-6 overflow-x-auto">
-        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer whitespace-nowrap">
+        <span className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap">
           <Phone className="w-3.5 h-3.5 animate-[wiggle_1s_ease-in-out_infinite]" /> <span className="hidden sm:inline">+27 (0) 123 456 789</span>
         </span>
-        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer whitespace-nowrap hidden sm:flex">
+        <span className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap hidden sm:flex">
           <Mail className="w-3.5 h-3.5" /> info@vivatutorials.com
         </span>
-        <span className="flex items-center gap-2 hover:text-purple-300 transition-colors cursor-pointer whitespace-nowrap hidden md:flex">
+        <span className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap hidden md:flex">
           <MapPin className="w-3.5 h-3.5" /> Cape Town, South Africa
         </span>
       </div>
       <div className="flex items-center gap-2 lg:gap-4">
         <span className="text-white/60 hidden lg:inline">Follow Us:</span>
         <div className="flex items-center gap-3">
-          <FaFacebook className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
-          <FaYoutube className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors" />
-          <FaTiktok className="w-3.5 h-3.5 hover:text-purple-400 cursor-pointer transition-colors hidden sm:block" />
+          <FaFacebook className="w-3.5 h-3.5 hover:text-[#ff7849] cursor-pointer transition-colors" />
+          <FaYoutube className="w-3.5 h-3.5 hover:text-[#ff7849] cursor-pointer transition-colors" />
+          <FaTiktok className="w-3.5 h-3.5 hover:text-[#ff7849] cursor-pointer transition-colors hidden sm:block" />
         </div>
       </div>
     </div>
@@ -207,7 +207,7 @@ export default function Home() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-            <a href="#" className="flex items-center gap-2">
+            <a href="/" className="flex items-center gap-2">
             <img 
               src="/viva-tutorials-logo.png" 
               alt="Viva Tutorials Logo" 
@@ -216,13 +216,19 @@ export default function Home() {
             </a>
 
           <nav className="hidden lg:flex items-center gap-8 font-medium text-sm text-gray-600">
-            {['Home', 'About', 'Services', 'Pricing', 'Contact'].map((item) => (
+            {[
+              { label: 'Home', path: '/' },
+              { label: 'About', path: '/about' },
+              { label: 'Services', path: '/services' },
+              { label: 'Pricing', path: '/pricing' },
+              { label: 'Contact', path: '/contact' }
+            ].map((item) => (
               <a 
-                key={item} 
-                href={`#${item.toLowerCase()}`}
+                key={item.label} 
+                href={item.path}
                 className="hover:text-[#7949fe] transition-colors relative group py-2"
               >
-                {item}
+                {item.label}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#7949fe] transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
@@ -230,9 +236,11 @@ export default function Home() {
 
           <div className="hidden lg:flex items-center gap-4">
             <span className="text-sm font-semibold text-[#7949fe] hover:underline cursor-pointer">Login</span>
-            <Button className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
-              Book a Tutor
-            </Button>
+            <a href="/contact">
+              <Button className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
+                Book a Tutor
+              </Button>
+            </a>
           </div>
 
           <button 
@@ -282,22 +290,30 @@ export default function Home() {
                 </div>
 
                 <nav className="flex flex-col gap-2">
-                  {['Home', 'About', 'Services', 'Pricing', 'Contact'].map((item) => (
+                  {[
+                    { label: 'Home', path: '/' },
+                    { label: 'About', path: '/about' },
+                    { label: 'Services', path: '/services' },
+                    { label: 'Pricing', path: '/pricing' },
+                    { label: 'Contact', path: '/contact' }
+                  ].map((item) => (
                     <a 
-                      key={item} 
-                      href={`#${item.toLowerCase()}`}
+                      key={item.label} 
+                      href={item.path}
                       className="text-lg font-semibold text-gray-800 py-4 px-4 hover:bg-[#7949fe]/10 rounded-lg transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      {item}
+                      {item.label}
                     </a>
                   ))}
                 </nav>
 
                 <div className="mt-8 pt-8 border-t border-gray-200 space-y-4">
-                  <Button className="w-full bg-[#7949fe] hover:bg-[#5a4ecf] py-6 rounded-full text-lg">
-                    Book a Tutor
-                  </Button>
+                  <a href="/contact">
+                    <Button className="w-full bg-[#7949fe] hover:bg-[#5a4ecf] py-6 rounded-full text-lg">
+                      Book a Tutor
+                    </Button>
+                  </a>
                   <Button variant="outline" className="w-full border-2 border-gray-200 py-6 rounded-full text-lg">
                     Login
                   </Button>
@@ -566,7 +582,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">{service.title}</h3>
                 <p className="text-gray-600 leading-relaxed mb-8">{service.desc}</p>
-                <a href="#" className="inline-flex items-center font-bold text-[#1a0b2e] hover:text-[#7949fe] transition-colors uppercase text-sm tracking-wide">
+                <a href="/services" className="inline-flex items-center font-bold text-[#1a0b2e] hover:text-[#7949fe] transition-colors uppercase text-sm tracking-wide">
                   Learn More <ArrowRight className="w-4 h-4 ml-2" />
                 </a>
               </motion.div>
@@ -1104,8 +1120,8 @@ export default function Home() {
           
           <div className="flex justify-center mb-12">
              <div className="bg-gray-100 p-1 rounded-full inline-flex">
-               <Button variant="ghost" className="rounded-full bg-white shadow-sm text-purple-900 font-bold px-6">Monthly</Button>
-               <Button variant="ghost" className="rounded-full text-gray-500 font-medium px-6 hover:text-purple-900">Quarterly (Save 15%)</Button>
+               <Button variant="ghost" className="rounded-full bg-white shadow-sm text-[#7949fe] font-bold px-6">Monthly</Button>
+               <Button variant="ghost" className="rounded-full text-gray-500 font-medium px-6 hover:text-[#7949fe]">Quarterly (Save 15%)</Button>
              </div>
           </div>
 
@@ -1173,11 +1189,11 @@ export default function Home() {
           <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
           <div className="relative z-10">
             <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">Ready to Transform Your Learning?</h2>
-            <p className="text-purple-200 text-lg md:text-xl max-w-2xl mx-auto mb-10">
+            <p className="text-white/60 text-lg md:text-xl max-w-2xl mx-auto mb-10">
               Take the first step towards academic excellence. Join hundreds of students achieving their goals with Viva Tutorials.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button className="bg-white text-purple-900 hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">Enroll Now</Button>
+              <Button className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">Enroll Now</Button>
               <Button variant="outline" className="border-white/20  hover:bg-white/10 py-6 px-10 rounded-full text-lg font-bold">Contact Us</Button>
             </div>
           </div>
@@ -1212,8 +1228,15 @@ export default function Home() {
             <div>
               <h4 className="font-bold text-gray-900 mb-6">Quick Links</h4>
               <ul className="space-y-3 text-gray-600">
-                {['Home', 'About Us', 'Our Tutors', 'Success Stories', 'Pricing', 'Contact'].map(item => (
-                  <li key={item}><a href="#" className="hover:text-[#7949fe] transition-colors">{item}</a></li>
+                {[
+                  { label: 'Home', path: '/' },
+                  { label: 'About Us', path: '/about' },
+                  { label: 'Our Tutors', path: '/tutors' },
+                  { label: 'Success Stories', path: '/success-stories' },
+                  { label: 'Pricing', path: '/pricing' },
+                  { label: 'Contact', path: '/contact' }
+                ].map(item => (
+                  <li key={item.label}><a href={item.path} className="hover:text-[#7949fe] transition-colors">{item.label}</a></li>
                 ))}
               </ul>
             </div>
@@ -1221,8 +1244,15 @@ export default function Home() {
             <div>
               <h4 className="font-bold text-gray-900 mb-6">Subjects</h4>
               <ul className="space-y-3 text-gray-600">
-                {['Mathematics', 'Physical Science', 'Life Sciences', 'Accounting', 'Information Tech', 'Geography'].map(item => (
-                  <li key={item}><a href="#" className="hover:text-[#7949fe] transition-colors">{item}</a></li>
+                {[
+                  { label: 'Mathematics', path: '/mathematics' },
+                  { label: 'Physical Science', path: '/physical-science' },
+                  { label: 'Life Sciences', path: '/life-sciences' },
+                  { label: 'Accounting', path: '/accounting' },
+                  { label: 'Information Tech', path: '/information-technology' },
+                  { label: 'Geography', path: '/geography' }
+                ].map(item => (
+                  <li key={item.label}><a href={item.path} className="hover:text-[#7949fe] transition-colors">{item.label}</a></li>
                 ))}
               </ul>
             </div>
@@ -1242,8 +1272,8 @@ export default function Home() {
           <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
             <p>&copy; 2026 Viva Tutorial Services. All rights reserved.</p>
             <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="hover:text-[#7949fe]">Privacy Policy</a>
-              <a href="#" className="hover:text-[#7949fe]">Terms of Service</a>
+              <a href="/privacy-policy" className="hover:text-[#7949fe]">Privacy Policy</a>
+              <a href="/terms-of-service" className="hover:text-[#7949fe]">Terms of Service</a>
             </div>
           </div>
         </div>
