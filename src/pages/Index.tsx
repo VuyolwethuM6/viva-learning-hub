@@ -912,9 +912,14 @@ export default function Home() {
             subtitle="Study Resources" 
             title="Study Materials & Resources" 
           />
-          <p className="text-center text-gray-600 text-lg mb-12 max-w-2xl mx-auto">
+          <p className="text-center text-gray-600 text-lg mb-4 max-w-2xl mx-auto">
             Access our collection of study guides, past papers, video lessons, and revision notes. Some resources are completely free!
           </p>
+          <div className="text-center mb-12">
+            <a href="/study-materials" className="inline-flex items-center gap-2 text-[#7949fe] font-semibold hover:text-[#ff7849] transition-colors">
+              Browse all materials for Grades 8-12 <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
@@ -984,39 +989,6 @@ export default function Home() {
                 type: "PDF Notes",
                 pages: "180+ pages",
                 includes: ["Detailed diagrams", "Summary notes", "Past papers", "Mnemonics & tips"]
-              },
-              {
-                title: "Accounting Mastery Pack",
-                description: "Step-by-step guides to mastering Grade 11-12 Accounting concepts",
-                price: "R279",
-                isFree: false,
-                icon: "💰",
-                gradient: "from-emerald-500 to-teal-500",
-                type: "PDF Notes",
-                pages: "200+ pages",
-                includes: ["Financial statements", "Practice exercises", "Case studies", "Calculator tips"]
-              },
-              {
-                title: "Complete Exam Prep Kit",
-                description: "All subjects combined - everything you need for final exams",
-                price: "R899",
-                isFree: false,
-                icon: "🎓",
-                gradient: "from-orange-500 to-red-500",
-                type: "Practice Tests",
-                pages: "1000+ pages",
-                includes: ["All major subjects", "Exam strategies", "Time management tips", "Bonus resources"]
-              },
-              {
-                title: "English Literature Pack",
-                description: "Comprehensive guides for all prescribed books and poetry",
-                price: "R229",
-                isFree: false,
-                icon: "📚",
-                gradient: "from-rose-500 to-pink-500",
-                type: "PDF Notes",
-                pages: "150+ pages",
-                includes: ["Character analysis", "Themes & symbols", "Essay guides", "Sample answers"]
               }
             ].map((material, idx) => (
               <motion.div
@@ -1097,18 +1069,18 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-12 md:mt-16 text-center bg-white rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 shadow-xl border-2 border-[#7949fe]/20 mx-2 sm:mx-0"
+            className="mt-12 md:mt-16 text-center bg-gradient-to-r from-[#7949fe] to-[#ff7849] rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 shadow-xl mx-2 sm:mx-0"
           >
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-3 md:mb-4">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#7949fe]" />
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center">Need Custom Study Material?</h3>
-            </div>
-            <p className="text-gray-600 text-sm sm:text-base mb-5 md:mb-6 px-2">
-              We can create personalized study guides tailored to your specific needs and learning style.
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 md:mb-4">Explore Complete Study Library</h3>
+            <p className="text-white/90 text-sm sm:text-base mb-5 md:mb-6 px-2">
+              Access materials for all grades (8-12), all subjects, and download free resources or purchase premium study packs.
             </p>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-[#7949fe] text-[#7949fe] hover:bg-[#7949fe]/10 px-6 sm:px-8 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold">
-              Request Custom Material
-            </Button>
+            <a href="/study-materials">
+              <Button className="w-full sm:w-auto bg-white text-[#7949fe] hover:bg-gray-100 px-6 sm:px-10 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold">
+                View All Materials
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+              </Button>
+            </a>
           </motion.div>
         </div>
       </section>
