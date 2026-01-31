@@ -25,7 +25,7 @@ const StickyHeader = () => {
     <>
       {/* Sticky Navigation */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
+        className={`fixed top-[2.5rem] left-0 right-0 z-40 transition-all duration-300 border-b ${
           isScrolled
             ? "bg-white/95 backdrop-blur-md shadow-lg py-3 border-gray-100"
             : "bg-white py-5 border-transparent"
@@ -86,7 +86,7 @@ const StickyHeader = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 bg-black/50 z-40"
+              className="lg:hidden fixed inset-0 bg-black/50 z-30"
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
@@ -96,7 +96,7 @@ const StickyHeader = () => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.3 }}
-              className="lg:hidden fixed top-0 right-0 bottom-0 w-[80%] max-w-sm bg-white z-50 shadow-2xl overflow-y-auto"
+              className="lg:hidden fixed top-[2.5rem] right-0 bottom-0 w-[80%] max-w-sm bg-white z-40 shadow-2xl overflow-y-auto"
             >
               <div className="p-6">
                 {/* Mobile Logo */}

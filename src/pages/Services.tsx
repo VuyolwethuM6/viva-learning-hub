@@ -2,80 +2,108 @@ import { motion } from 'framer-motion';
 import { BookOpen, Users, Clock, Award, MessageSquare, Zap } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TopBar, StickyHeader } from "@/components/Header";
+import TopBar from '@/components/TopBar';
+import StickyHeader from '@/components/StickyHeader';
 import Footer from '@/components/Footer';
 
 export default function Services() {
   const services = [
     {
-      icon: <BookOpen className="w-12 h-12" />,
+      icon: <BookOpen className="w-12 h-12 text-[#7949fe]" />,
       title: "One-on-One Tutoring",
       description: "Personalized one-on-one sessions with expert tutors tailored to your learning style and goals.",
       features: ["Flexible Scheduling", "Customized Curriculum", "Regular Progress Reports", "Exam Preparation"]
     },
     {
-      icon: <Users className="w-12 h-12" />,
+      icon: <Users className="w-12 h-12 text-[#7949fe]" />,
       title: "Group Classes",
       description: "Interactive group learning sessions for collaborative study and peer interaction.",
       features: ["Small Group Sizes", "Interactive Sessions", "Group Discounts", "Social Learning"]
     },
     {
-      icon: <Clock className="w-12 h-12" />,
+      icon: <Clock className="w-12 h-12 text-[#7949fe]" />,
       title: "Online Learning",
       description: "Access live virtual classes and pre-recorded lessons from the comfort of your home.",
       features: ["Live Sessions", "Recorded Lessons", "24/7 Access", "Flexible Duration"]
     },
     {
-      icon: <Award className="w-12 h-12" />,
+      icon: <Award className="w-12 h-12 text-[#7949fe]" />,
       title: "Exam Preparation",
       description: "Comprehensive exam preparation programs including practice papers and mock exams.",
       features: ["Past Paper Solutions", "Mock Exams", "Time Management Tips", "Subject Mastery"]
     },
     {
-      icon: <MessageSquare className="w-12 h-12" />,
+      icon: <MessageSquare className="w-12 h-12 text-[#7949fe]" />,
       title: "Study Materials",
       description: "Access to comprehensive study guides, notes, and resources for all major subjects.",
       features: ["Study Guides", "Video Lessons", "Practice Questions", "Quick Notes"]
     },
     {
-      icon: <Zap className="w-12 h-12" />,
-      title: "Workshop & Seminars",
+      icon: <Zap className="w-12 h-12 text-[#7949fe]" />,
+      title: "Workshops & Seminars",
       description: "Special workshops on specific topics, exam strategies, and study techniques.",
       features: ["Expert Sessions", "Small Groups", "Interactive Q&A", "Certificate of Participation"]
     }
   ];
 
   const subjects = [
-    "Mathematics",
-    "Physical Science",
-    "Life Sciences",
-    "Accounting",
-    "Information Technology",
-    "Geography",
-    "English",
-    "Afrikaans"
+    { name: "Mathematics", img: "/subjects/mathematics.png" },
+    { name: "Physical Science", img: "/subjects/physical-sciences.png" },
+    { name: "Life Sciences", img: "/subjects/life-sciences.png" },
+    { name: "Mathematical Literacy", img: "/subjects/maths-lit.png" },
   ];
 
   return (
     <div className="min-h-screen bg-white">
       <TopBar />
       <StickyHeader />
+
       {/* Hero Section */}
-      <section className="pt-40 pb-20 px-6 bg-gradient-to-b from-white to-[#7949fe]/5">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative pt-[12rem] sm:pt-[10rem] pb-16 md:pb-20 px-6 overflow-hidden bg-white">
+        {/* Pattern blobs */}
+        <motion.div
+          className="absolute w-72 h-72 bg-[#7949fe]/20 rounded-full top-10 left-10 blur-3xl"
+          animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
+          transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute w-96 h-96 bg-[#ff7849]/15 rounded-full bottom-10 right-20 blur-2xl"
+          animate={{ x: [0, -30, 0], y: [0, 20, 0] }}
+          transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute w-40 h-40 bg-[#7949fe]/10 rounded-full top-1/2 right-1/3 blur-2xl"
+          animate={{ x: [0, 10, 0], y: [0, -10, 0] }}
+          transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
+        />
+
+        {/* Hero Content */}
+        <div className="relative max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            className="mb-12 md:mb-16"
           >
-            <h1 className="text-5xl md:text-7xl font-bold text-[#1a0b2e] mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-[#1a0b2e] mb-4 sm:mb-6">
               Our Services
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Comprehensive educational services designed to help you achieve your academic goals.
             </p>
           </motion.div>
+
+          {/* Enroll Now Button */}
+          <motion.a
+            href="/contact"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-block mt-6"
+          >
+            <Button className="bg-[#7949fe] text-white hover:bg-[#5a4ecf] py-4 px-8 rounded-full text-lg font-bold shadow-lg">
+              Enroll Now
+            </Button>
+          </motion.a>
         </div>
       </section>
 
@@ -90,10 +118,11 @@ export default function Services() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
+                
               >
-                <Card className="h-full border-2 border-gray-100 hover:border-[#7949fe] transition-all duration-300 hover:shadow-lg">
+                <Card className="h-full border-2 border-[#7949fe] hover:border-[#5a4ecf] transition-all duration-300 hover:shadow-lg">
                   <CardHeader>
-                    <div className="text-[#7949fe] mb-4">{service.icon}</div>
+                    <div className="mb-4">{service.icon}</div>
                     <CardTitle className="text-[#1a0b2e]">{service.title}</CardTitle>
                     <CardDescription>{service.description}</CardDescription>
                   </CardHeader>
@@ -115,31 +144,38 @@ export default function Services() {
       </section>
 
       {/* Subjects Covered */}
-      <section className="py-24 px-6 bg-gradient-to-b from-[#7949fe]/5 to-white">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-[#1a0b2e] text-center mb-16">Subjects We Cover</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {subjects.map((subject, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.05 }}
-                className="bg-white p-6 rounded-xl border-2 border-gray-100 text-center hover:border-[#7949fe] hover:shadow-lg transition-all duration-300"
-              >
-                <p className="font-semibold text-[#1a0b2e]">{subject}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+{/* Subjects Covered */}
+<section className="py-24 px-6 bg-[#f7f5ff]">
+  <div className="max-w-7xl mx-auto">
+    <h2 className="text-4xl font-bold text-[#1a0b2e] text-center mb-16">Subjects We Cover</h2>
+        <p className="text-center text-gray-600 text-lg max-w-3xl mx-auto mb-12">
+      Our curriculum spans key subjects to ensure learners are fully prepared for exams and academic success. Each subject is supported with expert guidance and comprehensive resources.
+    </p>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      {subjects.map((subject, idx) => (
+        <motion.div
+          key={idx}
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: idx * 0.05 }}
+          className="rounded-xl border-2 border-[#7949fe] overflow-hidden shadow-md transition-all duration-300"
+        >
+          <div
+            className="w-full h-48 sm:h-60 md:h-64 bg-center bg-cover"
+            style={{ backgroundImage: `url(${subject.img})`, backgroundRepeat: "no-repeat" }}
+          />
+        </motion.div>
+      ))}
+    </div>
+  </div>
+</section>
+
 
       {/* How It Works */}
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-[#1a0b2e] text-center mb-16">How Our Services Work</h2>
-          
           <div className="space-y-12">
             {[
               { step: "1", title: "Assessment", description: "We assess your current level and identify areas for improvement" },
