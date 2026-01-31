@@ -18,25 +18,59 @@ import Maths from '/maths.png'
 const TopBar = () => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-[#1a0b2e] text-white py-2.5 text-xs font-medium border-b border-white/10">
     <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+      
+      {/* Left section */}
       <div className="flex items-center gap-3 lg:gap-6 overflow-x-auto">
-        <span className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap">
-          <Phone className="w-3.5 h-3.5 animate-[wiggle_1s_ease-in-out_infinite]" /> <span className="hidden sm:inline">+27 (0) 123 456 789</span>
-        </span>
+        <a
+          href="tel:073913206"
+          className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap"
+        >
+          <Phone className="w-3.5 h-3.5 animate-[wiggle_1s_ease-in-out_infinite]" />
+          <span className="hidden sm:inline">(+27) 73 913 206</span>
+        </a>
+
         <span className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap hidden sm:flex">
-          <Mail className="w-3.5 h-3.5" /> info@vivatutorials.com
+          <Mail className="w-3.5 h-3.5" />
+          info@vivatutorials.co.za
         </span>
+
         <span className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap hidden md:flex">
-          <MapPin className="w-3.5 h-3.5" /> Cape Town, South Africa
+          <MapPin className="w-3.5 h-3.5" />
+          Cape Town, South Africa
         </span>
       </div>
+
+      {/* Right section */}
       <div className="flex items-center gap-2 lg:gap-4">
         <span className="text-white/60 hidden lg:inline">Follow Us:</span>
+
         <div className="flex items-center gap-3">
-          <FaFacebook className="w-3.5 h-3.5 hover:text-[#ff7849] cursor-pointer transition-colors" />
-          <FaYoutube className="w-3.5 h-3.5 hover:text-[#ff7849] cursor-pointer transition-colors" />
-          <FaTiktok className="w-3.5 h-3.5 hover:text-[#ff7849] cursor-pointer transition-colors hidden sm:block" />
+          <a
+            href="https://web.facebook.com/profile.php?id=61586724797551"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FaFacebook className="w-3.5 h-3.5 hover:text-[#ff7849] transition-colors cursor-pointer" />
+          </a>
+
+          <a
+            href="https://www.youtube.com/@viva-tutorials"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FaYoutube className="w-3.5 h-3.5 hover:text-[#ff7849] transition-colors cursor-pointer" />
+          </a>
+
+          <a
+            href="https://www.tiktok.com/@viva.coach.vuyo?_r=1&_t=ZS-93WzVp1UbQe"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FaTiktok className="w-3.5 h-3.5 hover:text-[#ff7849] transition-colors cursor-pointer" />
+          </a>
         </div>
       </div>
+
     </div>
   </div>
 );
@@ -276,11 +310,14 @@ export default function Home() {
               <div className="p-6">
                 <div className="flex justify-between items-center mb-8">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-tr from-[#7949fe] to-[#ff7849] rounded-lg flex items-center justify-center text-white">
-                      <span className="text-lg font-bold font-mono">V</span>
-                    </div>
-                    <span className="text-lg font-extrabold text-[#1a0b2e]">Viva<span className="text-[#ff7849]">.</span></span>
+                    <img
+                      src="/viva-tutorials-logo.png"  
+                      alt="Viva Logo"
+                      className="w-12 h-12 object-contain" // adjust size as needed
+                    />
+                    
                   </div>
+
                   <button 
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="p-2 hover:bg-gray-100 rounded-full"
@@ -309,26 +346,46 @@ export default function Home() {
                 </nav>
 
                 <div className="mt-8 pt-8 border-t border-gray-200 space-y-4">
-                  <a href="/contact">
+                  <a href="https://forms.gle/sh3Be1fF8gD1qt9G9">
                     <Button className="w-full bg-[#7949fe] hover:bg-[#5a4ecf] py-6 rounded-full text-lg">
-                      Book a Tutor
+                      Enroll Now
                     </Button>
                   </a>
-                  <Button variant="outline" className="w-full border-2 border-gray-200 py-6 rounded-full text-lg">
-                    Login
-                  </Button>
+                  <a
+                    href="https://calendar.app.google/k1hbyKuD97U5g1Vf7"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button
+                      variant="outline"
+                      className="w-full border-2 border-gray-200 py-6 rounded-full text-lg mt-4"
+                    >
+                      Book a Session
+                    </Button>
+                  </a>
                 </div>
-
                 <div className="mt-8 pt-8 border-t border-gray-200">
                   <p className="text-sm font-semibold text-gray-500 mb-4">Follow Us</p>
+
                   <div className="flex gap-4">
-                    {[FaFacebook, FaTiktok, FaYoutube].map((Icon, i) => (
-                      <div key={i} className="w-10 h-10 rounded-full bg-[#7949fe]/10 flex items-center justify-center text-[#7949fe] hover:bg-[#7949fe] hover:text-white transition-all cursor-pointer">
+                    {[
+                      { icon: FaFacebook, url: "https://facebook.com/yourpage" },
+                      { icon: FaTiktok, url: "https://www.tiktok.com/@yourhandle" },
+                      { icon: FaYoutube, url: "https://www.youtube.com/@yourchannel" },
+                    ].map(({ icon: Icon, url }, i) => (
+                      <a
+                        key={i}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 rounded-full bg-[#7949fe]/10 flex items-center justify-center text-[#7949fe] hover:bg-[#7949fe] hover:text-white transition-all"
+                      >
                         <Icon className="w-5 h-5" />
-                      </div>
+                      </a>
                     ))}
                   </div>
                 </div>
+
               </div>
             </motion.div>
           </>
