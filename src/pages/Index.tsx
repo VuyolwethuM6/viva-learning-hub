@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import Footer from '@/components/Footer';
 import { FaYoutube, FaFacebook, FaTiktok } from "react-icons/fa6";
-import { useNavigate } from "react-router-dom";
-
+import Maths from '/maths.png'
+import { Link } from "react-router-dom";
 
 // --- Theme Components ---
 
@@ -151,8 +152,6 @@ const TestimonialCarousel = () => {
   const prevTestimonial = () => {
     setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
-
-  const navigate = useNavigate();
 
   return (
     <div className="relative">
@@ -468,23 +467,22 @@ export default function Home() {
               
 <div className="flex flex-col sm:flex-row gap-4">
   <Button
+    asChild
     size="lg"
-    onClick={() => navigate("/contact")}
     className="h-14 px-8 text-base bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full shadow-xl shadow-[#7949fe]/30 hover:shadow-2xl hover:scale-105 transition-all duration-300"
   >
-    Get Started Now
+    <Link to="/contact">Enroll Now!</Link>
   </Button>
 
   <Button
+    asChild
     size="lg"
     variant="outline"
-    onClick={() => navigate("/pricing")}
     className="h-14 px-8 text-base border-2 border-[#7949fe] text-[#7949fe] hover:bg-[#7949fe]/10 rounded-full font-bold"
   >
-    More Info
+    <Link to="/services">Book A Session</Link>
   </Button>
 </div>
-
 
               <div className="mt-12 flex items-center gap-4 text-sm font-medium text-gray-500">
                 <div className="flex -space-x-3">

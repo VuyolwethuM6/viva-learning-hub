@@ -189,7 +189,7 @@ export default function About() {
         <section className="py-24 px-6 bg-white">
           <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
             <div className="flex justify-center md:justify-end">
-              <img src="/founder.jpg" alt="Founder" className="w-64 h-64 md:w-72 md:h-72 rounded-full object-cover shadow-xl" />
+              <img src="/vuyo.heic" alt="Founder" className="w-64 h-64 md:w-72 md:h-72 rounded-full object-cover shadow-xl" />
             </div>
             <div className="text-center md:text-left">
               <h2 className="text-4xl font-bold text-[#1a0b2e] mb-4">Meet Our Founder</h2>

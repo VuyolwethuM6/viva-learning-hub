@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const StickyHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -56,16 +57,15 @@ const StickyHeader = () => {
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-4">
-            <span className="text-sm font-semibold text-[#7949fe] hover:underline cursor-pointer">
-              Login
-            </span>
-            <a href="/contact">
-              <Button className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
-                Book a Tutor
-              </Button>
-            </a>
-          </div>
+<div className="hidden lg:flex items-center gap-4">
+  <Link to="/login" className="text-sm font-semibold text-[#7949fe] hover:underline">
+    Login
+  </Link>
+
+  <Button asChild className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
+    <Link to="/contact">Book a Tutor</Link>
+  </Button>
+</div>
 
           {/* Mobile menu button */}
           <button
