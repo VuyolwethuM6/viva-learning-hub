@@ -188,9 +188,14 @@ export default function About() {
         {/* Founder Section */}
         <section className="py-24 px-6 bg-white">
           <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-            <div className="flex justify-center md:justify-end">
-              <img src="/vuyo.heic" alt="Founder" className="w-64 h-64 md:w-72 md:h-72 rounded-full object-cover shadow-xl" />
-            </div>
+<div className="flex justify-center md:justify-end">
+  <img
+    src="/vuyo.jfif"
+    alt="Founder"
+    className="w-64 md:w-72 h-auto object-contain shadow-xl rounded-xl"
+  />
+</div>
+
             <div className="text-center md:text-left">
               <h2 className="text-4xl font-bold text-[#1a0b2e] mb-4">Meet Our Founder</h2>
               <h3 className="text-xl text-[#7949fe] font-semibold mb-4">Vuyolwethu Mabhuleka</h3>

@@ -269,14 +269,21 @@ export default function Home() {
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-4">
-            <span className="text-sm font-semibold text-[#7949fe] hover:underline cursor-pointer">Login</span>
-            <a href="/contact">
-              <Button className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
-                Book a Tutor
-              </Button>
-            </a>
-          </div>
+<div className="hidden lg:flex items-center gap-4">
+  <a
+    href="/login"
+    className="text-sm font-semibold text-[#7949fe] hover:underline"
+  >
+    Book A Session
+  </a>
+
+  <a href="/contact">
+    <Button className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
+      Enroll Now!
+    </Button>
+  </a>
+</div>
+
 
           <button 
             className="lg:hidden p-2 text-gray-600"
