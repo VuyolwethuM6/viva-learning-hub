@@ -1243,7 +1243,7 @@ export default function Home() {
       </section>
 
       {/* Image Grid Section */}
-      <section className="py-24 bg-white overflow-hidden">
+      <section className="py-24 bg-gray-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <SectionHeading subtitle="Our Community" title="Learning in Action" />
           <motion.div
