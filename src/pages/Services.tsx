@@ -95,7 +95,7 @@ export default function Services() {
 
           {/* Enroll Now Button */}
           <motion.a
-            href="/contact"
+            href="https://forms.gle/sh3Be1fF8gD1qt9G9"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="inline-block mt-6"
@@ -212,9 +212,9 @@ export default function Services() {
           <p className="text-white/60 text-lg mb-8 max-w-2xl mx-auto">
             Start your journey to academic excellence with our comprehensive services.
           </p>
-          <a href="/contact">
+          <a href="https://forms.gle/sh3Be1fF8gD1qt9G9">
             <Button className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">
-              Get in Touch
+              Start Now
             </Button>
           </a>
         </div>

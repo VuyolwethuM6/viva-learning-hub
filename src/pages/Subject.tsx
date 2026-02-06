@@ -264,7 +264,7 @@ export default function Subject() {
             Start with expert tutoring or explore our comprehensive learning resources.
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <a href="/contact">
+            <a href="https://calendar.app.google/k1hbyKuD97U5g1Vf7">
               <Button className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">
                 Book a Tutor
               </Button>
