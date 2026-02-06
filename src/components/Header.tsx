@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export const TopBar = () => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-[#1a0b2e] text-white py-2.5 text-xs font-medium border-b border-white/10">
-    <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+    {/* <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
       <div className="flex items-center gap-3 lg:gap-6 overflow-x-auto">
         <span>🎓 Empowering learners across South Africa</span>
       </div>
@@ -15,7 +15,7 @@ export const TopBar = () => (
         <span className="hidden lg:inline">•</span>
         <span className="hidden lg:inline">✉️ info@viviatutorials.com</span>
       </div>
-    </div>
+    </div> */}
   </div>
 );
 

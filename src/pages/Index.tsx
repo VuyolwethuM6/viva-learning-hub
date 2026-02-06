@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { 
+import {
   GraduationCap, Phone, Mail, MapPin,
-  ChevronRight, Star, Check, ArrowRight, Play, BookOpen, Users, 
-  Award, Clock, Calendar, Search, Menu, X, Laptop, Sparkles } from 'lucide-react';
+  ChevronRight, Star, Check, ArrowRight, Play, BookOpen, Users,
+  Award, Clock, Calendar, Search, Menu, X, Laptop, Sparkles
+} from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -13,13 +14,14 @@ import Footer from '@/components/Footer';
 import { FaYoutube, FaFacebook, FaTiktok } from "react-icons/fa6";
 import Maths from '/maths.png'
 import { Link } from "react-router-dom";
+import SubjectRequestModal from '@/components/SubjectRequestModal';
 
 // --- Theme Components ---
 
 const TopBar = () => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-[#1a0b2e] text-white py-2.5 text-xs font-medium border-b border-white/10">
     <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-      
+
       {/* Left section */}
       <div className="flex items-center gap-3 lg:gap-6 overflow-x-auto">
         <a
@@ -78,7 +80,7 @@ const TopBar = () => (
 
 const SectionHeading = ({ subtitle, title, align = "center", light = false }) => (
   <div className={`mb-16 ${align === "center" ? "text-center" : "text-left"}`}>
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -86,7 +88,7 @@ const SectionHeading = ({ subtitle, title, align = "center", light = false }) =>
     >
       {subtitle}
     </motion.div>
-    <motion.h2 
+    <motion.h2
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -95,7 +97,7 @@ const SectionHeading = ({ subtitle, title, align = "center", light = false }) =>
     >
       {title}
     </motion.h2>
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, width: 0 }}
       whileInView={{ opacity: 1, width: 80 }}
       viewport={{ once: true }}
@@ -107,7 +109,7 @@ const SectionHeading = ({ subtitle, title, align = "center", light = false }) =>
 
 const AnimatedCounter = ({ value, label }) => {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.5 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
@@ -123,7 +125,7 @@ const AnimatedCounter = ({ value, label }) => {
 
 const TestimonialCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  
+
   const testimonials = [
     {
       name: "Thabo M.",
@@ -158,7 +160,7 @@ const TestimonialCarousel = () => {
       {/* Abstract background shapes */}
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#7949fe]/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
       <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-      
+
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
@@ -169,7 +171,7 @@ const TestimonialCarousel = () => {
         >
           <Card className="relative bg-white border-none shadow-2xl p-8 rounded-[2rem]">
             <div className="text-[#7949fe] mb-6">
-              {[1,2,3,4,5].map(i => <Star key={i} className="inline-block w-5 h-5 fill-current" />)}
+              {[1, 2, 3, 4, 5].map(i => <Star key={i} className="inline-block w-5 h-5 fill-current" />)}
             </div>
             <blockquote className="text-xl text-gray-800 font-medium leading-relaxed mb-6">
               "{testimonials[currentIndex].text}"
@@ -187,10 +189,10 @@ const TestimonialCarousel = () => {
 
       {/* Navigation */}
       <div className="flex justify-center gap-4 mt-6">
-        <Button 
+        <Button
           onClick={prevTestimonial}
-          variant="outline" 
-          size="icon" 
+          variant="outline"
+          size="icon"
           className="rounded-full h-10 w-10"
         >
           <ChevronRight className="w-5 h-5 rotate-180" />
@@ -200,16 +202,15 @@ const TestimonialCarousel = () => {
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`h-2 rounded-full transition-all ${
-                idx === currentIndex ? 'w-8 bg-[#7949fe]' : 'w-2 bg-gray-300'
-              }`}
+              className={`h-2 rounded-full transition-all ${idx === currentIndex ? 'w-8 bg-[#7949fe]' : 'w-2 bg-gray-300'
+                }`}
             />
           ))}
         </div>
-        <Button 
+        <Button
           onClick={nextTestimonial}
-          variant="outline" 
-          size="icon" 
+          variant="outline"
+          size="icon"
           className="rounded-full h-10 w-10"
         >
           <ChevronRight className="w-5 h-5" />
@@ -224,7 +225,7 @@ const TestimonialCarousel = () => {
 export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
@@ -234,21 +235,20 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-[#7949fe]/20 selection:text-[#7949fe] overflow-x-hidden">
       <TopBar />
-      
+
       {/* Sticky Header */}
-      <header 
-        className={`fixed top-[37px] left-0 right-0 z-40 transition-all duration-300 border-b ${
-          isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg py-3 border-gray-100' : 'bg-white py-5 border-transparent'
-        }`}
+      <header
+        className={`fixed top-[37px] left-0 right-0 z-40 transition-all duration-300 border-b ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg py-3 border-gray-100' : 'bg-white py-5 border-transparent'
+          }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-            <a href="/" className="flex items-center gap-2">
-            <img 
-              src="/viva-tutorials-logo.png" 
-              alt="Viva Tutorials Logo" 
+          <a href="/" className="flex items-center gap-2">
+            <img
+              src="/viva-tutorials-logo.png"
+              alt="Viva Tutorials Logo"
               className="h-10 w-auto"
             />
-            </a>
+          </a>
 
           <nav className="hidden lg:flex items-center gap-8 font-medium text-sm text-gray-600">
             {[
@@ -256,10 +256,10 @@ export default function Home() {
               { label: 'About', path: '/about' },
               { label: 'Services', path: '/services' },
               { label: 'Pricing', path: '/pricing' },
-              { label: 'Contact', path: '/contact' }
+              { label: 'Contact', path: 'https://forms.gle/sh3Be1fF8gD1qt9G9' }
             ].map((item) => (
-              <a 
-                key={item.label} 
+              <a
+                key={item.label}
                 href={item.path}
                 className="hover:text-[#7949fe] transition-colors relative group py-2"
               >
@@ -269,23 +269,23 @@ export default function Home() {
             ))}
           </nav>
 
-<div className="hidden lg:flex items-center gap-4">
-  <a
-    href="/login"
-    className="text-sm font-semibold text-[#7949fe] hover:underline"
-  >
-    Book A Session
-  </a>
+          <div className="hidden lg:flex items-center gap-4">
+            <a
+              href="https://calendar.app.google/k1hbyKuD97U5g1Vf7"
+              className="text-sm font-semibold text-[#7949fe] hover:underline"
+            >
+              Book A Session
+            </a>
 
-  <a href="/contact">
-    <Button className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
-      Enroll Now!
-    </Button>
-  </a>
-</div>
+            <a href="https://forms.gle/sh3Be1fF8gD1qt9G9">
+              <Button className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
+                Enroll Now!
+              </Button>
+            </a>
+          </div>
 
 
-          <button 
+          <button
             className="lg:hidden p-2 text-gray-600"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
@@ -306,7 +306,7 @@ export default function Home() {
               className="lg:hidden fixed inset-0 bg-black/50 z-50"
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            
+
             {/* Slide-in Menu */}
             <motion.div
               initial={{ x: '100%' }}
@@ -319,14 +319,14 @@ export default function Home() {
                 <div className="flex justify-between items-center mb-8">
                   <div className="flex items-center gap-2">
                     <img
-                      src="/viva-tutorials-logo.png"  
+                      src="/viva-tutorials-logo.png"
                       alt="Viva Logo"
                       className="w-12 h-12 object-contain" // adjust size as needed
                     />
-                    
+
                   </div>
 
-                  <button 
+                  <button
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="p-2 hover:bg-gray-100 rounded-full"
                   >
@@ -340,10 +340,10 @@ export default function Home() {
                     { label: 'About', path: '/about' },
                     { label: 'Services', path: '/services' },
                     { label: 'Pricing', path: '/pricing' },
-                    { label: 'Contact', path: '/contact' }
+                    { label: 'Contact', path: 'https://forms.gle/sh3Be1fF8gD1qt9G9' }
                   ].map((item) => (
-                    <a 
-                      key={item.label} 
+                    <a
+                      key={item.label}
                       href={item.path}
                       className="text-lg font-semibold text-gray-800 py-4 px-4 hover:bg-[#7949fe]/10 rounded-lg transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
@@ -403,28 +403,28 @@ export default function Home() {
       {/* Hero Section */}
       <section id="home" className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden bg-gradient-to-b from-white to-white">
         {/* Decorative blobs */}
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" style={{backgroundColor: 'rgba(108, 92, 231, 0.08)'}} />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full blur-3xl translate-y-1/4 -translate-x-1/4" style={{backgroundColor: 'rgba(255, 122, 69, 0.08)'}} />
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" style={{ backgroundColor: 'rgba(108, 92, 231, 0.08)' }} />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full blur-3xl translate-y-1/4 -translate-x-1/4" style={{ backgroundColor: 'rgba(255, 122, 69, 0.08)' }} />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
 
 
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7949fe]/10 border border-[#7949fe]/30"
-            >
-              <Sparkles className="w-4 h-4 text-[#7949fe]" />
-              <span className="text-sm font-medium text-[#7949fe]">STEM Education Excellence</span>
-            </motion.div>
+              {/* Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7949fe]/10 border border-[#7949fe]/30"
+              >
+                <Sparkles className="w-4 h-4 text-[#7949fe]" />
+                <span className="text-sm font-medium text-[#7949fe]">STEM Education Excellence</span>
+              </motion.div>
 
               {/* Headline */}
               <div className="space-y-4 mb-6">
@@ -471,31 +471,31 @@ export default function Home() {
                 </p>
               </div>
 
-              
-<div className="flex flex-col sm:flex-row gap-4">
-  <Button
-    asChild
-    size="lg"
-    className="h-14 px-8 text-base bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full shadow-xl shadow-[#7949fe]/30 hover:shadow-2xl hover:scale-105 transition-all duration-300"
-  >
-    <Link to="/contact">Enroll Now!</Link>
-  </Button>
 
-  <Button
-    asChild
-    size="lg"
-    variant="outline"
-    className="h-14 px-8 text-base border-2 border-[#7949fe] text-[#7949fe] hover:bg-[#7949fe]/10 rounded-full font-bold"
-  >
-    <Link to="/services">Book A Session</Link>
-  </Button>
-</div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  asChild
+                  size="lg"
+                  className="h-14 px-8 text-base bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full shadow-xl shadow-[#7949fe]/30 hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                >
+                  <Link to="https://forms.gle/sh3Be1fF8gD1qt9G9">Enroll Now!</Link>
+                </Button>
+
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="h-14 px-8 text-base border-2 border-[#7949fe] text-[#7949fe] hover:bg-[#7949fe]/10 rounded-full font-bold"
+                >
+                  <Link to="https://calendar.app.google/k1hbyKuD97U5g1Vf7">Book A Session</Link>
+                </Button>
+              </div>
 
               <div className="mt-12 flex items-center gap-4 text-sm font-medium text-gray-500">
                 <div className="flex -space-x-3">
-                  {[1,2,3,4].map(i => (
+                  {[1, 2, 3, 4].map(i => (
                     <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
-                       <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Student" className="w-full h-full object-cover" />
+                      <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Student" className="w-full h-full object-cover" />
                     </div>
                   ))}
                   <div className="w-10 h-10 rounded-full border-2 border-white bg-[#7949fe]/20 flex items-center justify-center text-[#7949fe] text-xs font-bold">
@@ -507,14 +507,14 @@ export default function Home() {
             </motion.div>
 
             {/* Custom Dashboard Graphic */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative hidden md:block"
             >
               <div className="absolute inset-0 bg-[#7949fe] rounded-[3rem] rotate-3 opacity-10 scale-95 blur-2xl transform translate-y-8" />
-              
+
               <div className="relative bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden">
                 {/* Dashboard Header */}
                 <div className="bg-gradient-to-r from-[#7c3aed] to-[#9333ea] p-6 text-white">
@@ -527,7 +527,7 @@ export default function Home() {
                       <Users className="w-5 h-5 text-white" />
                     </div>
                   </div>
-                  
+
                   {/* Progress Cards */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
@@ -547,12 +547,12 @@ export default function Home() {
                     <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Upcoming Sessions</h4>
                     <span className="text-xs text-[#ff7849] font-semibold cursor-pointer">View All</span>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {[
                       { subject: "Advanced Physics", time: "Today, 14:00", icon: Sparkles, color: "text-blue-500", bg: "bg-blue-100" },
                       { subject: "Calculus II", time: "Tomorrow, 10:00", icon: Laptop, color: "text-[#7949fe]", bg: "bg-[#7949fe]/10" },
-                      { subject: "Chemistry Lab", time: "Wed, 15:30", icon:  BookOpen, color: "text-pink-500", bg: "bg-pink-100" },
+                      { subject: "Chemistry Lab", time: "Wed, 15:30", icon: BookOpen, color: "text-pink-500", bg: "bg-pink-100" },
                     ].map((item, idx) => (
                       <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
                         <div className={`w-12 h-12 ${item.bg} rounded-full flex items-center justify-center flex-shrink-0`}>
@@ -582,9 +582,9 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Floating elements */}
-              <motion.div 
+              <motion.div
                 animate={{ y: [0, -10, 0] }}
                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                 className="absolute -right-8 top-20 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 z-20 hidden md:block"
@@ -618,36 +618,36 @@ export default function Home() {
       {/* Services Grid (WordPress Style) */}
       <section id="services" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
-          <SectionHeading 
-            subtitle="What We Offer" 
-            title="Our Services" 
+          <SectionHeading
+            subtitle="What We Offer"
+            title="Our Services"
           />
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { 
-                icon: Users, 
-                title: "In-Person Tutoring", 
+              {
+                icon: Users,
+                title: "In-Person Tutoring",
                 desc: "Personalized one-on-one sessions at your home or our learning centers, tailored to your pace and learning style.",
                 color: "text-blue-600",
                 bg: "bg-blue-50"
               },
-              { 
-                icon: Laptop, 
-                title: "Hybrid/Combined Learning", 
+              {
+                icon: Laptop,
+                title: "Hybrid/Combined Learning",
                 desc: "Flexible combination of in-person and online tutoring designed to fit your schedule and maximize results.",
                 color: "text-[#7949fe]",
                 bg: "bg-[#7949fe]/10"
               },
-              { 
-                icon: BookOpen, 
-                title: "Comprehensive Study Material", 
+              {
+                icon: BookOpen,
+                title: "Comprehensive Study Material",
                 desc: "Access to curated notes, practice tests, and resources aligned with the CAPS curriculum.",
                 color: "text-pink-600",
                 bg: "bg-pink-50"
               }
             ].map((service, idx) => (
-              <motion.div 
+              <motion.div
                 key={idx}
                 whileHover={{ y: -10 }}
                 className="bg-white p-10 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 group"
@@ -669,9 +669,9 @@ export default function Home() {
       {/* Featured Subjects - Enhanced */}
       <section id="subjects" className="py-24 bg-gradient-to-b from-white to-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <SectionHeading 
-            subtitle="Our Curriculum" 
-            title="Subjects We Excel In" 
+          <SectionHeading
+            subtitle="Our Curriculum"
+            title="Subjects We Excel In"
           />
 
           <Tabs defaultValue="stem" className="w-full">
@@ -686,40 +686,40 @@ export default function Home() {
             <TabsContent value="stem" className="mt-0">
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[
-                  { 
-                    title: "Mathematics", 
+                  {
+                    title: "Mathematics",
                     icon: "/integration.png",
                     gradient: "from-blue-500 to-cyan-500",
                     description: "Pure Maths & Maths Literacy from Grade 8-12",
                     topics: ["Algebra", "Calculus", "Trigonometry", "Statistics"],
                     students: "150+ students"
                   },
-                  { 
-                    title: "Physical Sciences", 
+                  {
+                    title: "Physical Sciences",
                     icon: "/physics.png",
                     gradient: "from-[#7949fe] to-[#ff7849]",
                     description: "Physics & Chemistry combined curriculum",
                     topics: ["Mechanics", "Waves", "Organic Chemistry", "Electrostatics"],
                     students: "120+ students"
                   },
-                  { 
-                    title: "Life Sciences", 
+                  {
+                    title: "Life Sciences",
                     icon: "/genetic-engineering.png",
                     gradient: "from-green-500 to-emerald-500",
                     description: "Biology & Life Sciences for all grades",
                     topics: ["Genetics", "Ecology", "Human Biology", "Evolution"],
                     students: "80+ students"
                   },
-                  { 
-                    title: "Computer Science", 
+                  {
+                    title: "Computer Science",
                     icon: "💻",
                     gradient: "from-indigo-500 to-blue-500",
                     description: "IT, CAT & Programming fundamentals",
                     topics: ["Algorithms", "Python", "Web Dev", "Data Structures"],
                     students: "420+ students"
                   },
-                  { 
-                    title: "Mathematical Literacy", 
+                  {
+                    title: "Mathematical Literacy",
                     icon: "📐",
                     gradient: "from-orange-500 to-red-500",
                     description: "Technical drawing & design principles",
@@ -784,7 +784,7 @@ export default function Home() {
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
                         <Button variant="ghost" className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group">
-                          View Syllabus 
+                          View Syllabus
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </CardFooter>
@@ -797,24 +797,24 @@ export default function Home() {
             <TabsContent value="languages" className="mt-0">
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[
-                  { 
-                    title: "English", 
+                  {
+                    title: "English",
                     icon: "📚",
                     gradient: "from-rose-500 to-pink-500",
                     description: "Language, Literature & Comprehension",
                     topics: ["Poetry", "Prose", "Grammar", "Essay Writing"],
                     students: "920+ students"
                   },
-                  { 
-                    title: "Afrikaans", 
+                  {
+                    title: "Afrikaans",
                     icon: "🗣️",
                     gradient: "from-amber-500 to-orange-500",
                     description: "First & Additional Language courses",
                     topics: ["Begrip", "Taal", "Letterkunde", "Skrif"],
                     students: "640+ students"
                   },
-                  { 
-                    title: "isiZulu", 
+                  {
+                    title: "isiZulu",
                     icon: "🌟",
                     gradient: "from-yellow-500 to-amber-500",
                     description: "Home Language & FAL",
@@ -866,8 +866,8 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
-                        <Button variant="ghost" className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group">
-                          View Syllabus 
+                        <Button variant="outline" className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group">
+                          View Syllabus
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </CardFooter>
@@ -880,24 +880,24 @@ export default function Home() {
             <TabsContent value="commerce" className="mt-0">
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[
-                  { 
-                    title: "Accounting", 
+                  {
+                    title: "Accounting",
                     icon: "💰",
                     gradient: "from-emerald-500 to-teal-500",
                     description: "Financial & Management Accounting",
                     topics: ["Balance Sheets", "Income Statements", "Cost Accounting", "Budgets"],
                     students: "560+ students"
                   },
-                  { 
-                    title: "Business Studies", 
+                  {
+                    title: "Business Studies",
                     icon: "📊",
                     gradient: "from-blue-500 to-indigo-500",
                     description: "Business principles & entrepreneurship",
                     topics: ["Marketing", "Management", "HR", "Economics"],
                     students: "490+ students"
                   },
-                  { 
-                    title: "Economics", 
+                  {
+                    title: "Economics",
                     icon: "📈",
                     gradient: "from-[#7949fe] to-[#ff7849]",
                     description: "Micro & Macroeconomics studies",
@@ -950,7 +950,7 @@ export default function Home() {
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
                         <Button variant="ghost" className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group">
-                          View Syllabus 
+                          View Syllabus
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </CardFooter>
@@ -962,7 +962,7 @@ export default function Home() {
           </Tabs>
 
           {/* Bottom CTA */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -972,20 +972,32 @@ export default function Home() {
             <p className="text-gray-600 text-sm sm:text-base md:text-lg mb-6 md:mb-8 max-w-2xl mx-auto px-2">
               We offer personalized tutoring for many other subjects. Contact us to discuss your specific learning needs.
             </p>
-            <Button size="lg" className="w-full sm:w-auto bg-[#7949fe] hover:bg-[#5a4ecf] text-white px-6 sm:px-10 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold">
+
+            {/* Updated Button with onClick */}
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              size="lg"
+              className="w-full sm:w-auto bg-[#7949fe] hover:bg-[#5a4ecf] text-white px-6 sm:px-10 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold"
+            >
               <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Request a Subject
             </Button>
           </motion.div>
+
+          {/* The Modal Component */}
+          <SubjectRequestModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+          />
         </div>
       </section>
 
       {/* Study Materials Section */}
       <section id="materials" className="py-24 bg-gradient-to-b from-white to-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-          <SectionHeading 
-            subtitle="Study Resources" 
-            title="Study Materials & Resources" 
+          <SectionHeading
+            subtitle="Study Resources"
+            title="Study Materials & Resources"
           />
           <p className="text-center text-gray-600 text-lg mb-4 max-w-2xl mx-auto">
             Access our collection of study guides, past papers, video lessons, and revision notes. Some resources are completely free!
@@ -1126,11 +1138,10 @@ export default function Home() {
                     ))}
                   </CardContent>
                   <CardFooter className="pt-4">
-                    <Button className={`w-full py-6 rounded-xl font-bold group-hover:shadow-lg transition-all ${
-                      material.isFree 
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white' 
-                        : 'bg-gradient-to-r from-[#7949fe] to-[#ff7849] hover:from-[#5a4ecf] hover:to-[#ff6b35] text-white'
-                    }`}>
+                    <Button className={`w-full py-6 rounded-xl font-bold group-hover:shadow-lg transition-all ${material.isFree
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+                      : 'bg-gradient-to-r from-[#7949fe] to-[#ff7849] hover:from-[#5a4ecf] hover:to-[#ff6b35] text-white'
+                      }`}>
                       {material.isFree ? 'Download Free' : 'Purchase Now'}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
@@ -1164,12 +1175,12 @@ export default function Home() {
       <section id="pricing" className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-6">
           <SectionHeading subtitle="Pricing Plans" title="Affordable Learning Packages" />
-          
+
           <div className="flex justify-center mb-12">
-             <div className="bg-gray-100 p-1 rounded-full inline-flex">
-               <Button variant="ghost" className="rounded-full bg-white shadow-sm text-[#7949fe] font-bold px-6">Monthly</Button>
-               <Button variant="ghost" className="rounded-full text-gray-500 font-medium px-6 hover:text-[#7949fe]">Quarterly (Save 15%)</Button>
-             </div>
+            <div className="bg-gray-100 p-1 rounded-full inline-flex">
+              <Button variant="ghost" className="rounded-full bg-white shadow-sm text-[#7949fe] font-bold px-6">Monthly</Button>
+              <Button variant="ghost" className="rounded-full text-gray-500 font-medium px-6 hover:text-[#7949fe]">Quarterly (Save 15%)</Button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 items-start">
@@ -1178,8 +1189,8 @@ export default function Home() {
               { name: "Standard", price: "R850", color: "border-[#7949fe]", popular: true, features: ["8 sessions per month", "Small group (max 3)", "Printed & digital materials", "WhatsApp support", "Monthly assessments", "Parent-teacher meetings"] },
               { name: "Premium", price: "R1200", color: "border-gray-200", features: ["12 sessions per month", "One-on-one tutoring", "Complete resource library", "24/7 tutor access", "Weekly progress reports", "Exam preparation workshops", "University application guidance"] }
             ].map((plan, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className={`relative bg-white rounded-3xl p-8 border-2 ${plan.popular ? 'border-[#7949fe] shadow-2xl scale-105 z-10' : 'border-gray-100 shadow-lg'} transition-all`}
               >
                 {plan.popular && (
@@ -1216,17 +1227,17 @@ export default function Home() {
       {/* Testimonial Carousel Style */}
       <section className="py-24 bg-gray-50 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-           <div className="grid md:grid-cols-2 gap-16 items-center">
-             <div>
-               <SectionHeading align="left" subtitle="Testimonials" title="What Our Learners Say" />
-               <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-                 Hear from our students and parents about their transformative learning experiences with Viva Tutorials.
-               </p>
-               <Button className="bg-[#1a0b2e] text-white px-8 py-6 rounded-full text-lg">Read More Stories</Button>
-             </div>
-             
-             <TestimonialCarousel />
-           </div>
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <SectionHeading align="left" subtitle="Testimonials" title="What Our Learners Say" />
+              <p className="text-gray-600 text-lg mb-8 leading-relaxed">
+                Hear from our students and parents about their transformative learning experiences with Viva Tutorials.
+              </p>
+              <Button className="bg-[#1a0b2e] text-white px-8 py-6 rounded-full text-lg">Read More Stories</Button>
+            </div>
+
+            <TestimonialCarousel />
+          </div>
         </div>
       </section>
 
@@ -1248,83 +1259,6 @@ export default function Home() {
       </section>
 
       <Footer />
-
-      {/* Footer (Detailed WP Style) */}
-      {/* <footer className="bg-white pt-20 pb-10 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-12 mb-16">
-            <div className="col-span-1 md:col-span-1">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-[#7949fe] rounded-lg flex items-center justify-center text-white">
-                  <span className="font-bold font-mono">V</span>
-                </div>
-                <span className="text-2xl font-extrabold text-[#1a0b2e]">Viva.</span>
-              </div>
-              <p className="text-gray-500 mb-6 leading-relaxed">
-                Empowering students to achieve academic excellence through personalized STEM education and expert guidance.
-              </p>
-              <div className="flex gap-4">
-                {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-[#7949fe]/10 flex items-center justify-center text-[#7949fe] hover:bg-[#7949fe] hover:text-white transition-all cursor-pointer">
-                    <Icon className="w-4 h-4" />
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-bold text-gray-900 mb-6">Quick Links</h4>
-              <ul className="space-y-3 text-gray-600">
-                {[
-                  { label: 'Home', path: '/' },
-                  { label: 'About Us', path: '/about' },
-                  { label: 'Our Tutors', path: '/tutors' },
-                  { label: 'Success Stories', path: '/success-stories' },
-                  { label: 'Pricing', path: '/pricing' },
-                  { label: 'Contact', path: '/contact' }
-                ].map(item => (
-                  <li key={item.label}><a href={item.path} className="hover:text-[#7949fe] transition-colors">{item.label}</a></li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-bold text-gray-900 mb-6">Subjects</h4>
-              <ul className="space-y-3 text-gray-600">
-                {[
-                  { label: 'Mathematics', path: '/mathematics' },
-                  { label: 'Physical Science', path: '/physical-science' },
-                  { label: 'Life Sciences', path: '/life-sciences' },
-                  { label: 'Accounting', path: '/accounting' },
-                  { label: 'Information Tech', path: '/information-technology' },
-                  { label: 'Geography', path: '/geography' }
-                ].map(item => (
-                  <li key={item.label}><a href={item.path} className="hover:text-[#7949fe] transition-colors">{item.label}</a></li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-bold text-gray-900 mb-6">Newsletter</h4>
-              <p className="text-gray-500 mb-4 text-sm">Subscribe to get study tips and updates.</p>
-              <div className="flex gap-2">
-                <Input placeholder="Email Address" className="rounded-full bg-gray-50 border-gray-200" />
-                <Button className="rounded-full bg-[#7949fe] hover:bg-[#5a4ecf] w-12 h-10 p-0 flex items-center justify-center">
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-            <p>&copy; 2026 Viva Tutorial Services. All rights reserved.</p>
-            <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="/privacy-policy" className="hover:text-[#7949fe]">Privacy Policy</a>
-              <a href="/terms-of-service" className="hover:text-[#7949fe]">Terms of Service</a>
-            </div>
-          </div>
-        </div>
-      </footer> */}
     </div>
   );
 }
