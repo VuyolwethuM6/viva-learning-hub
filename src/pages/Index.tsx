@@ -1241,6 +1241,71 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Image Grid Section */}
+      <section className="py-24 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <SectionHeading subtitle="Our Community" title="Learning in Action" />
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative max-w-3xl mx-auto"
+          >
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="space-y-3 sm:space-y-4"
+              >
+                <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
+                  <img
+                    src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400&h=300&fit=crop"
+                    alt="Students studying"
+                    className="w-full h-36 sm:h-48 object-cover"
+                  />
+                </div>
+                <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
+                  <img
+                    src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=400&h=400&fit=crop"
+                    alt="Group learning"
+                    className="w-full h-44 sm:h-56 object-cover"
+                  />
+                </div>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="space-y-3 sm:space-y-4 pt-6 sm:pt-8"
+              >
+                <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
+                  <img
+                    src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=400&fit=crop"
+                    alt="Tutoring session"
+                    className="w-full h-44 sm:h-56 object-cover"
+                  />
+                </div>
+                <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
+                  <img
+                    src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=300&fit=crop"
+                    alt="Success celebration"
+                    className="w-full h-36 sm:h-48 object-cover"
+                  />
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Floating Stats Card */}
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -bottom-6 -right-4 sm:-right-6 bg-gradient-to-br from-[#7949fe] to-[#5a4ecf] rounded-2xl p-4 sm:p-6 text-white shadow-xl z-10"
+            >
+              <p className="text-3xl sm:text-4xl font-bold">95%</p>
+              <p className="text-white/70 text-sm sm:text-base">Pass Rate</p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto bg-[#1a0b2e] rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden shadow-2xl">
