@@ -38,11 +38,8 @@ export default function Footer() {
   };
 
   const locations = [
-    "Khayelitsha, Cape Town",
-    "Mitchell's Plain",
-    "Cape Town CBD",
-    "Durban",
-    "Mpumalanga"
+    "Mfuleni, Cape Town",
+    "Online Around South Africa",
   ];
 
   const socials = [
@@ -82,7 +79,7 @@ export default function Footer() {
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-slate-400">
                 <Phone className="w-4 h-4 text-violet-400" />
-                <span>+27 (0) 00 000 0000</span>
+                <span>+27 (73) 391 3206</span>
               </div>
               <div className="flex items-center gap-3 text-slate-400">
                 <Mail className="w-4 h-4 text-violet-400" />
