@@ -16,24 +16,24 @@ export default function Footer() {
       { name: "Holiday Classes", href: "#" }
     ],
     subjects: [
-      { name: "Mathematics", href: "#" },
-      { name: "Physical Sciences", href: "#" },
-      { name: "Life Sciences", href: "#" },
-      { name: "Accounting", href: "#" },
+      { name: "Mathematics", href: "/mathematics" },
+      { name: "Physical Sciences", href: "/physical-science" },
+      { name: "Life Sciences", href: "/life-sciences" },
+      { name: "Accounting", href: "/accounting" },
       { name: "Economics", href: "#" }
     ],
     company: [
-      { name: "About Us", href: "#" },
-      { name: "Our Tutors", href: "#" },
-      { name: "Locations", href: "#" },
-      { name: "Success Stories", href: "#" },
+      { name: "About Us", href: "/about" },
+      { name: "Our Tutors", href: "/tutors" },
+      { name: "Locations", href: "/locations" },
+      { name: "Success Stories", href: "/success-stories" },
       { name: "Careers", href: "#" }
     ],
     support: [
-      { name: "Contact Us", href: "#" },
+      { name: "Contact Us", href: "/contact" },
       { name: "FAQ", href: "#" },
-      { name: "Privacy Policy", href: "#" },
-      { name: "Terms of Service", href: "#" }
+      { name: "Privacy Policy", href: "/privacy-policy" },
+      { name: "Terms of Service", href: "/terms-of-service" }
     ]
   };
 
