@@ -1261,7 +1261,7 @@ export default function Home() {
                 <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
                   <img
                     loading="lazy"
-                    src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400&h=300&fit=crop"
+                    src="/images/inclass.jfif"
                     alt="Students studying"
                     className="w-full h-36 sm:h-48 object-cover"
                   />
@@ -1269,7 +1269,7 @@ export default function Home() {
                 <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
                   <img
                     loading="lazy"
-                    src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=400&h=400&fit=crop"
+                    src="/images/incamp.jfif"
                     alt="Group learning"
                     className="w-full h-44 sm:h-56 object-cover"
                   />
@@ -1282,7 +1282,7 @@ export default function Home() {
                 <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
                   <img
                     loading="lazy"
-                    src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=400&fit=crop"
+                    src="/images/tutoring.jfif"
                     alt="Tutoring session"
                     className="w-full h-44 sm:h-56 object-cover"
                   />
@@ -1290,7 +1290,7 @@ export default function Home() {
                 <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
                   <img
                     loading="lazy"
-                    src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=300&fit=crop"
+                    src="/images/success.jfif"
                     alt="Success celebration"
                     className="w-full h-36 sm:h-48 object-cover"
                   />

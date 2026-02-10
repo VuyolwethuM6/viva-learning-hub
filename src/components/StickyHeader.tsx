@@ -26,11 +26,10 @@ const StickyHeader = () => {
     <>
       {/* Sticky Navigation */}
       <header
-        className={`fixed top-[2.5rem] left-0 right-0 z-40 transition-all duration-300 border-b ${
-          isScrolled
+        className={`fixed top-[2.5rem] left-0 right-0 z-40 transition-all duration-300 border-b ${isScrolled
             ? "bg-white/95 backdrop-blur-md shadow-lg py-3 border-gray-100"
             : "bg-white py-5 border-transparent"
-        }`}
+          }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           {/* Logo */}
@@ -57,15 +56,15 @@ const StickyHeader = () => {
           </nav>
 
           {/* Desktop Actions */}
-<div className="hidden lg:flex items-center gap-4">
-  <Link to="/login" className="text-sm font-semibold text-[#7949fe] hover:underline">
-    Book A Session
-  </Link>
+          <div className="hidden lg:flex items-center gap-4">
+            <Link to="/login" className="text-sm font-semibold text-[#7949fe] hover:underline">
+              Book A Session
+            </Link>
 
-  <Button asChild className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
-    <Link to="/contact">Enroll Now!</Link>
-  </Button>
-</div>
+            <Button asChild className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
+              <Link to="/contact">Enroll Now!</Link>
+            </Button>
+          </div>
 
           {/* Mobile menu button */}
           <button
@@ -151,3 +150,4 @@ const StickyHeader = () => {
 };
 
 export default StickyHeader;
+ 
