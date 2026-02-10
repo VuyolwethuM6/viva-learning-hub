@@ -15,6 +15,7 @@ import { FaYoutube, FaFacebook, FaTiktok } from "react-icons/fa6";
 import Maths from '/maths.png'
 import { Link } from "react-router-dom";
 import SubjectRequestModal from '@/components/SubjectRequestModal';
+import SyllabusModal from '@/components/SyllabusModal';
 
 // --- Theme Components ---
 
@@ -226,6 +227,8 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSyllabusModalOpen, setIsSyllabusModalOpen] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState(null);
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
@@ -784,7 +787,13 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
-                        <Button variant="ghost" className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group">
+                        <Button 
+                          onClick={() => {
+                            setSelectedSubject(subject);
+                            setIsSyllabusModalOpen(true);
+                          }}
+                          className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group bg-transparent"
+                        >
                           View Syllabus
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
@@ -867,7 +876,14 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
-                        <Button variant="outline" className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group">
+                        <Button 
+                          onClick={() => {
+                            setSelectedSubject(subject);
+                            setIsSyllabusModalOpen(true);
+                          }}
+                          variant="outline" 
+                          className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group"
+                        >
                           View Syllabus
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
@@ -950,7 +966,13 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
-                        <Button variant="ghost" className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group">
+                        <Button 
+                          onClick={() => {
+                            setSelectedSubject(subject);
+                            setIsSyllabusModalOpen(true);
+                          }}
+                          className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group bg-transparent"
+                        >
                           View Syllabus
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
@@ -989,6 +1011,13 @@ export default function Home() {
           <SubjectRequestModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
+          />
+
+          {/* Syllabus Modal Component */}
+          <SyllabusModal
+            isOpen={isSyllabusModalOpen}
+            onClose={() => setIsSyllabusModalOpen(false)}
+            subject={selectedSubject}
           />
         </div>
       </section>
