@@ -494,7 +494,7 @@ export default function Home() {
                 </Button>
               </div>
 
-              <div className="mt-12 flex items-center gap-4 text-sm font-medium text-gray-500">
+              <div className="mt-12 flex items-center gap-4 text-sm font-medium text-gray-500 relative z-[60]">
                 <div className="flex -space-x-3">
                   {[1, 2, 3, 4].map(i => (
                     <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
