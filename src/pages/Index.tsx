@@ -1282,7 +1282,7 @@ export default function Home() {
                 <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
                   <img
                     loading="lazy"
-                    src="/images/tutoring.jfif"
+                    src="/images/tutoring.jpeg"
                     alt="Tutoring session"
                     className="w-full h-44 sm:h-56 object-cover"
                   />
@@ -1300,12 +1300,12 @@ export default function Home() {
 
             {/* Floating Stats Card */}
             <motion.div
-              animate={{ y: [0, -10, 0] }}
+              animate={{ y: [0, -8, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -bottom-6 -right-4 sm:-right-6 bg-gradient-to-br from-[#7949fe] to-[#5a4ecf] rounded-2xl p-4 sm:p-6 text-white shadow-xl z-10"
+              className="absolute -bottom-4 -right-3 sm:-right-4 bg-gradient-to-br from-[#7949fe] to-[#5a4ecf] rounded-xl p-2 sm:p-3 text-white shadow-lg z-10"
             >
-              <p className="text-3xl sm:text-4xl font-bold">95%</p>
-              <p className="text-white/70 text-sm sm:text-base">Pass Rate</p>
+              <p className="text-xl sm:text-2xl font-bold">95%</p>
+              <p className="text-white/70 text-xs sm:text-sm">Pass Rate</p>
             </motion.div>
           </motion.div>
         </div>
