@@ -129,22 +129,22 @@ const TestimonialCarousel = () => {
 
   const testimonials = [
     {
-      name: "Thabo M.",
-      role: "Grade 11 Student",
-      image: 32,
-      text: "Viva Tutorials helped me improve my Maths from 45% to 78% in just one term! The tutors are patient and explain concepts in a way I can understand."
-    },
-    {
-      name: "Sarah K.",
-      role: "Parent of Grade 9 Student",
-      image: 45,
-      text: "My daughter's confidence in Physical Sciences has skyrocketed. The personalized attention and structured approach make all the difference."
-    },
-    {
-      name: "Lebo N.",
+      name: "Sahluma Mkabile",
       role: "Grade 12 Student",
-      image: 28,
-      text: "Thanks to Viva, I got accepted into my dream university! The exam preparation workshops and one-on-one tutoring were invaluable."
+      image: 32, // Replace with actual image index
+      text: "Coach Vuyo, thank you for your genuine love and for sacrificing your sleep to help us understand the work. Without you, we wouldn't be where we are. I really appreciate you being patient with me since Grade 10."
+    },
+    {
+      name: "Liya Dameni",
+      role: "Grade 12 Student",
+      image: 45, // Replace with actual image index
+      text: "What a journey it has been! You played a huge role in my academics. Thank you for being patient, understanding, and for never getting tired of my 'stupid' questions. I'm writing this with a heavy heart because your impact was so great."
+    },
+    {
+      name: "Smart Kids Community",
+      role: "Student Group",
+      image: 28, // Replace with actual image index
+      text: "We appreciate all the effort you put into making sure we get good grades. Your dedication is unmatched, and we hope that in the future, we can proudly say we are the products of your hands."
     }
   ];
 
@@ -221,6 +221,38 @@ const TestimonialCarousel = () => {
   );
 };
 
+// SVG Icons as components
+const HomeIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+  </svg>
+);
+
+const BookIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+  </svg>
+);
+
+const FileIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+const UserIcon = () => (
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+
+
 // --- Page Sections ---
 
 export default function Home() {
@@ -229,6 +261,8 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSyllabusModalOpen, setIsSyllabusModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [activeTab, setActiveTab] = useState('home');
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
@@ -404,26 +438,26 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section id="home" className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden bg-gradient-to-b from-white to-white">
+<section id="home" className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden bg-gradient-to-b from-white to-white">
         {/* Decorative blobs */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" style={{ backgroundColor: 'rgba(108, 92, 231, 0.08)' }} />
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full blur-3xl translate-y-1/4 -translate-x-1/4" style={{ backgroundColor: 'rgba(255, 122, 69, 0.08)' }} />
 
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="max-w-7xl mx-auto px-6 relative">
+          <div className="flex flex-col items-center lg:grid lg:grid-cols-2 gap-12 lg:gap-16 lg:items-center">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
+              className="w-full flex flex-col items-center lg:items-start text-center lg:text-left"
             >
-
 
               {/* Badge */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7949fe]/10 border border-[#7949fe]/30"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7949fe]/10 border border-[#7949fe]/30 mb-6"
               >
                 <Sparkles className="w-4 h-4 text-[#7949fe]" />
                 <span className="text-sm font-medium text-[#7949fe]">STEM Education Excellence</span>
@@ -468,14 +502,14 @@ export default function Home() {
                   <span className="text-slate-900">Potential</span>
                 </h1>
 
-                <p className="text-lg sm:text-xl text-slate-600 max-w-xl leading-relaxed">
+                <p className="text-lg sm:text-xl text-slate-600 max-w-xl leading-relaxed mx-auto lg:mx-0">
                   Empowering Grade 8–12 learners across South Africa with personalized STEM tutoring,
                   comprehensive mentorship, and innovative mobile learning solutions.
                 </p>
               </div>
 
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center lg:justify-start">
                 <Button
                   asChild
                   size="lg"
@@ -494,7 +528,7 @@ export default function Home() {
                 </Button>
               </div>
 
-              <div className="mt-12 flex items-center gap-4 text-sm font-medium text-gray-500 relative z-[60]">
+              <div className="mt-12 flex items-center gap-4 text-sm font-medium text-gray-500 relative justify-center lg:justify-start">
                 <div className="flex -space-x-3">
                   {[1, 2, 3, 4].map(i => (
                     <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
@@ -514,94 +548,211 @@ export default function Home() {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative hidden md:block"
+              className="relative w-full max-w-md mx-auto hidden lg:block"
             >
-              <div className="absolute inset-0 bg-[#7949fe] rounded-[3rem] rotate-3 opacity-10 scale-95 blur-2xl transform translate-y-8" />
+              <div className="absolute inset-0 bg-[#9f82f6] rounded-[3rem] rotate-3 opacity-10 scale-95 blur-2xl transform translate-y-8" />
 
               <div className="relative bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden">
                 {/* Dashboard Header */}
-                <div className="bg-gradient-to-r from-[#7c3aed] to-[#9333ea] p-6 text-white">
+                <div style={{ background: 'linear-gradient(to right, #7949fe, #9f82f6)' }} className="p-6 text-white">
                   <div className="flex justify-between items-center mb-6">
                     <div>
-                      <h3 className="font-bold text-lg">Student Portal</h3>
-                      <p className="text-[#7949fe]/40 text-sm">Welcome back, Sarah!</p>
+                      <h3 className="font-bold text-3xl mb-1">Vitocostrian Mableka</h3>
+                      <p className="text-white/70 text-lg">Grade 12</p>
                     </div>
-                    <div className="w-10 h-10 bg-white/20 rounded-full backdrop-blur-sm flex items-center justify-center">
-                      <Users className="w-5 h-5 text-white" />
+                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                      <svg className="w-7 h-7 text-[#E85D52]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
                     </div>
                   </div>
 
                   {/* Progress Cards */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                      <div className="text-2xl font-bold mb-1">92%</div>
-                      <div className="text-xs text-[#7949fe]/60">Math Average</div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="relative w-12 h-12">
+                          <svg className="w-12 h-12 transform -rotate-90">
+                            <circle
+                              cx="24"
+                              cy="24"
+                              r="20"
+                              stroke="rgba(255,255,255,0.3)"
+                              strokeWidth="4"
+                              fill="none"
+                            />
+                            <circle
+                              cx="24"
+                              cy="24"
+                              r="20"
+                              stroke="white"
+                              strokeWidth="4"
+                              fill="none"
+                              strokeDasharray="125.6"
+                              strokeDashoffset="31.4"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-xl font-bold">Level 4</div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-white/70">530 XP total</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                      <div className="text-2xl font-bold mb-1">A+</div>
-                      <div className="text-xs text-[#7949fe]/60">Recent Grade</div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#FFB74D] to-[#FFA726] rounded-full flex items-center justify-center">
+                          <span className="text-2xl">🔥</span>
+                        </div>
+                        <div>
+                          <div className="text-xl font-bold">3 days</div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-white/70">Current streak</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Dashboard Body */}
                 <div className="p-6 bg-gray-50/50">
-                  <div className="mb-2 flex justify-between items-center">
-                    <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Upcoming Sessions</h4>
-                    <span className="text-xs text-[#ff7849] font-semibold cursor-pointer">View All</span>
-                  </div>
-
                   <div className="space-y-3">
-                    {[
-                      { subject: "Advanced Physics", time: "Today, 14:00", icon: Sparkles, color: "text-blue-500", bg: "bg-blue-100" },
-                      { subject: "Calculus II", time: "Tomorrow, 10:00", icon: Laptop, color: "text-[#7949fe]", bg: "bg-[#7949fe]/10" },
-                      { subject: "Chemistry Lab", time: "Wed, 15:30", icon: BookOpen, color: "text-pink-500", bg: "bg-pink-100" },
-                    ].map((item, idx) => (
-                      <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
-                        <div className={`w-12 h-12 ${item.bg} rounded-full flex items-center justify-center flex-shrink-0`}>
-                          <item.icon className={`w-5 h-5 ${item.color}`} />
-                        </div>
+                    {/* Equations course */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                      className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <h5 className="font-bold text-gray-900 text-sm">{item.subject}</h5>
-                          <p className="text-xs text-gray-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> {item.time}
+                          <h5 className="font-bold text-gray-900 text-lg mb-2">Equations and Inequalities</h5>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            Master solving linear, quadratic, exponential, logarithmic equations, and inequalities.
                           </p>
                         </div>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full">
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
-                        </Button>
+                        <button className="ml-4 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors flex-shrink-0">
+                          <ChevronRight />
+                        </button>
                       </div>
-                    ))}
-                  </div>
 
-                  <div className="mt-6 bg-[#7949fe]/10 rounded-xl p-4 border border-[#7949fe]/20 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-[#7949fe]">
-                      <Star className="w-5 h-5 fill-[#7949fe]" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900 text-sm">Course Completed!</div>
-                      <div className="text-xs text-gray-600">You finished "Biology 101"</div>
-                    </div>
+                      <div className="space-y-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: '50%' }}
+                            transition={{ duration: 1, delay: 0.5 }}
+                            className="bg-[#9987ed] h-full rounded-full"
+                          ></motion.div>
+                        </div>
+                        <p className="text-gray-500 text-xs text-right font-medium">50% complete</p>
+                      </div>
+                    </motion.div>
+
+                    {/* Newton's Laws course */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                      className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h5 className="font-bold text-gray-900 text-lg mb-2">Newton's Laws of Motion</h5>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            Learn how forces affect motion using Newton's three laws.
+                          </p>
+                        </div>
+                        <button className="ml-4 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors flex-shrink-0">
+                          <ChevronRight />
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: '40%' }}
+                            transition={{ duration: 1, delay: 0.6 }}
+                            className="bg-[#9987ed] h-full rounded-full"
+                          ></motion.div>
+                        </div>
+                        <p className="text-gray-500 text-xs text-right font-medium">40% complete</p>
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* Bottom navigation */}
+                <div className="border-t border-gray-200 bg-white px-4 py-3">
+                  <div className="flex items-center justify-around">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setActiveTab('home')}
+                      className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${activeTab === 'home' ? 'text-[#9987ed]' : 'text-gray-400'
+                        }`}
+                    >
+                      <HomeIcon />
+                      <span className="text-xs font-medium">Home</span>
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setActiveTab('learn')}
+                      className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${activeTab === 'learn' ? 'text-[#9987ed]' : 'text-gray-400'
+                        }`}
+                    >
+                      <BookIcon />
+                      <span className="text-xs font-medium">Learn</span>
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setActiveTab('tutor')}
+                      className={`flex flex-col items-center gap-1 px-6 py-2 rounded-xl transition-colors relative ${activeTab === 'tutor' ? 'text-[#9987ed]' : 'text-gray-400'
+                        }`}
+                    >
+                      {activeTab === 'tutor' && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-[#9987ed]/10 rounded-full -z-10"
+                        />
+                      )}
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${activeTab === 'tutor' ? 'bg-[#9987ed] ring-4 ring-[#9987ed]/20' : 'bg-gray-200'
+                        }`}>
+                        <UsersIcon />
+                      </div>
+                      <span className="text-xs font-medium">Tutor</span>
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setActiveTab('exams')}
+                      className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${activeTab === 'exams' ? 'text-[#9987ed]' : 'text-gray-400'
+                        }`}
+                    >
+                      <FileIcon />
+                      <span className="text-xs font-medium">Exams</span>
+                    </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setActiveTab('profile')}
+                      className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${activeTab === 'profile' ? 'text-[#9987ed]' : 'text-gray-400'
+                        }`}
+                    >
+                      <UserIcon />
+                      <span className="text-xs font-medium">Profile</span>
+                    </motion.button>
                   </div>
                 </div>
               </div>
-
-              {/* Floating elements */}
-              <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                className="absolute -right-8 top-20 bg-white p-4 rounded-2xl shadow-xl border border-gray-100 z-20 hidden md:block"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-full">
-                    <Check className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold">Homework Done</div>
-                    <div className="text-xs text-gray-500">Just now</div>
-                  </div>
-                </div>
-              </motion.div>
             </motion.div>
           </div>
         </div>
@@ -787,7 +938,7 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
-                        <Button 
+                        <Button
                           onClick={() => {
                             setSelectedSubject(subject);
                             setIsSyllabusModalOpen(true);
@@ -876,12 +1027,12 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
-                        <Button 
+                        <Button
                           onClick={() => {
                             setSelectedSubject(subject);
                             setIsSyllabusModalOpen(true);
                           }}
-                          variant="outline" 
+                          variant="outline"
                           className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group"
                         >
                           View Syllabus
@@ -966,7 +1117,7 @@ export default function Home() {
                         </div>
                       </CardContent>
                       <CardFooter className="pt-4 border-t">
-                        <Button 
+                        <Button
                           onClick={() => {
                             setSelectedSubject(subject);
                             setIsSyllabusModalOpen(true);
