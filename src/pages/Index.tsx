@@ -503,8 +503,7 @@ export default function Home() {
                 </h1>
 
                 <p className="text-lg sm:text-xl text-slate-600 max-w-xl leading-relaxed mx-auto lg:mx-0">
-                  Empowering Grade 8–12 learners across South Africa with personalized STEM tutoring,
-                  comprehensive mentorship, and innovative mobile learning solutions.
+                  From Grade 8 to Matric, we provide personalized STEM mentorship and innovative mobile tools that South Africa’s future leaders need to succeed.
                 </p>
               </div>
 
@@ -898,7 +897,7 @@ export default function Home() {
                     whileHover={{ y: -8 }}
                     className="group"
                   >
-                    <Card className="h-full border-2 border-gray-100 hover:border-[#7949fe]/30 transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
+                    <Card className="h-full border-2 border-[#7949fe]/30 hover:border-[#7949fe] transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
                       <div className={`h-2 bg-gradient-to-r ${subject.gradient}`} />
                       <CardHeader className="pb-4">
                         <div className="flex items-start justify-between mb-4">
