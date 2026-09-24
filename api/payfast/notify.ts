@@ -16,6 +16,11 @@ const products: Record<string, { title: string; amount: string; file: string }> 
   },
 };
 
+function amountInCents(value: string | undefined) {
+  const amount = Number.parseFloat(value || '');
+  return Number.isFinite(amount) ? Math.round(amount * 100) : -1;
+}
+
 function signature(fields: Record<string, string>, passphrase?: string) {
   const payload = Object.entries(fields)
     .filter(([key, value]) => key !== 'signature' && value !== '')
@@ -78,11 +83,15 @@ export default async function handler(request: IncomingMessage, response: Server
       customerEmail: fields.email_address,
     });
 
-    if (!product || fields.merchant_id !== process.env.PAYFAST_MERCHANT_ID || fields.amount !== product.amount) {
+    const expectedAmount = amountInCents(product?.amount);
+    const receivedAmount = amountInCents(fields.amount);
+    if (!product || fields.merchant_id !== process.env.PAYFAST_MERCHANT_ID || receivedAmount !== expectedAmount) {
       console.error('[PayFast ITN] purchase validation failed', {
         productFound: Boolean(product),
         merchantMatches: fields.merchant_id === process.env.PAYFAST_MERCHANT_ID,
-        amountMatches: product ? fields.amount === product.amount : false,
+        amountMatches: product ? receivedAmount === expectedAmount : false,
+        receivedAmount: receivedAmount === -1 ? 'invalid' : receivedAmount,
+        expectedAmount: expectedAmount === -1 ? 'invalid' : expectedAmount,
       });
       return sendText(response, 400, 'Invalid purchase');
     }
