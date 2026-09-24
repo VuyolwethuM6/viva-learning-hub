@@ -84,12 +84,14 @@ export default async function handler(request: IncomingMessage, response: Server
     });
 
     const expectedAmount = amountInCents(product?.amount);
-    const receivedAmount = amountInCents(fields.amount);
+    const receivedAmountField = fields.amount_gross || fields.amount;
+    const receivedAmount = amountInCents(receivedAmountField);
     if (!product || fields.merchant_id !== process.env.PAYFAST_MERCHANT_ID || receivedAmount !== expectedAmount) {
       console.error('[PayFast ITN] purchase validation failed', {
         productFound: Boolean(product),
         merchantMatches: fields.merchant_id === process.env.PAYFAST_MERCHANT_ID,
         amountMatches: product ? receivedAmount === expectedAmount : false,
+        receivedAmountField: fields.amount_gross ? 'amount_gross' : 'amount',
         receivedAmount: receivedAmount === -1 ? 'invalid' : receivedAmount,
         expectedAmount: expectedAmount === -1 ? 'invalid' : expectedAmount,
       });
