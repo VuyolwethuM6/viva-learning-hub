@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 
 const products: Record<string, { title: string; amount: string }> = {
   'Analytical Geometry Practice': { title: 'Analytical Geometry Practice', amount: '299.00' },
@@ -22,12 +23,24 @@ function payfastSignature(fields: Record<string, string>, passphrase?: string) {
   return crypto.createHash('md5').update(withPassphrase).digest('hex');
 }
 
-export default async function handler(request: Request): Promise<Response> {
+function sendJson(response: ServerResponse, status: number, body: Record<string, unknown>) {
+  response.statusCode = status;
+  response.setHeader('Content-Type', 'application/json');
+  response.end(JSON.stringify(body));
+}
+
+async function readBody(request: IncomingMessage) {
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) chunks.push(Buffer.from(chunk));
+  return JSON.parse(Buffer.concat(chunks).toString('utf8')) as CheckoutPayload;
+}
+
+export default async function handler(request: IncomingMessage, response: ServerResponse) {
   console.info('[PayFast API] checkout request', { method: request.method });
-  if (request.method !== 'POST') return Response.json({ error: 'Method not allowed' }, { status: 405 });
+  if (request.method !== 'POST') return sendJson(response, 405, { error: 'Method not allowed' });
 
   try {
-    const body = await request.json() as CheckoutPayload;
+    const body = await readBody(request);
     const product = products[String(body.material || '')];
     const firstName = String(body.firstName || '').trim();
     const lastName = String(body.lastName || '').trim();
@@ -36,10 +49,12 @@ export default async function handler(request: Request): Promise<Response> {
 
     if (!product || !firstName || !lastName || !email || !phone || !/^\S+@\S+\.\S+$/.test(email)) {
       console.warn('[PayFast API] invalid checkout details', { product: Boolean(product), email: Boolean(email) });
-      return Response.json({ error: 'Complete customer and product details are required.' }, { status: 400 });
+      return sendJson(response, 400, { error: 'Complete customer and product details are required.' });
     }
 
-    const origin = process.env.PUBLIC_SITE_URL || new URL(request.url).origin;
+    const protocol = request.headers['x-forwarded-proto'] || 'http';
+    const host = request.headers.host || 'localhost:8080';
+    const origin = process.env.PUBLIC_SITE_URL || `${protocol}://${host}`;
     const fields: Record<string, string> = {
       merchant_id: process.env.PAYFAST_MERCHANT_ID || '',
       merchant_key: process.env.PAYFAST_MERCHANT_KEY || '',
@@ -58,16 +73,16 @@ export default async function handler(request: Request): Promise<Response> {
 
     if (!fields.merchant_id || !fields.merchant_key) {
       console.error('[PayFast API] missing server credentials');
-      return Response.json({ error: 'PayFast server configuration is incomplete.' }, { status: 503 });
+      return sendJson(response, 503, { error: 'PayFast server configuration is incomplete.' });
     }
 
     console.info('[PayFast API] checkout payload signed', { product: product.title, amount: product.amount });
-    return Response.json({
+    return sendJson(response, 200, {
       endpoint: process.env.PAYFAST_ENDPOINT || 'https://sandbox.payfast.co.za/eng/process',
       fields: { ...fields, signature: payfastSignature(fields, process.env.PAYFAST_PASSPHRASE) },
     });
   } catch (error) {
     console.error('[PayFast API] checkout failed', error instanceof Error ? error.message : 'unknown error');
-    return Response.json({ error: 'Unable to create checkout.' }, { status: 400 });
+    return sendJson(response, 400, { error: 'Unable to create checkout.' });
   }
 }

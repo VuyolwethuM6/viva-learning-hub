@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 
 const products: Record<string, { title: string; amount: string; file: string }> = {
@@ -42,20 +43,32 @@ async function sendEmail(to: string[], subject: string, text: string, attachment
   if (!response.ok) throw new Error(`Email provider returned ${response.status}`);
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+function sendText(response: ServerResponse, status: number, message: string) {
+  response.statusCode = status;
+  response.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  response.end(message);
+}
+
+async function readBody(request: IncomingMessage) {
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) chunks.push(Buffer.from(chunk));
+  return Buffer.concat(chunks).toString('utf8');
+}
+
+export default async function handler(request: IncomingMessage, response: ServerResponse) {
+  if (request.method !== 'POST') return sendText(response, 405, 'Method not allowed');
 
   try {
-    const raw = await request.text();
+    const raw = await readBody(request);
     const params = new URLSearchParams(raw);
     const fields = Object.fromEntries(params.entries());
     const product = products[fields.item_name];
 
     if (!product || fields.merchant_id !== process.env.PAYFAST_MERCHANT_ID || fields.amount !== product.amount) {
-      return new Response('Invalid purchase', { status: 400 });
+      return sendText(response, 400, 'Invalid purchase');
     }
     if (signature(fields, process.env.PAYFAST_PASSPHRASE) !== fields.signature) {
-      return new Response('Invalid signature', { status: 400 });
+      return sendText(response, 400, 'Invalid signature');
     }
 
     const validationUrl = process.env.PAYFAST_VALIDATE_URL || 'https://sandbox.payfast.co.za/eng/query/validate';
@@ -64,10 +77,10 @@ export default async function handler(request: Request): Promise<Response> {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: raw,
     });
-    if ((await validation.text()).trim() !== 'VALID') return new Response('Payment not validated', { status: 400 });
-    if (fields.payment_status !== 'COMPLETE') return new Response('Payment incomplete', { status: 202 });
+    if ((await validation.text()).trim() !== 'VALID') return sendText(response, 400, 'Payment not validated');
+    if (fields.payment_status !== 'COMPLETE') return sendText(response, 202, 'Payment incomplete');
     if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM || !process.env.ADMIN_EMAIL) {
-      return new Response('Email service is not configured', { status: 503 });
+      return sendText(response, 503, 'Email service is not configured');
     }
 
     const filePath = path.join(process.cwd(), 'public', 'materials', product.file);
@@ -79,8 +92,9 @@ export default async function handler(request: Request): Promise<Response> {
     await sendEmail([fields.email_address], `Your Viva Tutorials PDF: ${product.title}`, `Thank you for your payment. Your PDF is attached.\n\n${details}`, attachment);
     await sendEmail([process.env.ADMIN_EMAIL], `New PDF purchase: ${product.title}`, `A paid PDF was purchased.\n\n${details}`, attachment);
 
-    return new Response('OK', { status: 200 });
-  } catch {
-    return new Response('Unable to process notification', { status: 500 });
+    return sendText(response, 200, 'OK');
+  } catch (error) {
+    console.error('[PayFast API] notification failed', error instanceof Error ? error.message : 'unknown error');
+    return sendText(response, 500, 'Unable to process notification');
   }
 }
