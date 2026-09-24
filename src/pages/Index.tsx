@@ -259,6 +259,111 @@ const UserIcon = () => (
   </svg>
 );
 
+const PurchaseModal = ({ material, open, onOpenChange }) => {
+  const [customer, setCustomer] = useState({ firstName: '', lastName: '', email: '', phone: '' });
+  const merchantId = import.meta.env.VITE_PAYFAST_MERCHANT_ID;
+  const merchantKey = import.meta.env.VITE_PAYFAST_MERCHANT_KEY;
+  const payFastEndpoint = import.meta.env.VITE_PAYFAST_ENDPOINT || 'https://sandbox.payfast.co.za/eng/process';
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!material || !merchantId || !merchantKey) return;
+
+    sessionStorage.setItem('viva-purchase', JSON.stringify({
+      customer,
+      material: material.title,
+      amount: material.amount,
+      currency: 'ZAR',
+      status: 'pending',
+    }));
+    event.currentTarget.submit();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[94vh] max-w-lg overflow-y-auto rounded-3xl border-0 bg-white p-0 shadow-2xl">
+        {material && (
+          <form onSubmit={handleSubmit} action={payFastEndpoint} method="POST" target="_self" className="p-6 sm:p-8">
+            <DialogHeader className="pr-10 text-left">
+              <DialogTitle className="text-2xl font-bold text-slate-900">Complete your purchase</DialogTitle>
+              <DialogDescription className="text-slate-600">Enter your details so we know where to send your paid PDF.</DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-6 rounded-2xl bg-slate-50 p-4">
+              <div className="text-xs font-bold uppercase tracking-[0.16em] text-[#7949fe]">You are buying</div>
+              <div className="mt-1 text-lg font-bold text-slate-900">{material.title}</div>
+              <div className="mt-1 text-sm text-slate-500">{material.pages} pages · PDF · {material.price}</div>
+            </div>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-semibold text-slate-700">First name
+                <Input required autoComplete="given-name" value={customer.firstName} onChange={(event) => setCustomer({ ...customer, firstName: event.target.value })} className="mt-2" />
+              </label>
+              <label className="text-sm font-semibold text-slate-700">Surname
+                <Input required autoComplete="family-name" value={customer.lastName} onChange={(event) => setCustomer({ ...customer, lastName: event.target.value })} className="mt-2" />
+              </label>
+            </div>
+            <label className="mt-4 block text-sm font-semibold text-slate-700">Email address
+              <Input required type="email" autoComplete="email" value={customer.email} onChange={(event) => setCustomer({ ...customer, email: event.target.value })} className="mt-2" />
+            </label>
+            <label className="mt-4 block text-sm font-semibold text-slate-700">Phone number
+              <Input required type="tel" autoComplete="tel" value={customer.phone} onChange={(event) => setCustomer({ ...customer, phone: event.target.value })} className="mt-2" />
+            </label>
+
+            <input type="hidden" name="merchant_id" value={merchantId} />
+            <input type="hidden" name="merchant_key" value={merchantKey} />
+            <input type="hidden" name="amount" value={material.amount} />
+            <input type="hidden" name="item_name" value={material.title} />
+            <input type="hidden" name="name_first" value={customer.firstName} />
+            <input type="hidden" name="name_last" value={customer.lastName} />
+            <input type="hidden" name="email_address" value={customer.email} />
+            <input type="hidden" name="cell_number" value={customer.phone} />
+            <input type="hidden" name="custom_str1" value={material.title} />
+            <input type="hidden" name="return_url" value={import.meta.env.VITE_PAYFAST_RETURN_URL || `${window.location.origin}/payment-success`} />
+            <input type="hidden" name="cancel_url" value={import.meta.env.VITE_PAYFAST_CANCEL_URL || `${window.location.origin}/payment-cancelled`} />
+            <input type="hidden" name="notify_url" value={import.meta.env.VITE_PAYFAST_NOTIFY_URL || ''} />
+
+            <Button type="submit" disabled={!merchantId || !merchantKey} className="mt-6 min-h-12 w-full rounded-xl bg-gradient-to-r from-[#7949fe] to-[#ff7849] font-bold text-white hover:from-[#5a4ecf] hover:to-[#ff6b35]">
+              {merchantId && merchantKey ? `Continue to PayFast · ${material.price}` : 'Add PayFast credentials first'}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <p className="mt-3 text-center text-xs leading-5 text-slate-500">Your details are used for payment processing, purchase records, and PDF delivery.</p>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const PayFastButton = ({ material, onPurchase }) => {
+  const merchantId = import.meta.env.VITE_PAYFAST_MERCHANT_ID;
+  const merchantKey = import.meta.env.VITE_PAYFAST_MERCHANT_KEY;
+
+  if (!merchantId || !merchantKey) {
+    return (
+      <button
+        type="button"
+        onClick={onPurchase}
+        className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7949fe] to-[#ff7849] px-3 py-3 text-center text-sm font-bold text-white transition-all hover:from-[#5a4ecf] hover:to-[#ff6b35]"
+      >
+        Buy via PayFast
+        <ArrowRight className="h-4 w-4" />
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onPurchase}
+        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7949fe] to-[#ff7849] px-3 py-3 text-center text-sm font-bold text-white transition-all hover:from-[#5a4ecf] hover:to-[#ff6b35]"
+    >
+      Buy via PayFast
+      <ArrowRight className="h-4 w-4" />
+    </button>
+  );
+};
+
 
 // --- Page Sections ---
 
@@ -269,6 +374,7 @@ export default function Home() {
   const [isSyllabusModalOpen, setIsSyllabusModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [previewMaterial, setPreviewMaterial] = useState(null);
+  const [purchaseMaterial, setPurchaseMaterial] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
 
   useEffect(() => {
@@ -1203,56 +1309,60 @@ export default function Home() {
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {[
               {
-                title: "Grade 12 Mathematics Paper 1",
+                title: "Sequence and Series Practice",
                 subtitle: "Sequence and Series",
-                description: "Revision notes and practice questions for the most tested Grade 12 maths topics.",
+                description: "Uploaded Grade 12 practice problems for arithmetic and geometric sequences and series.",
                 price: "Free",
                 isFree: true,
                 file: "/materials/02. Sequence And Series Practice Problems.pdf",
                 paymentUrl: "",
-                pages: "18 pages",
+                pages: 18,
+                amount: "0.00",
                 accent: "from-violet-500 to-indigo-600",
                 badge: "Free PDF",
                 includes: ["Sequence and series", "Practice questions", "Exam-style layout", "Quick revision summary"]
               },
               {
-                title: "Grade 12 Mathematics Paper 2",
-                subtitle: "Trigonometry ",
-                description: "Exam-focused worksheets that help learners revise high-frequency patterns and formulas.",
+                title: "Trigonometry Practice Questions",
+                subtitle: "Trigonometry",
+                description: "Uploaded exam-focused trigonometry questions for Grade 12 revision.",
                 price: "Free",
                 isFree: true,
                 file: "/materials/03. Trigonometry Practice Questions.pdf",
                 paymentUrl: "",
-                pages: "20 pages",
+                pages: 148,
+                amount: "0.00",
                 accent: "from-cyan-500 to-sky-600",
                 badge: "Free PDF",
                 includes: ["Trigonometry", "Euclidean geometry", "Worked questions", "Exam prep checklist"]
               },
               {
-                title: "Physical Sciences Essentials",
-                subtitle: "Revision Bundle",
-                description: "Physics and chemistry summaries built for quicker retention before assessment week.",
+                title: "Analytical Geometry Practice",
+                subtitle: "Analytical Geometry",
+                description: "Uploaded analytical geometry practice questions for focused exam preparation.",
                 price: "R299",
                 isFree: false,
-                file: "/materials/physical-sciences-essentials.pdf",
-                paymentUrl: import.meta.env.VITE_PAYFAST_PHYSICAL_SCIENCES_URL || "/contact",
-                pages: "24 pages",
+                file: "/materials/02. Analytical Geometry Practice Questions.pdf",
+                paymentUrl: "",
+                pages: 133,
+                amount: "299.00",
                 accent: "from-[#7949fe] to-[#ff7849]",
                 badge: "PayFast",
-                includes: ["Key concepts", "Formula recap", "Practice problems", "Exam strategy tips"]
+                includes: ["Coordinate geometry", "Practice problems", "Exam-style questions", "Revision focus areas"]
               },
               {
-                title: "Life Sciences Revision Guide",
-                subtitle: "Core Topics",
-                description: "A clean, structured notes pack covering the main Grade 12 Life Sciences focus areas.",
+                title: "Finance Practice Questions",
+                subtitle: "Finance",
+                description: "Uploaded finance practice questions for structured mathematics revision.",
                 price: "R399",
                 isFree: false,
-                file: "/materials/grade-12-life-sciences-guide.pdf",
-                paymentUrl: import.meta.env.VITE_PAYFAST_LIFE_SCIENCES_URL || "/contact",
-                pages: "26 pages",
+                file: "/materials/04. Finance Practice Questions.pdf",
+                paymentUrl: "",
+                pages: 11,
+                amount: "399.00",
                 accent: "from-emerald-500 to-teal-600",
                 badge: "PayFast",
-                includes: ["Genetics", "Human reproduction", "Evolution", "Term definitions and diagrams"]
+                includes: ["Finance concepts", "Practice questions", "Exam-style layout", "Revision checklist"]
               }
             ].map((material, index) => (
               <motion.article
@@ -1274,7 +1384,7 @@ export default function Home() {
                       <div className="text-right">
                         <div className="text-xl font-extrabold text-[#1a0b2e]">{material.price}</div>
                         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                          {material.pages}
+                          {material.pages} pages
                         </div>
                       </div>
                     </div>
@@ -1299,7 +1409,7 @@ export default function Home() {
                         <div className="flex h-52 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-5 text-center">
                           <div>
                             <div className="mb-2 text-sm font-bold text-slate-700">Premium PDF</div>
-                            <p className="text-xs leading-5 text-slate-500">The first page becomes available after PayFast payment and email delivery.</p>
+                            <p className="text-xs leading-5 text-slate-500">This document is delivered after successful PayFast payment.</p>
                           </div>
                         </div>
                       )}
@@ -1321,15 +1431,17 @@ export default function Home() {
                       ))}
                     </CardContent>
 
-                    <CardFooter className="flex gap-2 p-0">
-                      <a
-                        href={material.isFree ? material.file : material.paymentUrl}
-                        {...(material.isFree ? { download: true } : { target: "_blank", rel: "noreferrer" })}
-                        className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold text-white transition-all ${material.isFree ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700' : 'bg-gradient-to-r from-[#7949fe] to-[#ff7849] hover:from-[#5a4ecf] hover:to-[#ff6b35]'}`}
-                      >
-                        {material.isFree ? 'Download PDF' : 'Buy via PayFast'}
-                        <ArrowRight className="h-4 w-4" />
-                      </a>
+                    <CardFooter className="flex flex-col gap-2 p-0 sm:flex-row">
+                      {material.isFree ? (
+                        <a
+                          href={material.file}
+                          download
+                          className="inline-flex min-h-12 w-full flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-3 py-3 text-center text-sm font-bold text-white transition-all hover:from-emerald-600 hover:to-green-700"
+                        >
+                          Download PDF
+                          <ArrowRight className="h-4 w-4" />
+                        </a>
+                      ) : <PayFastButton material={material} onPurchase={() => setPurchaseMaterial(material)} />}
                       {material.isFree && (
                         <button
                           type="button"
@@ -1356,18 +1468,18 @@ export default function Home() {
                       Free PDF preview · Page 1 of {previewMaterial.pages}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="bg-slate-800 px-4 pb-5 sm:px-8">
+                  <div className="bg-slate-800 px-3 pb-5 sm:px-8">
                     <iframe
                       src={`${previewMaterial.file}#page=1&view=FitH`}
                       title={`${previewMaterial.title} PDF preview`}
-                      className="h-[68vh] min-h-[480px] w-full rounded-2xl border border-white/10 bg-white"
+                      className="h-[58vh] min-h-[360px] w-full rounded-2xl border border-white/10 bg-white sm:h-[68vh] sm:min-h-[480px]"
                     />
-                    <div className="mt-4 flex items-center justify-between gap-4 text-sm text-slate-300">
-                      <span>Showing the first page of this free resource.</span>
+                    <div className="mt-4 flex flex-col items-stretch gap-4 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between">
+                      <span>Showing page 1 of {previewMaterial.pages}.</span>
                       <a
                         href={previewMaterial.file}
                         download
-                        className="shrink-0 rounded-full bg-white px-4 py-2 font-bold text-slate-900 transition-colors hover:bg-slate-200"
+                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 py-2 font-bold text-slate-900 transition-colors hover:bg-slate-200"
                       >
                         Download PDF
                       </a>
@@ -1377,6 +1489,11 @@ export default function Home() {
               )}
             </DialogContent>
           </Dialog>
+          <PurchaseModal
+            material={purchaseMaterial}
+            open={Boolean(purchaseMaterial)}
+            onOpenChange={(open) => !open && setPurchaseMaterial(null)}
+          />
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
