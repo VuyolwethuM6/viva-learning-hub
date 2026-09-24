@@ -1208,7 +1208,7 @@ export default function Home() {
                 description: "Revision notes and practice questions for the most tested Grade 12 maths topics.",
                 price: "Free",
                 isFree: true,
-                file: "/materials/",
+                file: "/materials/02. Sequence And Series Practice Problems.pdf",
                 paymentUrl: "",
                 pages: "18 pages",
                 accent: "from-violet-500 to-indigo-600",
