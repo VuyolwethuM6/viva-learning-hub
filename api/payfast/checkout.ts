@@ -46,14 +46,13 @@ export default async function handler(request: Request): Promise<Response> {
       custom_str2: email,
     };
 
-    if (!fields.merchant_id || !fields.merchant_key || !process.env.PAYFAST_NOTIFY_URL) {
+    if (!fields.merchant_id || !fields.merchant_key) {
       return Response.json({ error: 'PayFast server configuration is incomplete.' }, { status: 503 });
     }
 
-    const { merchant_key: _merchantKey, ...signedFields } = fields;
     return Response.json({
       endpoint: process.env.PAYFAST_ENDPOINT || 'https://sandbox.payfast.co.za/eng/process',
-      fields: { ...signedFields, signature: payfastSignature(signedFields, process.env.PAYFAST_PASSPHRASE) },
+      fields: { ...fields, signature: payfastSignature(fields, process.env.PAYFAST_PASSPHRASE) },
     });
   } catch {
     return Response.json({ error: 'Unable to create checkout.' }, { status: 400 });

@@ -262,11 +262,13 @@ const UserIcon = () => (
 const PurchaseModal = ({ material, open, onOpenChange }) => {
   const [customer, setCustomer] = useState({ firstName: '', lastName: '', email: '', phone: '' });
   const [checkoutError, setCheckoutError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!material) return;
 
+    setIsSubmitting(true);
     sessionStorage.setItem('viva-purchase', JSON.stringify({
       customer,
       material: material.title,
@@ -276,48 +278,58 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
     }));
 
     setCheckoutError('');
-    const response = await fetch('/api/payfast/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...customer, material: material.title }),
-    });
-    const checkout = await response.json();
-    if (!response.ok) {
-      setCheckoutError(checkout.error || 'Unable to start checkout. Please try again.');
-      return;
-    }
+    try {
+      const response = await fetch('/api/payfast/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ ...customer, material: material.title }),
+      });
+      const checkout = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setCheckoutError(checkout.error || `Checkout could not start (${response.status}). Check your PayFast server settings.`);
+        return;
+      }
+      if (!checkout.endpoint || !checkout.fields) {
+        setCheckoutError('PayFast returned an incomplete checkout response. Please try again.');
+        return;
+      }
 
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = checkout.endpoint;
-    Object.entries(checkout.fields).forEach(([name, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = String(value);
-      form.appendChild(input);
-    });
-    document.body.appendChild(form);
-    form.submit();
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = checkout.endpoint;
+      Object.entries(checkout.fields).forEach(([name, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = String(value);
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
+    } catch {
+      setCheckoutError('The checkout service could not be reached. Confirm the deployed API is available and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[94vh] max-w-lg overflow-y-auto rounded-3xl border-0 bg-white p-0 shadow-2xl">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-lg overflow-y-auto rounded-2xl border-0 bg-white p-0 shadow-2xl sm:max-h-[94vh] sm:w-full sm:rounded-3xl">
         {material && (
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-8">
             <DialogHeader className="pr-10 text-left">
               <DialogTitle className="text-2xl font-bold text-slate-900">Complete your purchase</DialogTitle>
               <DialogDescription className="text-slate-600">Enter your details so we know where to send your paid PDF.</DialogDescription>
             </DialogHeader>
 
-            <div className="mt-6 rounded-2xl bg-slate-50 p-4">
+            <div className="mt-4 rounded-2xl bg-slate-50 p-3 sm:mt-6 sm:p-4">
               <div className="text-xs font-bold uppercase tracking-[0.16em] text-[#7949fe]">You are buying</div>
               <div className="mt-1 text-lg font-bold text-slate-900">{material.title}</div>
               <div className="mt-1 text-sm text-slate-500">{material.pages} pages · PDF · {material.price}</div>
             </div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid gap-3 sm:mt-6 sm:gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold text-slate-700">First name
                 <Input required autoComplete="given-name" value={customer.firstName} onChange={(event) => setCustomer({ ...customer, firstName: event.target.value })} className="mt-2" />
               </label>
@@ -333,8 +345,8 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
             </label>
 
             {checkoutError && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{checkoutError}</p>}
-            <Button type="submit" className="mt-6 min-h-12 w-full rounded-xl bg-gradient-to-r from-[#7949fe] to-[#ff7849] font-bold text-white hover:from-[#5a4ecf] hover:to-[#ff6b35]">
-              Continue to PayFast · {material.price}
+            <Button type="submit" disabled={isSubmitting} className="mt-5 min-h-12 w-full rounded-xl bg-gradient-to-r from-[#7949fe] to-[#ff7849] font-bold text-white hover:from-[#5a4ecf] hover:to-[#ff6b35]">
+              {isSubmitting ? 'Connecting to PayFast...' : `Continue to PayFast · ${material.price}`}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <p className="mt-3 text-center text-xs leading-5 text-slate-500">Your details are used for payment processing, purchase records, and PDF delivery.</p>
