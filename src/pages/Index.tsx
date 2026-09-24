@@ -1217,11 +1217,11 @@ export default function Home() {
               },
               {
                 title: "Grade 12 Mathematics Paper 2",
-                subtitle: "Trigonometry and Geometry",
+                subtitle: "Trigonometry ",
                 description: "Exam-focused worksheets that help learners revise high-frequency patterns and formulas.",
                 price: "Free",
                 isFree: true,
-                file: "/materials/grade-12-mathematics-paper-2.pdf",
+                file: "/materials/03. Trigonometry Practice Questions.pdf",
                 paymentUrl: "",
                 pages: "20 pages",
                 accent: "from-cyan-500 to-sky-600",
