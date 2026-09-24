@@ -1208,7 +1208,7 @@ export default function Home() {
                 description: "Revision notes and practice questions for the most tested Grade 12 maths topics.",
                 price: "Free",
                 isFree: true,
-                file: "/materials/grade-12-mathematics-paper-1.pdf",
+                file: "/materials/",
                 paymentUrl: "",
                 pages: "18 pages",
                 accent: "from-violet-500 to-indigo-600",
