@@ -261,13 +261,11 @@ const UserIcon = () => (
 
 const PurchaseModal = ({ material, open, onOpenChange }) => {
   const [customer, setCustomer] = useState({ firstName: '', lastName: '', email: '', phone: '' });
-  const merchantId = import.meta.env.VITE_PAYFAST_MERCHANT_ID;
-  const merchantKey = import.meta.env.VITE_PAYFAST_MERCHANT_KEY;
-  const payFastEndpoint = import.meta.env.VITE_PAYFAST_ENDPOINT || 'https://sandbox.payfast.co.za/eng/process';
+  const [checkoutError, setCheckoutError] = useState('');
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!material || !merchantId || !merchantKey) return;
+    if (!material) return;
 
     sessionStorage.setItem('viva-purchase', JSON.stringify({
       customer,
@@ -276,14 +274,38 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
       currency: 'ZAR',
       status: 'pending',
     }));
-    event.currentTarget.submit();
+
+    setCheckoutError('');
+    const response = await fetch('/api/payfast/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...customer, material: material.title }),
+    });
+    const checkout = await response.json();
+    if (!response.ok) {
+      setCheckoutError(checkout.error || 'Unable to start checkout. Please try again.');
+      return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = checkout.endpoint;
+    Object.entries(checkout.fields).forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = String(value);
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[94vh] max-w-lg overflow-y-auto rounded-3xl border-0 bg-white p-0 shadow-2xl">
         {material && (
-          <form onSubmit={handleSubmit} action={payFastEndpoint} method="POST" target="_self" className="p-6 sm:p-8">
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8">
             <DialogHeader className="pr-10 text-left">
               <DialogTitle className="text-2xl font-bold text-slate-900">Complete your purchase</DialogTitle>
               <DialogDescription className="text-slate-600">Enter your details so we know where to send your paid PDF.</DialogDescription>
@@ -310,21 +332,9 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
               <Input required type="tel" autoComplete="tel" value={customer.phone} onChange={(event) => setCustomer({ ...customer, phone: event.target.value })} className="mt-2" />
             </label>
 
-            <input type="hidden" name="merchant_id" value={merchantId} />
-            <input type="hidden" name="merchant_key" value={merchantKey} />
-            <input type="hidden" name="amount" value={material.amount} />
-            <input type="hidden" name="item_name" value={material.title} />
-            <input type="hidden" name="name_first" value={customer.firstName} />
-            <input type="hidden" name="name_last" value={customer.lastName} />
-            <input type="hidden" name="email_address" value={customer.email} />
-            <input type="hidden" name="cell_number" value={customer.phone} />
-            <input type="hidden" name="custom_str1" value={material.title} />
-            <input type="hidden" name="return_url" value={import.meta.env.VITE_PAYFAST_RETURN_URL || `${window.location.origin}/payment-success`} />
-            <input type="hidden" name="cancel_url" value={import.meta.env.VITE_PAYFAST_CANCEL_URL || `${window.location.origin}/payment-cancelled`} />
-            <input type="hidden" name="notify_url" value={import.meta.env.VITE_PAYFAST_NOTIFY_URL || ''} />
-
-            <Button type="submit" disabled={!merchantId || !merchantKey} className="mt-6 min-h-12 w-full rounded-xl bg-gradient-to-r from-[#7949fe] to-[#ff7849] font-bold text-white hover:from-[#5a4ecf] hover:to-[#ff6b35]">
-              {merchantId && merchantKey ? `Continue to PayFast · ${material.price}` : 'Add PayFast credentials first'}
+            {checkoutError && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{checkoutError}</p>}
+            <Button type="submit" className="mt-6 min-h-12 w-full rounded-xl bg-gradient-to-r from-[#7949fe] to-[#ff7849] font-bold text-white hover:from-[#5a4ecf] hover:to-[#ff6b35]">
+              Continue to PayFast · {material.price}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <p className="mt-3 text-center text-xs leading-5 text-slate-500">Your details are used for payment processing, purchase records, and PDF delivery.</p>
