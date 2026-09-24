@@ -111,18 +111,33 @@ export default async function handler(request: IncomingMessage, response: Server
     }
 
     const filePath = path.join(process.cwd(), 'public', 'materials', product.file);
-    const file = (await readFile(filePath)).toString('base64');
-    console.info('[PayFast ITN] PDF loaded', { file: product.file, bytes: file.length });
+    console.info('[PayFast ITN] attempting to read PDF', { filePath, cwd: process.cwd() });
+    let file: string;
+    try {
+      file = (await readFile(filePath)).toString('base64');
+      console.info('[PayFast ITN] PDF loaded', { file: product.file, bytes: file.length });
+    } catch (fileError) {
+      console.error('[PayFast ITN] PDF file not found or unreadable', { filePath, error: fileError instanceof Error ? fileError.message : 'unknown' });
+      return sendText(response, 200, 'OK');
+    }
     const customerName = `${fields.name_first} ${fields.name_last}`.trim();
     const details = `Customer: ${customerName}\nEmail: ${fields.email_address}\nPhone: ${fields.cell_number}\nPDF: ${product.title}\nAmount: R${product.amount}\nPayment ID: ${fields.pf_payment_id || 'Sandbox transaction'}\nStatus: ${fields.payment_status}`;
     const attachment = { filename: product.file, content: file };
 
-    await sendEmail([fields.email_address], `Your Viva Tutorials PDF: ${product.title}`, `Thank you for your payment. Your PDF is attached.\n\n${details}`, attachment);
-    await sendEmail([process.env.ADMIN_EMAIL], `New PDF purchase: ${product.title}`, `A paid PDF was purchased.\n\n${details}`, attachment);
+    try {
+      await sendEmail([fields.email_address], `Your Viva Tutorials PDF: ${product.title}`, `Thank you for your payment. Your PDF is attached.\n\n${details}`, attachment);
+    } catch (emailError) {
+      console.error('[PayFast ITN] customer email failed', { email: fields.email_address, error: emailError instanceof Error ? emailError.message : 'unknown' });
+    }
+    try {
+      await sendEmail([process.env.ADMIN_EMAIL], `New PDF purchase: ${product.title}`, `A paid PDF was purchased.\n\n${details}`, attachment);
+    } catch (emailError) {
+      console.error('[PayFast ITN] admin email failed', { email: process.env.ADMIN_EMAIL, error: emailError instanceof Error ? emailError.message : 'unknown' });
+    }
 
     return sendText(response, 200, 'OK');
   } catch (error) {
-    console.error('[PayFast API] notification failed', error instanceof Error ? error.message : 'unknown error');
-    return sendText(response, 500, 'Unable to process notification');
+    console.error('[PayFast ITN] unhandled exception', { error: error instanceof Error ? error.message : 'unknown error', stack: error instanceof Error ? error.stack : '' });
+    return sendText(response, 200, 'OK');
   }
 }
