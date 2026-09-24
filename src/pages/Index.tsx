@@ -1179,158 +1179,157 @@ export default function Home() {
             subtitle="Study Resources"
             title="Study Materials & Resources"
           />
-          <p className="text-center text-gray-600 text-lg mb-4 max-w-2xl mx-auto">
-            Access our collection of study guides, past papers, video lessons, and revision notes. Some resources are completely free!
+          <p className="mx-auto mb-4 max-w-2xl text-center text-base text-gray-600 md:text-lg">
+            Clean, fast-download resources stored in a local materials folder for quick access, with two free PDFs and two premium resources available via PayFast.
           </p>
-          <div className="text-center mb-12">
-            <a href="/study-materials" className="inline-flex items-center gap-2 text-[#7949fe] font-semibold hover:text-[#ff7849] transition-colors">
-              Browse all materials for Grades 8-12 <ArrowRight className="w-4 h-4" />
+
+          <div className="mb-12 flex justify-center">
+            <a
+              href="/study-materials"
+              className="inline-flex items-center gap-2 rounded-full border border-[#7949fe]/20 bg-[#7949fe]/5 px-5 py-3 text-sm font-semibold text-[#7949fe] transition-colors hover:bg-[#7949fe]/10"
+            >
+              Explore the full library <ArrowRight className="h-4 w-4" />
             </a>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {[
               {
-                title: "Grade 10 Maths Basics",
-                description: "Introduction to Grade 10 Mathematics with essential concepts and practice questions",
+                title: "Grade 12 Mathematics Paper 1",
+                subtitle: "Sequence and Series",
+                description: "Revision notes and practice questions for the most tested Grade 12 maths topics.",
                 price: "Free",
                 isFree: true,
-                icon: "📊",
-                gradient: "from-green-500 to-emerald-500",
-                type: "PDF Notes",
-                pages: "45 pages",
-                includes: ["Basic algebra", "Number patterns", "Intro to functions", "Practice exercises"]
+                file: "/materials/grade-12-mathematics-paper-1.pdf",
+                paymentUrl: "",
+                pages: "18 pages",
+                accent: "from-violet-500 to-indigo-600",
+                badge: "Free PDF",
+                includes: ["Sequence and series", "Practice questions", "Exam-style layout", "Quick revision summary"]
               },
               {
-                title: "Past Exam Papers 2023",
-                description: "Free collection of past matric exam papers with memo answers",
+                title: "Grade 12 Mathematics Paper 2",
+                subtitle: "Trigonometry and Geometry",
+                description: "Exam-focused worksheets that help learners revise high-frequency patterns and formulas.",
                 price: "Free",
                 isFree: true,
-                icon: "📝",
-                gradient: "from-teal-500 to-cyan-500",
-                type: "Practice Tests",
-                pages: "12 papers",
-                includes: ["Maths Paper 1 & 2", "Physical Sciences", "Life Sciences", "Answer memos"]
+                file: "/materials/grade-12-mathematics-paper-2.pdf",
+                paymentUrl: "",
+                pages: "20 pages",
+                accent: "from-cyan-500 to-sky-600",
+                badge: "Free PDF",
+                includes: ["Trigonometry", "Euclidean geometry", "Worked questions", "Exam prep checklist"]
               },
               {
-                title: "Study Tips Video Series",
-                description: "Free video lessons on effective study techniques and exam strategies",
-                price: "Free",
-                isFree: true,
-                icon: "🎬",
-                gradient: "from-blue-400 to-blue-600",
-                type: "Video Lessons",
-                pages: "8 videos",
-                includes: ["Time management", "Memory techniques", "Exam strategies", "Note-taking tips"]
-              },
-              {
-                title: "Grade 12 Maths Study Pack",
-                description: "Complete revision notes, practice questions, and exam strategies for Grade 12 Mathematics",
+                title: "Physical Sciences Essentials",
+                subtitle: "Revision Bundle",
+                description: "Physics and chemistry summaries built for quicker retention before assessment week.",
                 price: "R299",
                 isFree: false,
-                icon: "📐",
-                gradient: "from-blue-500 to-cyan-500",
-                type: "PDF Notes",
-                pages: "250+ pages",
-                includes: ["Full syllabus coverage", "100+ practice problems", "Past exam papers", "Video explanations"]
+                file: "/materials/physical-sciences-essentials.pdf",
+                paymentUrl: import.meta.env.VITE_PAYFAST_PHYSICAL_SCIENCES_URL || "/contact",
+                pages: "24 pages",
+                accent: "from-[#7949fe] to-[#ff7849]",
+                badge: "PayFast",
+                includes: ["Key concepts", "Formula recap", "Practice problems", "Exam strategy tips"]
               },
               {
-                title: "Physical Sciences Bundle",
-                description: "Comprehensive Physics & Chemistry study material for Grades 10-12",
+                title: "Life Sciences Revision Guide",
+                subtitle: "Core Topics",
+                description: "A clean, structured notes pack covering the main Grade 12 Life Sciences focus areas.",
                 price: "R399",
                 isFree: false,
-                icon: "⚗️",
-                gradient: "from-[#7949fe] to-[#ff7849]",
-                type: "PDF Notes",
-                pages: "400+ pages",
-                popular: true,
-                includes: ["Physics & Chemistry", "Practical experiments", "Formula sheets", "Exam tips & tricks"]
-              },
-              {
-                title: "Life Sciences Guide",
-                description: "Detailed notes and diagrams covering all Grade 12 Life Sciences topics",
-                price: "R249",
-                isFree: false,
-                icon: "🧬",
-                gradient: "from-green-500 to-emerald-500",
-                type: "PDF Notes",
-                pages: "180+ pages",
-                includes: ["Detailed diagrams", "Summary notes", "Past papers", "Mnemonics & tips"]
+                file: "/materials/grade-12-life-sciences-guide.pdf",
+                paymentUrl: import.meta.env.VITE_PAYFAST_LIFE_SCIENCES_URL || "/contact",
+                pages: "26 pages",
+                accent: "from-emerald-500 to-teal-600",
+                badge: "PayFast",
+                includes: ["Genetics", "Human reproduction", "Evolution", "Term definitions and diagrams"]
               }
-            ].map((material, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
+            ].map((material, index) => (
+              <motion.article
+                key={material.title}
+                initial={{ opacity: 0, y: 22 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: idx * 0.05 }}
-                className="relative group"
+                transition={{ delay: index * 0.06 }}
+                className="group"
               >
-                {material.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 bg-gradient-to-r from-[#7949fe] to-[#ff7849] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
-                    Best Seller
-                  </div>
-                )}
-                <Card className={`h-full border-2 ${material.popular ? 'border-[#7949fe] shadow-2xl' : material.isFree ? 'border-green-200' : 'border-gray-100'} hover:border-[#7949fe]/50 transition-all duration-300 hover:shadow-xl bg-white overflow-hidden group-hover:-translate-y-2`}>
-                  <div className={`h-2 bg-gradient-to-r ${material.gradient}`} />
-                  <CardHeader>
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${material.gradient} flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
-                        {material.icon}
-                      </div>
+                <div className="h-full overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(121,73,254,0.15)]">
+                  <div className={`h-2 bg-gradient-to-r ${material.accent}`} />
+
+                  <div className="p-5">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <Badge className={material.isFree ? 'border border-emerald-200 bg-emerald-50 text-emerald-700' : 'border border-[#7949fe]/20 bg-[#7949fe]/5 text-[#7949fe]'}>
+                        {material.badge}
+                      </Badge>
                       <div className="text-right">
-                        {material.isFree ? (
-                          <Badge className="bg-green-100 text-green-700 border border-green-300 text-sm font-bold px-3 py-1">
-                            Free
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-[#7949fe]/10 text-[#7949fe] border border-[#7949fe]/30 text-sm font-bold px-3 py-1">
-                            Premium
-                          </Badge>
-                        )}
-                        <div className={`text-2xl font-bold mt-2 ${material.isFree ? 'text-green-600' : 'text-[#1a0b2e]'}`}>
-                          {material.price}
+                        <div className="text-xl font-extrabold text-[#1a0b2e]">{material.price}</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          {material.pages}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">
-                        {material.type}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">
-                        {material.pages}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-xl font-bold text-gray-900 mb-2">
-                      {material.title}
-                    </CardTitle>
-                    <CardDescription className="text-gray-600">
-                      {material.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-sm font-semibold text-gray-700 mb-2">Includes:</div>
-                    {material.includes.map((item, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                        {item}
+
+                    <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-inner">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="rounded-full bg-slate-900 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-white">
+                          PDF
+                        </span>
+                        <span className="text-[10px] font-medium text-slate-500">Preview</span>
                       </div>
-                    ))}
-                  </CardContent>
-                  <CardFooter className="pt-4">
-                    <Button className={`w-full py-6 rounded-xl font-bold group-hover:shadow-lg transition-all ${material.isFree
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
-                      : 'bg-gradient-to-r from-[#7949fe] to-[#ff7849] hover:from-[#5a4ecf] hover:to-[#ff6b35] text-white'
-                      }`}>
-                      {material.isFree ? 'Download Free' : 'Purchase Now'}
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </motion.div>
+
+                      <div className="rounded-xl border border-slate-200 bg-white p-3">
+                        <div className="mb-2 h-2.5 w-2/3 rounded-full bg-slate-200" />
+                        <div className="mb-2 h-2 w-5/6 rounded-full bg-slate-100" />
+                        <div className="mb-2 h-2 w-4/5 rounded-full bg-slate-100" />
+                        <div className="mb-3 h-2 w-2/3 rounded-full bg-slate-100" />
+                        <div className="rounded-lg border border-dashed border-[#7949fe]/30 bg-[#7949fe]/5 p-2">
+                          <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#7949fe]">{material.subtitle}</div>
+                          <div className="text-xs font-semibold text-slate-700">{material.title}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <CardHeader className="p-0 pb-3">
+                      <CardTitle className="text-xl font-bold text-slate-900">{material.title}</CardTitle>
+                      <CardDescription className="mt-2 text-sm leading-6 text-slate-600">
+                        {material.description}
+                      </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="space-y-2 p-0 pb-4">
+                      {material.includes.map((item) => (
+                        <div key={item} className="flex items-center gap-2 text-sm text-slate-600">
+                          <Check className="h-4 w-4 text-emerald-600" />
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </CardContent>
+
+                    <CardFooter className="flex gap-2 p-0">
+                      <a
+                        href={material.isFree ? material.file : material.paymentUrl}
+                        {...(material.isFree ? { download: true } : { target: "_blank", rel: "noreferrer" })}
+                        className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold text-white transition-all ${material.isFree ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700' : 'bg-gradient-to-r from-[#7949fe] to-[#ff7849] hover:from-[#5a4ecf] hover:to-[#ff6b35]'}`}
+                      >
+                        {material.isFree ? 'Download PDF' : 'Buy via PayFast'}
+                        <ArrowRight className="h-4 w-4" />
+                      </a>
+                      <a
+                        href={material.file}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100"
+                      >
+                        Preview
+                      </a>
+                    </CardFooter>
+                  </div>
+                </div>
+              </motion.article>
             ))}
           </div>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
