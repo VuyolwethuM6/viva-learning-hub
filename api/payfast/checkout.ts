@@ -57,6 +57,7 @@ export default async function handler(request: IncomingMessage, response: Server
     const origin = process.env.PUBLIC_SITE_URL || `${protocol}://${host}`;
     const fields: Record<string, string> = {
       merchant_id: process.env.PAYFAST_MERCHANT_ID || '',
+      merchant_key: process.env.PAYFAST_MERCHANT_KEY || '',
       return_url: `${origin}/payment-success`,
       cancel_url: `${origin}/payment-cancelled`,
       notify_url: process.env.PAYFAST_NOTIFY_URL || `${origin}/api/payfast/notify`,
@@ -75,10 +76,11 @@ export default async function handler(request: IncomingMessage, response: Server
       return sendJson(response, 503, { error: 'PayFast server configuration is incomplete.' });
     }
 
+    const { merchant_key: _merchantKey, ...signedFields } = fields;
     console.info('[PayFast API] checkout payload signed', { product: product.title, amount: product.amount });
     return sendJson(response, 200, {
       endpoint: process.env.PAYFAST_ENDPOINT || 'https://sandbox.payfast.co.za/eng/process',
-      fields: { ...fields, signature: payfastSignature(fields, process.env.PAYFAST_PASSPHRASE) },
+      fields: { ...fields, signature: payfastSignature(signedFields, process.env.PAYFAST_PASSPHRASE) },
     });
   } catch (error) {
     console.error('[PayFast API] checkout failed', error instanceof Error ? error.message : 'unknown error');
