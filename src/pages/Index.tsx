@@ -269,6 +269,11 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
     if (!material) return;
 
     setIsSubmitting(true);
+    console.info('[PayFast] Starting checkout', {
+      product: material.title,
+      amount: material.amount,
+      email: customer.email,
+    });
     sessionStorage.setItem('viva-purchase', JSON.stringify({
       customer,
       material: material.title,
@@ -279,17 +284,27 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
 
     setCheckoutError('');
     try {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 15000);
       const response = await fetch('/api/payfast/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ ...customer, material: material.title }),
+        signal: controller.signal,
       });
+      window.clearTimeout(timeout);
       const checkout = await response.json().catch(() => ({}));
+      console.info('[PayFast] Checkout API response', {
+        status: response.status,
+        ok: response.ok,
+        error: checkout.error || null,
+      });
       if (!response.ok) {
         setCheckoutError(checkout.error || `Checkout could not start (${response.status}). Check your PayFast server settings.`);
         return;
       }
       if (!checkout.endpoint || !checkout.fields) {
+        console.error('[PayFast] Invalid checkout response', checkout);
         setCheckoutError('PayFast returned an incomplete checkout response. Please try again.');
         return;
       }
@@ -305,9 +320,13 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
         form.appendChild(input);
       });
       document.body.appendChild(form);
+      console.info('[PayFast] Submitting signed checkout form', { endpoint: checkout.endpoint });
       form.submit();
-    } catch {
-      setCheckoutError('The checkout service could not be reached. Confirm the deployed API is available and try again.');
+    } catch (error) {
+      console.error('[PayFast] Checkout request failed', error);
+      setCheckoutError(error.name === 'AbortError'
+        ? 'Checkout timed out after 15 seconds. Check that the deployed /api/payfast/checkout endpoint is reachable.'
+        : 'The checkout service could not be reached. Check the browser console and deployed API settings.');
     } finally {
       setIsSubmitting(false);
     }

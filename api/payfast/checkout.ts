@@ -5,6 +5,14 @@ const products: Record<string, { title: string; amount: string }> = {
   'Finance Practice Questions': { title: 'Finance Practice Questions', amount: '399.00' },
 };
 
+type CheckoutPayload = {
+  material?: unknown;
+  firstName?: unknown;
+  lastName?: unknown;
+  email?: unknown;
+  phone?: unknown;
+};
+
 function payfastSignature(fields: Record<string, string>, passphrase?: string) {
   const payload = Object.entries(fields)
     .filter(([, value]) => value !== '')
@@ -15,10 +23,11 @@ function payfastSignature(fields: Record<string, string>, passphrase?: string) {
 }
 
 export default async function handler(request: Request): Promise<Response> {
+  console.info('[PayFast API] checkout request', { method: request.method });
   if (request.method !== 'POST') return Response.json({ error: 'Method not allowed' }, { status: 405 });
 
   try {
-    const body = await request.json();
+    const body = await request.json() as CheckoutPayload;
     const product = products[String(body.material || '')];
     const firstName = String(body.firstName || '').trim();
     const lastName = String(body.lastName || '').trim();
@@ -26,6 +35,7 @@ export default async function handler(request: Request): Promise<Response> {
     const phone = String(body.phone || '').trim();
 
     if (!product || !firstName || !lastName || !email || !phone || !/^\S+@\S+\.\S+$/.test(email)) {
+      console.warn('[PayFast API] invalid checkout details', { product: Boolean(product), email: Boolean(email) });
       return Response.json({ error: 'Complete customer and product details are required.' }, { status: 400 });
     }
 
@@ -47,14 +57,17 @@ export default async function handler(request: Request): Promise<Response> {
     };
 
     if (!fields.merchant_id || !fields.merchant_key) {
+      console.error('[PayFast API] missing server credentials');
       return Response.json({ error: 'PayFast server configuration is incomplete.' }, { status: 503 });
     }
 
+    console.info('[PayFast API] checkout payload signed', { product: product.title, amount: product.amount });
     return Response.json({
       endpoint: process.env.PAYFAST_ENDPOINT || 'https://sandbox.payfast.co.za/eng/process',
       fields: { ...fields, signature: payfastSignature(fields, process.env.PAYFAST_PASSPHRASE) },
     });
-  } catch {
+  } catch (error) {
+    console.error('[PayFast API] checkout failed', error instanceof Error ? error.message : 'unknown error');
     return Response.json({ error: 'Unable to create checkout.' }, { status: 400 });
   }
 }
