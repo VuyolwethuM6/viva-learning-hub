@@ -57,7 +57,6 @@ export default async function handler(request: IncomingMessage, response: Server
     const origin = process.env.PUBLIC_SITE_URL || `${protocol}://${host}`;
     const fields: Record<string, string> = {
       merchant_id: process.env.PAYFAST_MERCHANT_ID || '',
-      merchant_key: process.env.PAYFAST_MERCHANT_KEY || '',
       return_url: `${origin}/payment-success`,
       cancel_url: `${origin}/payment-cancelled`,
       notify_url: process.env.PAYFAST_NOTIFY_URL || `${origin}/api/payfast/notify`,
@@ -71,7 +70,7 @@ export default async function handler(request: IncomingMessage, response: Server
       custom_str2: email,
     };
 
-    if (!fields.merchant_id || !fields.merchant_key) {
+    if (!fields.merchant_id || !process.env.PAYFAST_MERCHANT_KEY) {
       console.error('[PayFast API] missing server credentials');
       return sendJson(response, 503, { error: 'PayFast server configuration is incomplete.' });
     }
