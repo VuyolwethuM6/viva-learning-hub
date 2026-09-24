@@ -10,6 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Footer from '@/components/Footer';
 import { FaYoutube, FaFacebook, FaTiktok } from "react-icons/fa6";
 import Maths from '/maths.png'
@@ -33,12 +40,12 @@ const TopBar = () => (
           <span className="hidden sm:inline">(+27) 73 913 206</span>
         </a>
 
-        <span className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap hidden sm:flex">
+        <span className="hidden items-center gap-2 whitespace-nowrap transition-colors hover:text-[#ff7849] cursor-pointer sm:flex">
           <Mail className="w-3.5 h-3.5" />
           info@vivatutorials.co.za
         </span>
 
-        <span className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap hidden md:flex">
+        <span className="hidden items-center gap-2 whitespace-nowrap transition-colors hover:text-[#ff7849] cursor-pointer md:flex">
           <MapPin className="w-3.5 h-3.5" />
           Cape Town, South Africa
         </span>
@@ -261,6 +268,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSyllabusModalOpen, setIsSyllabusModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [previewMaterial, setPreviewMaterial] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
 
   useEffect(() => {
@@ -1271,24 +1279,30 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-inner">
+                    <div className="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-inner">
                       <div className="mb-3 flex items-center justify-between">
                         <span className="rounded-full bg-slate-900 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-white">
                           PDF
                         </span>
-                        <span className="text-[10px] font-medium text-slate-500">Preview</span>
+                        <span className="text-[10px] font-medium text-slate-500">
+                          {material.isFree ? 'First page' : 'Preview locked'}
+                        </span>
                       </div>
 
-                      <div className="rounded-xl border border-slate-200 bg-white p-3">
-                        <div className="mb-2 h-2.5 w-2/3 rounded-full bg-slate-200" />
-                        <div className="mb-2 h-2 w-5/6 rounded-full bg-slate-100" />
-                        <div className="mb-2 h-2 w-4/5 rounded-full bg-slate-100" />
-                        <div className="mb-3 h-2 w-2/3 rounded-full bg-slate-100" />
-                        <div className="rounded-lg border border-dashed border-[#7949fe]/30 bg-[#7949fe]/5 p-2">
-                          <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#7949fe]">{material.subtitle}</div>
-                          <div className="text-xs font-semibold text-slate-700">{material.title}</div>
+                      {material.isFree ? (
+                        <iframe
+                          src={`${material.file}#page=1&view=FitH`}
+                          title={`${material.title} first page`}
+                          className="h-52 w-full rounded-xl border border-slate-200 bg-white"
+                        />
+                      ) : (
+                        <div className="flex h-52 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-5 text-center">
+                          <div>
+                            <div className="mb-2 text-sm font-bold text-slate-700">Premium PDF</div>
+                            <p className="text-xs leading-5 text-slate-500">The first page becomes available after PayFast payment and email delivery.</p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     <CardHeader className="p-0 pb-3">
@@ -1316,20 +1330,53 @@ export default function Home() {
                         {material.isFree ? 'Download PDF' : 'Buy via PayFast'}
                         <ArrowRight className="h-4 w-4" />
                       </a>
-                      <a
-                        href={material.file}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100"
-                      >
-                        Preview
-                      </a>
+                      {material.isFree && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewMaterial(material)}
+                          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100"
+                        >
+                          Preview
+                        </button>
+                      )}
                     </CardFooter>
                   </div>
                 </div>
               </motion.article>
             ))}
           </div>
+
+          <Dialog open={Boolean(previewMaterial)} onOpenChange={(open) => !open && setPreviewMaterial(null)}>
+            <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto border-0 bg-slate-950 p-0 text-white shadow-2xl sm:rounded-3xl">
+              {previewMaterial && (
+                <>
+                  <DialogHeader className="px-6 pb-4 pt-6 pr-14 text-left">
+                    <DialogTitle className="text-xl font-bold text-white">{previewMaterial.title}</DialogTitle>
+                    <DialogDescription className="text-slate-300">
+                      Free PDF preview · Page 1 of {previewMaterial.pages}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="bg-slate-800 px-4 pb-5 sm:px-8">
+                    <iframe
+                      src={`${previewMaterial.file}#page=1&view=FitH`}
+                      title={`${previewMaterial.title} PDF preview`}
+                      className="h-[68vh] min-h-[480px] w-full rounded-2xl border border-white/10 bg-white"
+                    />
+                    <div className="mt-4 flex items-center justify-between gap-4 text-sm text-slate-300">
+                      <span>Showing the first page of this free resource.</span>
+                      <a
+                        href={previewMaterial.file}
+                        download
+                        className="shrink-0 rounded-full bg-white px-4 py-2 font-bold text-slate-900 transition-colors hover:bg-slate-200"
+                      >
+                        Download PDF
+                      </a>
+                    </div>
+                  </div>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
