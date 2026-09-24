@@ -30,6 +30,17 @@ function signature(fields: Record<string, string>, passphrase?: string) {
   return crypto.createHash('md5').update(signedPayload).digest('hex');
 }
 
+function rawSignature(rawBody: string, passphrase?: string) {
+  const payload = rawBody
+    .split('&')
+    .filter((part) => !part.startsWith('signature='))
+    .join('&');
+  const encodedPassphrase = passphrase
+    ? `&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, '+')}`
+    : '';
+  return crypto.createHash('md5').update(`${payload}${encodedPassphrase}`).digest('hex');
+}
+
 async function sendEmail(to: string[], subject: string, text: string, attachment: { filename: string; content: string }) {
   console.info('[PayFast ITN] sending email', { recipients: to, subject, attachment: attachment.filename });
   const response = await fetch('https://api.resend.com/emails', {
@@ -97,8 +108,15 @@ export default async function handler(request: IncomingMessage, response: Server
       });
       return sendText(response, 400, 'Invalid purchase');
     }
-    if (signature(fields, process.env.PAYFAST_PASSPHRASE) !== fields.signature) {
-      console.error('[PayFast ITN] signature mismatch');
+    const expectedRawSignature = rawSignature(raw, process.env.PAYFAST_PASSPHRASE);
+    const expectedParsedSignature = signature(fields, process.env.PAYFAST_PASSPHRASE);
+    const signatureMatches = fields.signature === expectedRawSignature || fields.signature === expectedParsedSignature;
+    if (!signatureMatches) {
+      console.error('[PayFast ITN] signature mismatch', {
+        received: fields.signature,
+        rawMatch: fields.signature === expectedRawSignature,
+        parsedMatch: fields.signature === expectedParsedSignature,
+      });
       return sendText(response, 400, 'Invalid signature');
     }
 
