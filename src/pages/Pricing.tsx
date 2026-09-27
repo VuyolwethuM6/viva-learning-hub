@@ -53,6 +53,7 @@ export default function Pricing() {
       {/* Topbar + Sticky Header */}
       <TopBar />
       <StickyHeader />
+      <main id="main-content">
 
       {/* Hero Section */}
       <section className="relative pt-[10.5rem] md:pt-44 pb-20 px-6 bg-gradient-to-b from-white to-[#7949fe]/5 overflow-hidden">
@@ -131,14 +132,14 @@ export default function Pricing() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Button 
+                  <Button asChild
                     className={`w-full mb-8 py-6 rounded-lg font-bold ${
                       plan.highlighted 
                         ? 'bg-[#7949fe] hover:bg-[#5a4ecf] text-white' 
                         : 'bg-gray-100 hover:bg-gray-200 text-[#1a0b2e]'
                     }`}
                   >
-                    Choose {plan.name}
+                    <a href={`/contact?plan=${encodeURIComponent(plan.name)}`}>Choose {plan.name}</a>
                   </Button>
                   <div className="space-y-4">
                     {plan.features.map((feature, i) => (
@@ -203,6 +204,7 @@ export default function Pricing() {
         </div>
       </section>
 
+      </main>
       <Footer />
     </div>
   );

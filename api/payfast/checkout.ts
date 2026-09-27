@@ -31,7 +31,13 @@ function sendJson(response: ServerResponse, status: number, body: Record<string,
 
 async function readBody(request: IncomingMessage) {
   const chunks: Buffer[] = [];
-  for await (const chunk of request) chunks.push(Buffer.from(chunk));
+  let size = 0;
+  for await (const chunk of request) {
+    const buffer = Buffer.from(chunk);
+    size += buffer.length;
+    if (size > 16 * 1024) throw new Error('Request body too large');
+    chunks.push(buffer);
+  }
   return JSON.parse(Buffer.concat(chunks).toString('utf8')) as CheckoutPayload;
 }
 
@@ -52,9 +58,11 @@ export default async function handler(request: IncomingMessage, response: Server
       return sendJson(response, 400, { error: 'Complete customer and product details are required.' });
     }
 
-    const protocol = request.headers['x-forwarded-proto'] || 'http';
-    const host = request.headers.host || 'localhost:8080';
-    const origin = process.env.PUBLIC_SITE_URL || `${protocol}://${host}`;
+    const origin = process.env.PUBLIC_SITE_URL?.replace(/\/$/, '');
+    if (!origin) {
+      console.error('[PayFast API] PUBLIC_SITE_URL is not configured');
+      return sendJson(response, 503, { error: 'Public site configuration is incomplete.' });
+    }
     const fields: Record<string, string> = {
       merchant_id: process.env.PAYFAST_MERCHANT_ID || '',
       merchant_key: process.env.PAYFAST_MERCHANT_KEY || '',
@@ -71,14 +79,14 @@ export default async function handler(request: IncomingMessage, response: Server
       custom_str2: email,
     };
 
-    if (!fields.merchant_id || !process.env.PAYFAST_MERCHANT_KEY) {
-      console.error('[PayFast API] missing server credentials');
+    if (!fields.merchant_id || !process.env.PAYFAST_MERCHANT_KEY || !process.env.PAYFAST_ENDPOINT) {
+      console.error('[PayFast API] missing checkout configuration');
       return sendJson(response, 503, { error: 'PayFast server configuration is incomplete.' });
     }
 
     console.info('[PayFast API] checkout payload signed', { product: product.title, amount: product.amount });
     return sendJson(response, 200, {
-      endpoint: process.env.PAYFAST_ENDPOINT || 'https://sandbox.payfast.co.za/eng/process',
+      endpoint: process.env.PAYFAST_ENDPOINT,
       fields: { ...fields, signature: payfastSignature(fields, process.env.PAYFAST_PASSPHRASE) },
     });
   } catch (error) {

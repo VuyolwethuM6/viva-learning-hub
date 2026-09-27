@@ -84,8 +84,9 @@ export default function SuccessStories() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* <TopBar />
-      <StickyHeader /> */}
+      <TopBar />
+      <StickyHeader />
+    <main id="main-content">
       {/* Hero Section */}
       <section className="pt-40 pb-20 px-6 bg-gradient-to-b from-white to-[#7949fe]/5">
         <div className="max-w-7xl mx-auto">
@@ -227,6 +228,7 @@ export default function SuccessStories() {
         </div>
       </section>
 
+      </main>
       <Footer />
     </div>
   );

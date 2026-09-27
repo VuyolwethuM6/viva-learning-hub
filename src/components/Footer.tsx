@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Mail, Facebook, Twitter, Instagram, Linkedin, Youtube, ArrowUp } from 'lucide-react';
+import { MapPin, Phone, Mail, Facebook, Twitter, Linkedin, Youtube, ArrowUp } from 'lucide-react';
 
 export default function Footer() {
   const scrollToTop = () => {
@@ -9,29 +9,29 @@ export default function Footer() {
 
   const footerLinks = {
     services: [
-      { name: "In-Person Tutoring", href: "#" },
-      { name: "Mobile Learning", href: "#" },
-      { name: "Mentor Support", href: "#" },
-      { name: "Exam Prep", href: "exams" },
-      { name: "Holiday Classes", href: "#" }
+      { name: "In-Person Tutoring", href: "/services" },
+      { name: "Mobile Learning", href: "/services" },
+      { name: "Mentor Support", href: "/services" },
+      { name: "Exam Prep", href: "/services" },
+      { name: "Holiday Classes", href: "/contact" }
     ],
     subjects: [
       { name: "Mathematics", href: "/mathematics" },
       { name: "Physical Sciences", href: "/physical-science" },
       { name: "Life Sciences", href: "/life-sciences" },
       { name: "Accounting", href: "/accounting" },
-      { name: "Economics", href: "#" }
+      { name: "Economics", href: "/contact" }
     ],
     company: [
       { name: "About Us", href: "/about" },
       { name: "Our Tutors", href: "/tutors" },
-      { name: "Locations", href: "/locations" },
+      { name: "Locations", href: "/contact" },
       { name: "Success Stories", href: "/success-stories" },
-      { name: "Careers", href: "#" }
+      { name: "Careers", href: "/contact" }
     ],
     support: [
       { name: "Contact Us", href: "/contact" },
-      { name: "FAQ", href: "#" },
+      { name: "FAQ", href: "/contact" },
       { name: "Privacy Policy", href: "/privacy-policy" },
       { name: "Terms of Service", href: "/terms-of-service" }
     ]
@@ -43,11 +43,10 @@ export default function Footer() {
   ];
 
   const socials = [
-    { icon: Facebook, href: "#", label: "Facebook" },
-    { icon: Twitter, href: "#", label: "Twitter" },
-    { icon: Instagram, href: "#", label: "Instagram" },
-    { icon: Linkedin, href: "#", label: "LinkedIn" },
-    { icon: Youtube, href: "#", label: "YouTube" }
+    { icon: Facebook, href: "https://web.facebook.com/profile.php?id=61586724797551", label: "Facebook" },
+    { icon: Twitter, href: "https://twitter.com/vuyolwethu", label: "Twitter" },
+    { icon: Linkedin, href: "https://www.linkedin.com/in/vuyolwethu", label: "LinkedIn" },
+    { icon: Youtube, href: "https://www.youtube.com/@viva-tutorials", label: "YouTube" }
   ];
 
   return (
@@ -79,11 +78,11 @@ export default function Footer() {
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-slate-400">
                 <Phone className="w-4 h-4 text-violet-400" />
-                <span>+27 (73) 391 3206</span>
+                <a href="tel:+27733913206" className="hover:text-white">+27 73 391 3206</a>
               </div>
               <div className="flex items-center gap-3 text-slate-400">
                 <Mail className="w-4 h-4 text-violet-400" />
-                <span>info@vivatutorials.co.za</span>
+                <a href="mailto:info@vivatutorials.co.za" className="hover:text-white">info@vivatutorials.co.za</a>
               </div>
             </div>
 
@@ -93,6 +92,8 @@ export default function Footer() {
                 <motion.a
                   key={index}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   whileHover={{ y: -3 }}
                   className="w-10 h-10 rounded-lg bg-slate-800 hover:bg-violet-600 flex items-center justify-center transition-colors duration-300"
                   aria-label={social.label}
@@ -163,20 +164,21 @@ export default function Footer() {
           </p>
           
           <div className="flex items-center gap-6">
-            <a href="#" className="text-slate-500 hover:text-violet-400 text-sm transition-colors">
+            <button type="button" onClick={() => window.dispatchEvent(new Event("viva:manage-analytics"))} className="text-slate-500 hover:text-violet-400 text-sm transition-colors">
+              Analytics choices
+            </button>
+            <a href="/privacy-policy" className="text-slate-500 hover:text-violet-400 text-sm transition-colors">
               Privacy Policy
             </a>
-            <a href="#" className="text-slate-500 hover:text-violet-400 text-sm transition-colors">
+            <a href="/terms-of-service" className="text-slate-500 hover:text-violet-400 text-sm transition-colors">
               Terms of Service
-            </a>
-            <a href="#" className="text-slate-500 hover:text-violet-400 text-sm transition-colors">
-              Cookie Policy
             </a>
           </div>
 
           {/* Scroll to Top */}
           <motion.button
             onClick={scrollToTop}
+            aria-label="Scroll to top"
             whileHover={{ y: -3 }}
             className="w-10 h-10 rounded-lg bg-violet-600 hover:bg-violet-500 flex items-center justify-center transition-colors duration-300"
           >

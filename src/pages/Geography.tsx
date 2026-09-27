@@ -20,6 +20,7 @@ export default function Geography() {
     <div className="min-h-screen bg-white">
       <TopBar />
       <StickyHeader />
+      <main id="main-content">
       <section className="pt-40 pb-20 px-6 bg-gradient-to-b from-white to-[#7949fe]/5">
         <div className="max-w-7xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center">
@@ -100,6 +101,7 @@ export default function Geography() {
         </div>
       </section>
 
+      </main>
       <Footer />
     </div>
   );

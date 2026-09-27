@@ -1,7 +1,16 @@
 import { describe, it, expect } from "vitest";
+import { studyMaterials } from "@/lib/studyMaterials";
 
-describe("example", () => {
-  it("should pass", () => {
-    expect(true).toBe(true);
+describe("study materials catalogue", () => {
+  it("lists the available free and paid Grade 12 documents", () => {
+    expect(studyMaterials).toHaveLength(10);
+    expect(studyMaterials.filter((material) => material.isFree)).toHaveLength(8);
+    expect(studyMaterials.filter((material) => !material.isFree).map((material) => material.amount)).toEqual(["299.00", "399.00"]);
+    expect(studyMaterials.every((material) => material.grade === 12)).toBe(true);
+  });
+
+  it("keeps exam sitting explicit instead of guessing a month", () => {
+    expect(studyMaterials.every((material) => material.examSession === "General revision")).toBe(true);
+    expect(new Set(studyMaterials.map((material) => material.subject))).toEqual(new Set(["Mathematics", "Life Sciences", "Physical Sciences"]));
   });
 });

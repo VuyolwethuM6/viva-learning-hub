@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TopBar from '@/components/TopBar';
 import StickyHeader from '@/components/StickyHeader';
 import Footer from '@/components/Footer';
-import { useState } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -17,31 +18,51 @@ export default function Contact() {
     subject: '',
     message: ''
   });
+  const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
 
-  const handleChange = (e: any) => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get('plan');
+    const subject = params.get('subject');
+    if (plan || subject) setFormData((current) => ({ ...current, subject: plan ? `Enrollment: ${plan}` : subject || '' }));
+  }, []);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    setSubmitState('submitting');
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!response.ok) throw new Error('Contact request failed');
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      setSubmitState('success');
+      trackAnalyticsEvent('contact_form_success');
+    } catch {
+      setSubmitState('error');
+    }
   };
 
   const contactInfo = [
     {
       icon: <Phone className="w-8 h-8" />,
       title: "Phone",
-      details: ["+27 (0) 123 456 7890", "+27 (0) 123 456 7891"],
+      details: ["+27 73 391 3206"],
       color: "text-[#7949fe]"
     },
     {
       icon: <Mail className="w-8 h-8" />,
       title: "Email",
-      details: ["info@viviatutorials.com", "support@viviatutorials.com"],
+      details: ["info@vivatutorials.co.za"],
       color: "text-[#ff7849]"
     },
     {
@@ -62,6 +83,7 @@ export default function Contact() {
     <div className="min-h-screen bg-white">
       <TopBar />
       <StickyHeader />
+      <main id="main-content">
 
       {/* Hero Section */}
 <section className="relative pt-[10.5rem] md:pt-40 pb-40 px-6 bg-gradient-to-b from-white to-[#7949fe]/5 overflow-hidden">
@@ -127,9 +149,14 @@ export default function Contact() {
                     <div className={`${info.color} mb-4 flex justify-center`}>{info.icon}</div>
                     <h3 className="text-xl font-bold text-[#1a0b2e] mb-4">{info.title}</h3>
                     <div className="space-y-2">
-                      {info.details.map((detail, i) => (
-                        <p key={i} className="text-gray-600 text-sm">{detail}</p>
-                      ))}
+                      {info.details.map((detail, i) => {
+                        const href = info.title === "Phone" ? "tel:+27733913206" : info.title === "Email" ? "mailto:info@vivatutorials.co.za" : undefined;
+                        return href ? (
+                          <a key={i} href={href} className="block text-sm text-gray-600 underline-offset-2 hover:underline">{detail}</a>
+                        ) : (
+                          <p key={i} className="text-gray-600 text-sm">{detail}</p>
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -150,9 +177,10 @@ export default function Contact() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-[#1a0b2e] mb-2">Full Name</label>
+                    <label htmlFor="contact-name" className="block text-sm font-semibold text-[#1a0b2e] mb-2">Full Name</label>
                     <Input
                       type="text"
+                      id="contact-name"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
@@ -162,9 +190,10 @@ export default function Contact() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-[#1a0b2e] mb-2">Email</label>
+                    <label htmlFor="contact-email" className="block text-sm font-semibold text-[#1a0b2e] mb-2">Email</label>
                     <Input
                       type="email"
+                      id="contact-email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
@@ -177,9 +206,10 @@ export default function Contact() {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-[#1a0b2e] mb-2">Phone</label>
+                    <label htmlFor="contact-phone" className="block text-sm font-semibold text-[#1a0b2e] mb-2">Phone</label>
                     <Input
                       type="tel"
+                      id="contact-phone"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
@@ -188,9 +218,10 @@ export default function Contact() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-[#1a0b2e] mb-2">Subject</label>
+                    <label htmlFor="contact-subject" className="block text-sm font-semibold text-[#1a0b2e] mb-2">Subject</label>
                     <Input
                       type="text"
+                      id="contact-subject"
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
@@ -202,9 +233,10 @@ export default function Contact() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#1a0b2e] mb-2">Message</label>
+                  <label htmlFor="contact-message" className="block text-sm font-semibold text-[#1a0b2e] mb-2">Message</label>
                   <Textarea
                     name="message"
+                    id="contact-message"
                     value={formData.message}
                     onChange={handleChange}
                     placeholder="Your message..."
@@ -213,9 +245,11 @@ export default function Contact() {
                   />
                 </div>
 
-                <Button className="w-full bg-[#7949fe] hover:bg-[#5a4ecf] text-white py-6 rounded-lg font-bold flex items-center justify-center gap-2">
+                {submitState === 'success' && <p className="text-sm text-green-700" role="status">Thanks, your message has been sent.</p>}
+                {submitState === 'error' && <p className="text-sm text-red-700" role="alert">We could not send your message. Please try again.</p>}
+                <Button type="submit" disabled={submitState === 'submitting'} className="w-full bg-[#7949fe] hover:bg-[#5a4ecf] text-white py-6 rounded-lg font-bold flex items-center justify-center gap-2">
                   <Send className="w-5 h-5" />
-                  Send Message
+                  {submitState === 'submitting' ? 'Sending...' : 'Send Message'}
                 </Button>
               </form>
             </motion.div>
@@ -259,7 +293,7 @@ export default function Contact() {
           <p className="text-white/60 text-lg mb-8 max-w-2xl mx-auto">
             Our support team is here to help. Don't hesitate to reach out!
           </p>
-          <a href="mailto:info@viviatutorials.com">
+          <a href="mailto:info@vivatutorials.co.za">
             <Button className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">
               Email Us
             </Button>
@@ -267,6 +301,7 @@ export default function Contact() {
         </div>
       </section>
 
+      </main>
       <Footer />
     </div>
   );

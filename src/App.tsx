@@ -2,37 +2,61 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import About from "./pages/About";
-import Services from "./pages/Services";
-import Pricing from "./pages/Pricing";
-import Contact from "./pages/Contact";
-import OurTutors from "./pages/OurTutors";
-import SuccessStories from "./pages/SuccessStories";
-import Mathematics from "./pages/Mathematics";
-import PhysicalScience from "./pages/PhysicalScience";
-import LifeSciences from "./pages/LifeSciences";
-import Accounting from "./pages/Accounting";
-import Geography from "./pages/Geography";
-import InformationTechnology from "./pages/InformationTechnology";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import StudyMaterials from "./pages/StudyMaterials";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentCancelled from "./pages/PaymentCancelled";
+import { BrowserRouter, MemoryRouter, Routes, Route } from "react-router-dom";
+import { MotionConfig } from "framer-motion";
+import { lazy, Suspense } from "react";
 import { HelmetProvider } from "react-helmet-async";
+import RouteMetadata from "./components/RouteMetadata";
+import AnalyticsConsent from "./components/AnalyticsConsent";
+
+const Index = lazy(() => import("./pages/Index"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const About = lazy(() => import("./pages/About"));
+const Services = lazy(() => import("./pages/Services"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Contact = lazy(() => import("./pages/Contact"));
+const OurTutors = lazy(() => import("./pages/OurTutors"));
+const SuccessStories = lazy(() => import("./pages/SuccessStories"));
+const Mathematics = lazy(() => import("./pages/Mathematics"));
+const PhysicalScience = lazy(() => import("./pages/PhysicalScience"));
+const LifeSciences = lazy(() => import("./pages/LifeSciences"));
+const Accounting = lazy(() => import("./pages/Accounting"));
+const Geography = lazy(() => import("./pages/Geography"));
+const InformationTechnology = lazy(() => import("./pages/InformationTechnology"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const StudyMaterials = lazy(() => import("./pages/StudyMaterials"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <HelmetProvider>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+type AppProps = {
+  staticLocation?: string;
+  helmetContext?: object;
+};
+
+const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
+  const content = (
+    <MotionConfig reducedMotion="user">
+        <a
+          href="#main-content"
+          className="sr-only z-[100] bg-white px-4 py-3 text-[#1a0b2e] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:rounded-md focus:shadow-lg"
+          onClick={(event) => {
+            const target = document.querySelector<HTMLElement>("main") ?? document.querySelector<HTMLElement>("h1");
+            if (target) {
+              target.id = "main-content";
+              target.tabIndex = -1;
+            } else {
+              event.preventDefault();
+            }
+          }}
+        >
+          Skip to main content
+        </a>
+        <RouteMetadata />
+        <AnalyticsConsent />
+        <Suspense fallback={<div className="min-h-[50vh]" role="status" aria-label="Loading page" />}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
@@ -55,10 +79,25 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-    </HelmetProvider>
-  </QueryClientProvider>
-);
+        </Suspense>
+    </MotionConfig>
+  );
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider context={helmetContext}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          {staticLocation ? (
+            <MemoryRouter initialEntries={[staticLocation]}>{content}</MemoryRouter>
+          ) : (
+            <BrowserRouter>{content}</BrowserRouter>
+          )}
+        </TooltipProvider>
+      </HelmetProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

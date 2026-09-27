@@ -11,6 +11,7 @@ const StickyHeader = () => {
   const navItems = [
     { label: "Home", path: "/" },
     { label: "About", path: "/about" },
+    { label: "Study Materials", path: "/study-materials" },
     { label: "Services", path: "/services" },
     { label: "Pricing", path: "/pricing" },
     { label: "Contact", path: "/contact" },
@@ -57,7 +58,7 @@ const StickyHeader = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-4">
-            <Link to="/login" className="text-sm font-semibold text-[#7949fe] hover:underline">
+            <Link to="/contact" className="text-sm font-semibold text-[#7949fe] hover:underline">
               Book A Session
             </Link>
 
@@ -70,6 +71,8 @@ const StickyHeader = () => {
           <button
             className="lg:hidden p-2 text-gray-600"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMobileMenuOpen}
           >
             {isMobileMenuOpen ? <X /> : <Menu />}
           </button>
@@ -110,6 +113,7 @@ const StickyHeader = () => {
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="p-2 hover:bg-gray-100 rounded-full"
+                    aria-label="Close navigation menu"
                   >
                     <X className="w-6 h-6 text-gray-600" />
                   </button>

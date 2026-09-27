@@ -87,9 +87,19 @@ const SyllabusModal = ({ isOpen, onClose, subject }) => {
     resources: ["Study materials", "Practice exercises", "Expert guidance"]
   };
 
+  const downloadSyllabus = () => {
+    const text = `${subject.title}\n${content.grade}\n\n${content.description}\n\nKey topics:\n${content.topics.map((topic) => `- ${topic}`).join('\n')}\n\nLearning duration: ${content.duration}\n\nResources:\n${content.resources.map((resource) => `- ${resource}`).join('\n')}`;
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${subject.title.replace(/\s+/g, '-').toLowerCase()}-syllabus.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="syllabus-title">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -97,7 +107,7 @@ const SyllabusModal = ({ isOpen, onClose, subject }) => {
           className="bg-white rounded-3xl p-8 w-full max-w-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
         >
           {/* Close Button */}
-          <button 
+          <button aria-label="Close syllabus"
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
           >
@@ -108,7 +118,7 @@ const SyllabusModal = ({ isOpen, onClose, subject }) => {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <BookOpen className="w-8 h-8 text-[#7949fe]" />
-              <h3 className="text-3xl font-bold text-gray-900">{subject.title}</h3>
+              <h3 id="syllabus-title" className="text-3xl font-bold text-gray-900">{subject.title}</h3>
             </div>
             <p className="text-gray-600 text-sm font-medium">{content.grade}</p>
             <p className="text-gray-700 mt-4 leading-relaxed">{content.description}</p>
@@ -181,6 +191,7 @@ const SyllabusModal = ({ isOpen, onClose, subject }) => {
               Close
             </Button>
             <Button 
+              onClick={downloadSyllabus}
               className="flex-1 bg-[#7949fe] hover:bg-[#5a4ecf] text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2"
             >
               <Download className="w-4 h-4" />

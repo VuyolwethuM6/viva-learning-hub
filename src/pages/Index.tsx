@@ -23,6 +23,14 @@ import Maths from '/maths.png'
 import { Link } from "react-router-dom";
 import SubjectRequestModal from '@/components/SubjectRequestModal';
 import SyllabusModal from '@/components/SyllabusModal';
+import { studyMaterials } from '@/lib/studyMaterials';
+
+const communityImages = [
+  { src: '/images/inclass.jfif', alt: 'Students studying together in class' },
+  { src: '/images/incamp.jfif', alt: 'Students learning together at camp' },
+  { src: '/images/tutoring.jpeg', alt: 'Tutor supporting a student during a lesson' },
+  { src: '/images/success.jfif', alt: 'Students celebrating their academic success' },
+];
 
 // --- Theme Components ---
 
@@ -33,17 +41,17 @@ const TopBar = () => (
       {/* Left section */}
       <div className="flex items-center gap-3 lg:gap-6 overflow-x-auto">
         <a
-          href="tel:073913206"
+          href="tel:+27733913206"
           className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap"
         >
           <Phone className="w-3.5 h-3.5 animate-[wiggle_1s_ease-in-out_infinite]" />
-          <span className="hidden sm:inline">(+27) 73 913 206</span>
+          <span className="hidden sm:inline">(+27) 73 391 3206</span>
         </a>
 
-        <span className="hidden items-center gap-2 whitespace-nowrap transition-colors hover:text-[#ff7849] cursor-pointer sm:flex">
+        <a href="mailto:info@vivatutorials.co.za" className="hidden items-center gap-2 whitespace-nowrap transition-colors hover:text-[#ff7849] sm:flex">
           <Mail className="w-3.5 h-3.5" />
           info@vivatutorials.co.za
-        </span>
+        </a>
 
         <span className="hidden items-center gap-2 whitespace-nowrap transition-colors hover:text-[#ff7849] cursor-pointer md:flex">
           <MapPin className="w-3.5 h-3.5" />
@@ -60,6 +68,7 @@ const TopBar = () => (
             href="https://web.facebook.com/profile.php?id=61586724797551"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Facebook"
           >
             <FaFacebook className="w-3.5 h-3.5 hover:text-[#ff7849] transition-colors cursor-pointer" />
           </a>
@@ -68,6 +77,7 @@ const TopBar = () => (
             href="https://www.youtube.com/@viva-tutorials"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="YouTube"
           >
             <FaYoutube className="w-3.5 h-3.5 hover:text-[#ff7849] transition-colors cursor-pointer" />
           </a>
@@ -76,6 +86,7 @@ const TopBar = () => (
             href="https://www.tiktok.com/@viva.coach.vuyo?_r=1&_t=ZS-93WzVp1UbQe"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="TikTok"
           >
             <FaTiktok className="w-3.5 h-3.5 hover:text-[#ff7849] transition-colors cursor-pointer" />
           </a>
@@ -416,6 +427,7 @@ export default function Home() {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [previewMaterial, setPreviewMaterial] = useState(null);
   const [purchaseMaterial, setPurchaseMaterial] = useState(null);
+  const [selectedCommunityImage, setSelectedCommunityImage] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
 
   useEffect(() => {
@@ -446,9 +458,10 @@ export default function Home() {
             {[
               { label: 'Home', path: '/' },
               { label: 'About', path: '/about' },
+              { label: 'Study Materials', path: '/study-materials' },
               { label: 'Services', path: '/services' },
               { label: 'Pricing', path: '/pricing' },
-              { label: 'Contact', path: 'https://forms.gle/sh3Be1fF8gD1qt9G9' }
+              { label: 'Contact', path: '/contact' }
             ].map((item) => (
               <a
                 key={item.label}
@@ -480,6 +493,8 @@ export default function Home() {
           <button
             className="lg:hidden p-2 text-gray-600"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isMobileMenuOpen}
           >
             {isMobileMenuOpen ? <X /> : <Menu />}
           </button>
@@ -521,6 +536,7 @@ export default function Home() {
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="p-2 hover:bg-gray-100 rounded-full"
+                    aria-label="Close navigation menu"
                   >
                     <X className="w-6 h-6 text-gray-600" />
                   </button>
@@ -530,9 +546,10 @@ export default function Home() {
                   {[
                     { label: 'Home', path: '/' },
                     { label: 'About', path: '/about' },
+                    { label: 'Study Materials', path: '/study-materials' },
                     { label: 'Services', path: '/services' },
                     { label: 'Pricing', path: '/pricing' },
-                    { label: 'Contact', path: 'https://forms.gle/sh3Be1fF8gD1qt9G9' }
+                    { label: 'Contact', path: '/contact' }
                   ].map((item) => (
                     <a
                       key={item.label}
@@ -569,15 +586,16 @@ export default function Home() {
 
                   <div className="flex gap-4">
                     {[
-                      { icon: FaFacebook, url: "https://facebook.com/yourpage" },
-                      { icon: FaTiktok, url: "https://www.tiktok.com/@yourhandle" },
-                      { icon: FaYoutube, url: "https://www.youtube.com/@yourchannel" },
-                    ].map(({ icon: Icon, url }, i) => (
+                      { icon: FaFacebook, url: "https://web.facebook.com/profile.php?id=61586724797551", label: "Facebook" },
+                      { icon: FaTiktok, url: "https://www.tiktok.com/@viva.coach.vuyo?_r=1&_t=ZS-93WzVp1UbQe", label: "TikTok" },
+                      { icon: FaYoutube, url: "https://www.youtube.com/@viva-tutorials", label: "YouTube" },
+                    ].map(({ icon: Icon, url, label }, i) => (
                       <a
                         key={i}
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={label}
                         className="w-10 h-10 rounded-full bg-[#7949fe]/10 flex items-center justify-center text-[#7949fe] hover:bg-[#7949fe] hover:text-white transition-all"
                       >
                         <Icon className="w-5 h-5" />
@@ -593,6 +611,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Hero Section */}
+<main id="main-content">
 <section id="home" className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden bg-gradient-to-b from-white to-white">
         {/* Decorative blobs */}
         <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" style={{ backgroundColor: 'rgba(108, 92, 231, 0.08)' }} />
@@ -669,7 +688,7 @@ export default function Home() {
                   size="lg"
                   className="h-14 px-8 text-base bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full shadow-xl shadow-[#7949fe]/30 hover:shadow-2xl hover:scale-105 transition-all duration-300"
                 >
-                  <Link to="https://forms.gle/sh3Be1fF8gD1qt9G9">Enroll Now!</Link>
+                  <a href="https://forms.gle/sh3Be1fF8gD1qt9G9" target="_blank" rel="noopener noreferrer">Enroll Now!</a>
                 </Button>
 
                 <Button
@@ -678,7 +697,7 @@ export default function Home() {
                   variant="outline"
                   className="h-14 px-8 text-base border-2 border-[#7949fe] text-[#7949fe] hover:bg-[#7949fe]/10 rounded-full font-bold"
                 >
-                  <Link to="https://calendar.app.google/k1hbyKuD97U5g1Vf7">Book A Session</Link>
+                  <a href="https://calendar.app.google/k1hbyKuD97U5g1Vf7" target="_blank" rel="noopener noreferrer">Book A Session</a>
                 </Button>
               </div>
 
@@ -1335,7 +1354,7 @@ export default function Home() {
             title="Study Materials & Resources"
           />
           <p className="mx-auto mb-4 max-w-2xl text-center text-base text-gray-600 md:text-lg">
-            Clean, fast-download resources stored in a local materials folder for quick access, with two free PDFs and two premium resources available via PayFast.
+            Browse {studyMaterials.filter((material) => material.isFree).length} free Grade 12 study PDFs and {studyMaterials.filter((material) => !material.isFree).length} premium practice resources, with more grades and exam sessions being added.
           </p>
 
           <div className="mb-12 flex justify-center">
@@ -1348,64 +1367,7 @@ export default function Home() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              {
-                title: "Sequence and Series Practice",
-                subtitle: "Sequence and Series",
-                description: "Uploaded Grade 12 practice problems for arithmetic and geometric sequences and series.",
-                price: "Free",
-                isFree: true,
-                file: "/materials/02. Sequence And Series Practice Problems.pdf",
-                paymentUrl: "",
-                pages: 18,
-                amount: "0.00",
-                accent: "from-violet-500 to-indigo-600",
-                badge: "Free PDF",
-                includes: ["Sequence and series", "Practice questions", "Exam-style layout", "Quick revision summary"]
-              },
-              {
-                title: "Trigonometry Practice Questions",
-                subtitle: "Trigonometry",
-                description: "Uploaded exam-focused trigonometry questions for Grade 12 revision.",
-                price: "Free",
-                isFree: true,
-                file: "/materials/03. Trigonometry Practice Questions.pdf",
-                paymentUrl: "",
-                pages: 148,
-                amount: "0.00",
-                accent: "from-cyan-500 to-sky-600",
-                badge: "Free PDF",
-                includes: ["Trigonometry", "Euclidean geometry", "Worked questions", "Exam prep checklist"]
-              },
-              {
-                title: "Analytical Geometry Practice",
-                subtitle: "Analytical Geometry",
-                description: "Uploaded analytical geometry practice questions for focused exam preparation.",
-                price: "R299",
-                isFree: false,
-                file: "/materials/02. Analytical Geometry Practice Questions.pdf",
-                paymentUrl: "",
-                pages: 133,
-                amount: "299.00",
-                accent: "from-[#7949fe] to-[#ff7849]",
-                badge: "PayFast",
-                includes: ["Coordinate geometry", "Practice problems", "Exam-style questions", "Revision focus areas"]
-              },
-              {
-                title: "Finance Practice Questions",
-                subtitle: "Finance",
-                description: "Uploaded finance practice questions for structured mathematics revision.",
-                price: "R399",
-                isFree: false,
-                file: "/materials/04. Finance Practice Questions.pdf",
-                paymentUrl: "",
-                pages: 11,
-                amount: "399.00",
-                accent: "from-emerald-500 to-teal-600",
-                badge: "PayFast",
-                includes: ["Finance concepts", "Practice questions", "Exam-style layout", "Revision checklist"]
-              }
-            ].map((material, index) => (
+            {[...studyMaterials.filter((material) => material.isFree).slice(0, 2), ...studyMaterials.filter((material) => !material.isFree)].map((material, index) => (
               <motion.article
                 key={material.title}
                 initial={{ opacity: 0, y: 22 }}
@@ -1599,8 +1561,8 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <Button className={`w-full py-6 rounded-xl font-bold ${plan.popular ? 'bg-[#7949fe] hover:bg-[#5a4ecf]' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
-                  Choose {plan.name}
+                <Button asChild className={`w-full py-6 rounded-xl font-bold ${plan.popular ? 'bg-[#7949fe] hover:bg-[#5a4ecf]' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
+                  <a href={`/contact?plan=${encodeURIComponent(plan.name)}`}>Choose {plan.name}</a>
                 </Button>
               </div>
             ))}
@@ -1634,65 +1596,57 @@ export default function Home() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="relative max-w-3xl mx-auto"
+            className="relative mx-auto max-w-5xl"
           >
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="space-y-3 sm:space-y-4"
-              >
-                <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
-                  <img
-                    loading="lazy"
-                    src="/images/inclass.jfif"
-                    alt="Students studying"
-                    className="w-full h-36 sm:h-48 object-cover"
-                  />
-                </div>
-                <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
-                  <img
-                    loading="lazy"
-                    src="/images/incamp.jfif"
-                    alt="Group learning"
-                    className="w-full h-44 sm:h-56 object-cover"
-                  />
-                </div>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="space-y-3 sm:space-y-4 pt-6 sm:pt-8"
-              >
-                <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
-                  <img
-                    loading="lazy"
-                    src="/images/tutoring.jpeg"
-                    alt="Tutoring session"
-                    className="w-full h-44 sm:h-56 object-cover"
-                  />
-                </div>
-                <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-[#7949fe]/10">
-                  <img
-                    loading="lazy"
-                    src="/images/success.jfif"
-                    alt="Success celebration"
-                    className="w-full h-36 sm:h-48 object-cover"
-                  />
-                </div>
-              </motion.div>
+            <div className="columns-1 gap-5 sm:columns-2 sm:gap-6 lg:columns-3 lg:gap-7">
+              {communityImages.map((image, index) => (
+                <motion.figure
+                  key={image.src}
+                  whileHover={{ y: -6 }}
+                  transition={{ duration: 0.2 }}
+                  className="group mb-5 break-inside-avoid overflow-hidden rounded-2xl border-2 border-[#7949fe]/10 bg-white p-2 shadow-lg sm:mb-6 lg:mb-7"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCommunityImage(image)}
+                    aria-label={`Open larger view of ${image.alt}`}
+                    className="block w-full cursor-zoom-in overflow-hidden rounded-xl bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#7949fe]/30"
+                  >
+                    <img
+                      loading={index < 3 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      src={image.src}
+                      alt={image.alt}
+                      sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                      className="block h-auto w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  </button>
+                </motion.figure>
+              ))}
             </div>
-
-            {/* Floating Stats Card */}
-            <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -bottom-4 -right-3 sm:-right-4 bg-gradient-to-br from-[#7949fe] to-[#5a4ecf] rounded-xl p-2 sm:p-3 text-white shadow-lg z-10"
-            >
-              <p className="text-xl sm:text-2xl font-bold">95%</p>
-              <p className="text-white/70 text-xs sm:text-sm">Pass Rate</p>
-            </motion.div>
           </motion.div>
         </div>
       </section>
+
+      <Dialog open={Boolean(selectedCommunityImage)} onOpenChange={(open) => !open && setSelectedCommunityImage(null)}>
+        <DialogContent className="max-h-[92vh] max-w-5xl border-0 bg-[#1a0b2e] p-3 text-white shadow-2xl sm:rounded-3xl sm:p-5">
+          {selectedCommunityImage && (
+            <>
+              <DialogHeader className="px-2 pb-3 pt-2 text-left sm:px-3">
+                <DialogTitle className="text-lg font-bold text-white">Learning in Action</DialogTitle>
+                <DialogDescription className="text-white/70">{selectedCommunityImage.alt}</DialogDescription>
+              </DialogHeader>
+              <div className="flex max-h-[78vh] items-center justify-center overflow-hidden rounded-2xl bg-black/20">
+                <img
+                  src={selectedCommunityImage.src}
+                  alt={selectedCommunityImage.alt}
+                  className="max-h-[78vh] w-full object-contain"
+                />
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* CTA Section */}
       <section className="py-20 px-6">
@@ -1704,13 +1658,18 @@ export default function Home() {
               Take the first step towards academic excellence. Join hundreds of students achieving their goals with Viva Tutorials.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">Enroll Now</Button>
-              <Button variant="outline" className="border-white/20  hover:bg-white/10 py-6 px-10 rounded-full text-lg font-bold">Contact Us</Button>
+              <Button asChild className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">
+                <a href="https://forms.gle/sh3Be1fF8gD1qt9G9" target="_blank" rel="noopener noreferrer">Enroll Now</a>
+              </Button>
+              <Button asChild variant="outline" className="border-white/20 hover:bg-white/10 py-6 px-10 rounded-full text-lg font-bold">
+                <a href="/contact">Contact Us</a>
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
+      </main>
       <Footer />
     </div>
   );

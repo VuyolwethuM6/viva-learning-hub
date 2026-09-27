@@ -1,5 +1,34 @@
 {
+  "functions": {
+    "api/payfast/notify.ts": {
+      "includeFiles": "private/materials/**"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.vivatutorials.co.za" }],
+      "destination": "https://vivatutorials.co.za/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/about", "destination": "/about/index.html" },
+    { "source": "/services", "destination": "/services/index.html" },
+    { "source": "/pricing", "destination": "/pricing/index.html" },
+    { "source": "/contact", "destination": "/contact/index.html" },
+    { "source": "/tutors", "destination": "/tutors/index.html" },
+    { "source": "/success-stories", "destination": "/success-stories/index.html" },
+    { "source": "/mathematics", "destination": "/mathematics/index.html" },
+    { "source": "/physical-science", "destination": "/physical-science/index.html" },
+    { "source": "/life-sciences", "destination": "/life-sciences/index.html" },
+    { "source": "/accounting", "destination": "/accounting/index.html" },
+    { "source": "/geography", "destination": "/geography/index.html" },
+    { "source": "/information-technology", "destination": "/information-technology/index.html" },
+    { "source": "/privacy-policy", "destination": "/privacy-policy/index.html" },
+    { "source": "/terms-of-service", "destination": "/terms-of-service/index.html" },
+    { "source": "/study-materials", "destination": "/study-materials/index.html" },
+    { "source": "/payment-success", "destination": "/payment-success/index.html" },
+    { "source": "/payment-cancelled", "destination": "/payment-cancelled/index.html" }
   ]
 }

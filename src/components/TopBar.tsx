@@ -8,22 +8,22 @@ const TopBar = () => (
       {/* Left section */}
       <div className="flex items-center gap-3 lg:gap-6 overflow-x-auto">
         <a
-          href="tel:+2773913206"
+          href="tel:+27733913206"
           className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap"
         >
           <Phone className="w-3.5 h-3.5 animate-[wiggle_1s_ease-in-out_infinite]" />
-          <span className="hidden sm:inline">(+27) 73 913 206</span>
+          <span className="hidden sm:inline">(+27) 73 391 3206</span>
         </a>
 
         <a
           href="mailto:info@vivatutorials.co.za"
-          className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap hidden sm:flex"
+          className="items-center gap-2 hover:text-[#ff7849] transition-colors whitespace-nowrap hidden sm:flex"
         >
           <Mail className="w-3.5 h-3.5" />
           info@vivatutorials.co.za
         </a>
 
-        <span className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap hidden md:flex">
+        <span className="items-center gap-2 whitespace-nowrap hidden md:flex">
           <MapPin className="w-3.5 h-3.5" />
           Cape Town, South Africa
         </span>

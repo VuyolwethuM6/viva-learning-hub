@@ -12,7 +12,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+    <main id="main-content" className="min-h-screen bg-white flex items-center justify-center px-4">
       {/* Animated background gradient blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -118,10 +118,10 @@ const NotFound = () => {
           transition={{ delay: 0.8, duration: 0.8 }}
           className="mt-12 text-gray-500 text-sm"
         >
-          Need help? Contact us at <span className="text-[#ff7849] font-semibold">info@vivatutorials.com</span>
+          Need help? Contact us at <a className="font-semibold text-[#ff7849] underline" href="mailto:info@vivatutorials.co.za">info@vivatutorials.co.za</a>
         </motion.p>
       </motion.div>
-    </div>
+    </main>
   );
 };
 

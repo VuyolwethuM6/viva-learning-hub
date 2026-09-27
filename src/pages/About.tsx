@@ -206,10 +206,10 @@ export default function About() {
                 Through innovative teaching methods, expert tutors, and a student-centered approach, Viva Tutorials has transformed learning for hundreds of students nationwide.
               </p>
               <div className="mt-4 flex justify-center md:justify-start gap-4">
-                <a href="https://www.linkedin.com/in/vuyolwethu" target="_blank">
+                <a href="https://www.linkedin.com/in/vuyolwethu" target="_blank" rel="noopener noreferrer">
                   <FaLinkedin className="w-6 h-6 text-[#7949fe] hover:text-[#ff7849]" />
                 </a>
-                <a href="https://twitter.com/vuyolwethu" target="_blank">
+                <a href="https://twitter.com/vuyolwethu" target="_blank" rel="noopener noreferrer">
                   <FaTwitter className="w-6 h-6 text-[#7949fe] hover:text-[#ff7849]" />
                 </a>
               </div>

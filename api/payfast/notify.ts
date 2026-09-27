@@ -15,6 +15,7 @@ const products: Record<string, { title: string; amount: string; file: string }> 
     file: '04. Finance Practice Questions.pdf',
   },
 };
+const deliveredPaymentIds = new Set<string>();
 
 function amountInCents(value: string | undefined) {
   const amount = Number.parseFloat(value || '');
@@ -73,7 +74,13 @@ function sendText(response: ServerResponse, status: number, message: string) {
 
 async function readBody(request: IncomingMessage) {
   const chunks: Buffer[] = [];
-  for await (const chunk of request) chunks.push(Buffer.from(chunk));
+  let size = 0;
+  for await (const chunk of request) {
+    const buffer = Buffer.from(chunk);
+    size += buffer.length;
+    if (size > 64 * 1024) throw new Error('Request body too large');
+    chunks.push(buffer);
+  }
   return Buffer.concat(chunks).toString('utf8');
 }
 
@@ -120,7 +127,11 @@ export default async function handler(request: IncomingMessage, response: Server
       return sendText(response, 400, 'Invalid signature');
     }
 
-    const validationUrl = process.env.PAYFAST_VALIDATE_URL || 'https://sandbox.payfast.co.za/eng/query/validate';
+    const validationUrl = process.env.PAYFAST_VALIDATE_URL;
+    if (!validationUrl) {
+      console.error('[PayFast ITN] PAYFAST_VALIDATE_URL is not configured');
+      return sendText(response, 503, 'PayFast validation is not configured');
+    }
     const validation = await fetch(validationUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -130,6 +141,8 @@ export default async function handler(request: IncomingMessage, response: Server
     console.info('[PayFast ITN] PayFast validation result', { validationResult });
     if (validationResult !== 'VALID') return sendText(response, 400, 'Payment not validated');
     if (fields.payment_status !== 'COMPLETE') return sendText(response, 202, 'Payment incomplete');
+    const paymentId = fields.pf_payment_id;
+    if (paymentId && deliveredPaymentIds.has(paymentId)) return sendText(response, 200, 'Already delivered');
     if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM || !process.env.ADMIN_EMAIL) {
       console.error('[PayFast ITN] email configuration missing', {
         hasResendKey: Boolean(process.env.RESEND_API_KEY),
@@ -139,7 +152,7 @@ export default async function handler(request: IncomingMessage, response: Server
       return sendText(response, 503, 'Email service is not configured');
     }
 
-    const filePath = path.join(process.cwd(), 'public', 'materials', product.file);
+    const filePath = path.join(process.cwd(), 'private', 'materials', product.file);
     console.info('[PayFast ITN] attempting to read PDF', { filePath, cwd: process.cwd() });
     let file: string;
     try {
@@ -147,26 +160,19 @@ export default async function handler(request: IncomingMessage, response: Server
       console.info('[PayFast ITN] PDF loaded', { file: product.file, bytes: file.length });
     } catch (fileError) {
       console.error('[PayFast ITN] PDF file not found or unreadable', { filePath, error: fileError instanceof Error ? fileError.message : 'unknown' });
-      return sendText(response, 200, 'OK');
+      return sendText(response, 503, 'Paid file is unavailable');
     }
     const customerName = `${fields.name_first} ${fields.name_last}`.trim();
     const details = `Customer: ${customerName}\nEmail: ${fields.email_address}\nPhone: ${fields.cell_number}\nPDF: ${product.title}\nAmount: R${product.amount}\nPayment ID: ${fields.pf_payment_id || 'Sandbox transaction'}\nStatus: ${fields.payment_status}`;
     const attachment = { filename: product.file, content: file };
 
-    try {
-      await sendEmail([fields.email_address], `Your Viva Tutorials PDF: ${product.title}`, `Thank you for your payment. Your PDF is attached.\n\n${details}`, attachment);
-    } catch (emailError) {
-      console.error('[PayFast ITN] customer email failed', { email: fields.email_address, error: emailError instanceof Error ? emailError.message : 'unknown' });
-    }
-    try {
-      await sendEmail([process.env.ADMIN_EMAIL], `New PDF purchase: ${product.title}`, `A paid PDF was purchased.\n\n${details}`, attachment);
-    } catch (emailError) {
-      console.error('[PayFast ITN] admin email failed', { email: process.env.ADMIN_EMAIL, error: emailError instanceof Error ? emailError.message : 'unknown' });
-    }
+    await sendEmail([fields.email_address], `Your Viva Tutorials PDF: ${product.title}`, `Thank you for your payment. Your PDF is attached.\n\n${details}`, attachment);
+    await sendEmail([process.env.ADMIN_EMAIL], `New PDF purchase: ${product.title}`, `A paid PDF was purchased.\n\n${details}`, attachment);
+    if (paymentId) deliveredPaymentIds.add(paymentId);
 
     return sendText(response, 200, 'OK');
   } catch (error) {
     console.error('[PayFast ITN] unhandled exception', { error: error instanceof Error ? error.message : 'unknown error', stack: error instanceof Error ? error.stack : '' });
-    return sendText(response, 200, 'OK');
+    return sendText(response, 503, 'Unable to process notification');
   }
 }

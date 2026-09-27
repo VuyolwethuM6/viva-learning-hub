@@ -57,6 +57,7 @@ export default function Services() {
     <div className="min-h-screen bg-white">
       <TopBar />
       <StickyHeader />
+      <main id="main-content">
 
       {/* Hero Section */}
       <section className="relative pt-[12rem] sm:pt-[10rem] pb-16 md:pb-20 px-6 overflow-hidden bg-white">
@@ -161,10 +162,8 @@ export default function Services() {
           transition={{ delay: idx * 0.05 }}
           className="rounded-xl border-2 border-[#7949fe] overflow-hidden shadow-md transition-all duration-300"
         >
-          <div
-            className="w-full h-48 sm:h-60 md:h-64 bg-center bg-cover"
-            style={{ backgroundImage: `url(${subject.img})`, backgroundRepeat: "no-repeat" }}
-          />
+          <img src={subject.img} alt={subject.name} loading="lazy" className="h-40 w-full object-cover sm:h-52 md:h-56" />
+          <p className="px-3 py-3 text-center font-semibold text-[#1a0b2e]">{subject.name}</p>
         </motion.div>
       ))}
     </div>
@@ -220,6 +219,7 @@ export default function Services() {
         </div>
       </section>
 
+      </main>
       <Footer />
     </div>
   );

@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
     },
     {
       title: "2. Information Collection and Use",
-      content: "We collect several different types of information for various purposes to provide and improve our service to you. Types of data collected include: Personal Data (name, email address, phone number, cookies and usage data), usage data (pages visited, time spent, referring source, etc.)"
+      content: "When you contact us or request a service, we receive the information you choose to submit, such as your name, email address, phone number, and message. Payment and delivery details are processed as needed to complete purchases. Do not include sensitive personal information in website forms."
     },
     {
       title: "3. Use of Data",
@@ -23,7 +23,11 @@ export default function PrivacyPolicy() {
     },
     {
       title: "5. Contact Us",
-      content: "If you have any questions about this Privacy Policy, please contact us at: Email: privacy@viviatutorials.com, Address: South Africa"
+      content: "If you have questions about this Privacy Policy, contact us at info@vivatutorials.co.za."
+    },
+    {
+      title: "6. Optional Website Analytics",
+      content: "If Google Analytics is enabled on this website, it is loaded only after you choose to allow analytics. Page visits and broad interaction categories may then be measured to improve the site. Contact form contents, names, email addresses, and phone numbers are not sent as analytics events. You can change your choice using Analytics choices in the footer."
     }
   ];
 
@@ -31,6 +35,7 @@ export default function PrivacyPolicy() {
     <div className="min-h-screen bg-white">
       <TopBar />
       <StickyHeader />
+      <main id="main-content">
       {/* Hero Section */}
       <section className="pt-40 pb-20 px-6 bg-gradient-to-b from-white to-[#7949fe]/5">
         <div className="max-w-7xl mx-auto">
@@ -44,7 +49,7 @@ export default function PrivacyPolicy() {
               Privacy Policy
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Last updated: January 2024
+              Last updated: September 2026
             </p>
           </motion.div>
         </div>
@@ -77,7 +82,7 @@ export default function PrivacyPolicy() {
           >
             <h3 className="text-2xl font-bold text-[#1a0b2e] mb-4">Children's Privacy</h3>
             <p className="text-gray-600">
-              Our service does not knowingly collect personally identifiable information from anyone under the age of 18. If you are a parent or guardian and you are aware that your child has provided us with Personal Data, please contact us. If we become aware that we have collected Personal Data from children without verification of parental consent, we take steps to remove such information.
+              Viva Tutorials supports Grade 8-12 learners, who may be under 18. A parent or guardian should submit contact, enrollment, and purchase requests on behalf of learners under 18. Contact us with questions about personal information relating to a learner.
             </p>
           </motion.div>
         </div>
@@ -98,6 +103,7 @@ export default function PrivacyPolicy() {
         </div>
       </section>
 
+      </main>
       <Footer />
     </div>
   );
