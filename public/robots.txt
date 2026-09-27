@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://vivatutorials.co.za/sitemap.xml
+Sitemap: https://www.vivatutorials.co.za/sitemap.xml

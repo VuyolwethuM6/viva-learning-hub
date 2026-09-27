@@ -8,7 +8,7 @@ import { createServer } from "vite";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
-const siteUrl = "https://vivatutorials.co.za";
+const siteUrl = "https://www.vivatutorials.co.za";
 const pages = JSON.parse(await readFile(resolve(projectRoot, "src/lib/pageMetadata.json"), "utf8"));
 const template = await readFile(resolve(projectRoot, "dist/index.html"), "utf8");
 const vite = await createServer({

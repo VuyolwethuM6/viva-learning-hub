@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import pages from "@/lib/pageMetadata.json";
 
-const siteUrl = "https://vivatutorials.co.za";
+const siteUrl = "https://www.vivatutorials.co.za";
 const logoUrl = `${siteUrl}/viva-tutorials-logo.png`;
 type PageMetadata = { title: string; description: string; indexable?: boolean };
 

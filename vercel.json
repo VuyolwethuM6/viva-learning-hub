@@ -4,14 +4,6 @@
       "includeFiles": "private/materials/**"
     }
   },
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.vivatutorials.co.za" }],
-      "destination": "https://vivatutorials.co.za/:path*",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     { "source": "/about", "destination": "/about/index.html" },
     { "source": "/services", "destination": "/services/index.html" },

@@ -19,7 +19,7 @@ const examSessions: SessionFilter[] = ['all', 'March', 'June', 'September', 'Nov
 
 const materialUrl = (material: StudyMaterial) => {
   const slug = material.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return material.isFree ? `https://vivatutorials.co.za${material.file}` : `https://vivatutorials.co.za/study-materials#${slug}`;
+  return material.isFree ? `https://www.vivatutorials.co.za${material.file}` : `https://www.vivatutorials.co.za/study-materials#${slug}`;
 };
 
 export default function StudyMaterials() {
@@ -49,7 +49,7 @@ export default function StudyMaterials() {
     '@type': 'CollectionPage',
     name: 'Grade 8–12 Study Materials and Matric Practice PDFs',
     description: 'Viva Tutorials study resources organized by grade, subject, and exam sitting. Browse free and premium Grade 12 Mathematics practice PDFs; more Grades 8–11 resources are being added.',
-    url: 'https://vivatutorials.co.za/study-materials',
+    url: 'https://www.vivatutorials.co.za/study-materials',
     about: { '@type': 'Thing', name: 'South African school exam preparation' },
     mainEntity: {
       '@type': 'ItemList',
