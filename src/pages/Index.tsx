@@ -1053,14 +1053,7 @@ export default function Home() {
                     topics: ["Projections", "CAD", "Drafting", "3D Modeling"],
                     students: "280+ students"
                   },
-                  // { 
-                  //   title: "Geography", 
-                  //   icon: "🌍",
-                  //   gradient: "from-teal-500 to-cyan-500",
-                  //   description: "Physical & Human Geography studies",
-                  //   topics: ["Climatology", "Geomorphology", "Urban Studies", "GIS"],
-                  //   students: "510+ students"
-                  // }
+
                 ].map((subject, idx) => (
                   <motion.div
                     key={idx}
