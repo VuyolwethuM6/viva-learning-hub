@@ -1,6 +1,11 @@
-import React, { useState, type FormEvent } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, X } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const SubjectRequestModal = ({ isOpen, onClose }) => {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
@@ -28,39 +33,29 @@ const SubjectRequestModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="subject-request-title">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl relative"
-        >
-          {/* Close Button */}
-          <button aria-label="Close subject request"
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-          >
-            <X className="w-6 h-6" />
-          </button>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-md overflow-y-auto rounded-2xl border-0 bg-white p-6 shadow-2xl sm:rounded-3xl sm:p-8">
+        <DialogHeader className="pr-8 text-left">
+          <DialogTitle id="subject-request-title" className="text-2xl font-bold text-gray-900">Ask About Subject Availability</DialogTitle>
+          <DialogDescription className="text-gray-600">Tell us the subject you need help with. We will confirm whether support is currently available.</DialogDescription>
+        </DialogHeader>
 
-          <h3 id="subject-request-title" className="text-2xl font-bold text-gray-900 mb-2">Request a Subject</h3>
-          <p className="text-gray-600 mb-6">Tell us what you'd like to learn, and we'll find the perfect tutor for you.</p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
+              <label htmlFor="requested-subject" className="block text-sm font-medium text-gray-700 mb-1">Subject Name</label>
               <input 
+                id="requested-subject"
                 type="text" 
                 name="subject"
-                placeholder="e.g. Advanced Physics" 
+                placeholder="e.g. Grade 10 Mathematics" 
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#7949fe] outline-none"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Your Email</label>
+              <label htmlFor="requester-email" className="block text-sm font-medium text-gray-700 mb-1">Your Email</label>
               <input 
+                id="requester-email"
                 type="email" 
                 name="email"
                 placeholder="email@example.com" 
@@ -76,10 +71,9 @@ const SubjectRequestModal = ({ isOpen, onClose }) => {
             >
               {status === 'submitting' ? 'Sending...' : 'Send Request'}
             </button>
-          </form>
-        </motion.div>
-      </div>
-    </AnimatePresence>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

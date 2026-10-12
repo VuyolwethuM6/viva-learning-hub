@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  GraduationCap, Phone, Mail, MapPin,
-  ChevronRight, Star, Check, ArrowRight, Play, BookOpen, Users,
-  Award, Clock, Calendar, Search, Menu, X, Laptop, Sparkles
+  Phone, Mail, MapPin,
+  Check, ArrowRight, BookOpen, Users, Menu, X, Laptop, Sparkles
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import Footer from '@/components/Footer';
 import { FaYoutube, FaFacebook, FaTiktok } from "react-icons/fa6";
-import Maths from '/maths.png'
-import { Link } from "react-router-dom";
 import SubjectRequestModal from '@/components/SubjectRequestModal';
 import SyllabusModal from '@/components/SyllabusModal';
 import { studyMaterials } from '@/lib/studyMaterials';
@@ -55,7 +52,7 @@ const TopBar = () => (
 
         <span className="hidden items-center gap-2 whitespace-nowrap transition-colors hover:text-[#ff7849] cursor-pointer md:flex">
           <MapPin className="w-3.5 h-3.5" />
-          Cape Town, South Africa
+          Mfuleni, Cape Town, South Africa
         </span>
       </div>
 
@@ -126,147 +123,10 @@ const SectionHeading = ({ subtitle, title, align = "center", light = false }) =>
   </div>
 );
 
-const AnimatedCounter = ({ value, label }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.5 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      className="text-center p-6"
-    >
-      <div className="text-4xl md:text-5xl font-extrabold text-[#7949fe] mb-2 font-mono tracking-tighter">
-        {value}
-      </div>
-      <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">{label}</div>
-    </motion.div>
-  );
-};
-
-const TestimonialCarousel = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  const testimonials = [
-    {
-      name: "Sahluma Mkabile",
-      role: "Grade 12 Student",
-      image: 32, // Replace with actual image index
-      text: "Coach Vuyo, thank you for your genuine love and for sacrificing your sleep to help us understand the work. Without you, we wouldn't be where we are. I really appreciate you being patient with me since Grade 10."
-    },
-    {
-      name: "Liya Dameni",
-      role: "Grade 12 Student",
-      image: 45, // Replace with actual image index
-      text: "What a journey it has been! You played a huge role in my academics. Thank you for being patient, understanding, and for never getting tired of my 'stupid' questions. I'm writing this with a heavy heart because your impact was so great."
-    },
-    {
-      name: "Smart Kids Community",
-      role: "Student Group",
-      image: 28, // Replace with actual image index
-      text: "We appreciate all the effort you put into making sure we get good grades. Your dedication is unmatched, and we hope that in the future, we can proudly say we are the products of your hands."
-    }
-  ];
-
-  const nextTestimonial = () => {
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-  };
-
-  const prevTestimonial = () => {
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
-
-  return (
-    <div className="relative">
-      {/* Abstract background shapes */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#7949fe]/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentIndex}
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -100 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Card className="relative bg-white border-none shadow-2xl p-8 rounded-[2rem]">
-            <div className="text-[#7949fe] mb-6">
-              {[1, 2, 3, 4, 5].map(i => <Star key={i} className="inline-block w-5 h-5 fill-current" />)}
-            </div>
-            <blockquote className="text-xl text-gray-800 font-medium leading-relaxed mb-6">
-              "{testimonials[currentIndex].text}"
-            </blockquote>
-            <div className="flex items-center gap-4">
-              <img loading="lazy" src={`https://i.pravatar.cc/100?img=${testimonials[currentIndex].image}`} alt={testimonials[currentIndex].name} className="w-12 h-12 rounded-full object-cover" />
-              <div>
-                <div className="font-bold text-gray-900">{testimonials[currentIndex].name}</div>
-                <div className="text-sm text-[#7949fe]">{testimonials[currentIndex].role}</div>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Navigation */}
-      <div className="flex justify-center gap-4 mt-6">
-        <Button
-          onClick={prevTestimonial}
-          variant="outline"
-          size="icon"
-          className="rounded-full h-10 w-10"
-        >
-          <ChevronRight className="w-5 h-5 rotate-180" />
-        </Button>
-        <div className="flex items-center gap-2">
-          {testimonials.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentIndex(idx)}
-              className={`h-2 rounded-full transition-all ${idx === currentIndex ? 'w-8 bg-[#7949fe]' : 'w-2 bg-gray-300'
-                }`}
-            />
-          ))}
-        </div>
-        <Button
-          onClick={nextTestimonial}
-          variant="outline"
-          size="icon"
-          className="rounded-full h-10 w-10"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
-};
-
 // SVG Icons as components
-const HomeIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-  </svg>
-);
-
-const BookIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-  </svg>
-);
-
-const UsersIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-  </svg>
-);
-
 const FileIcon = () => (
   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-  </svg>
-);
-
-const UserIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
   </svg>
 );
 
@@ -428,13 +288,26 @@ export default function Home() {
   const [previewMaterial, setPreviewMaterial] = useState(null);
   const [purchaseMaterial, setPurchaseMaterial] = useState(null);
   const [selectedCommunityImage, setSelectedCommunityImage] = useState(null);
-  const [activeTab, setActiveTab] = useState('home');
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const handleMenuKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+        mobileMenuButtonRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleMenuKeyDown);
+    return () => window.removeEventListener('keydown', handleMenuKeyDown);
+  }, [isMobileMenuOpen]);
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-[#7949fe]/20 selection:text-[#7949fe] overflow-x-hidden">
@@ -491,10 +364,13 @@ export default function Home() {
 
 
           <button
-            className="lg:hidden p-2 text-gray-600"
+            ref={mobileMenuButtonRef}
+            type="button"
+            className="lg:hidden p-2 text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7949fe]"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-navigation"
           >
             {isMobileMenuOpen ? <X /> : <Menu />}
           </button>
@@ -516,6 +392,10 @@ export default function Home() {
 
             {/* Slide-in Menu */}
             <motion.div
+              id="mobile-navigation"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile navigation"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
@@ -610,7 +490,6 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Hero Section */}
 <main id="main-content">
 <section id="home" className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden bg-gradient-to-b from-white to-white">
         {/* Decorative blobs */}
@@ -634,25 +513,22 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7949fe]/10 border border-[#7949fe]/30 mb-6"
               >
                 <Sparkles className="w-4 h-4 text-[#7949fe]" />
-                <span className="text-sm font-medium text-[#7949fe]">STEM Education Excellence</span>
+                <span className="text-sm font-medium text-[#7949fe]">ONLINE &amp; IN-PERSON TUTORING</span>
               </motion.div>
 
               {/* Headline */}
               <div className="space-y-4 mb-6">
-                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight">
-                  <span className="text-slate-900">Unlock Your</span>
-                  <br />
-
-                  <span className="relative inline-block">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-slate-900">
+                  <span className="relative inline-block mb-3">
                     <span className="bg-gradient-to-r from-[#7949fe] via-[#ff7849] to-[#7949fe] bg-clip-text text-transparent">
-                      Academic
+                      Maths & Science
                     </span>
 
                     <motion.svg
                       initial={{ pathLength: 0 }}
                       animate={{ pathLength: 1 }}
                       transition={{ delay: 1, duration: 1 }}
-                      className="absolute -bottom-2 left-0 w-full"
+                      className="absolute -bottom-3 left-0 h-3 w-full"
                       viewBox="0 0 200 12"
                       fill="none"
                       aria-hidden="true"
@@ -673,11 +549,13 @@ export default function Home() {
                   </span>
 
                   <br />
-                  <span className="text-slate-900">Potential</span>
+                  <span>Tutoring in Mfuleni </span>
+                  <br />
+                  <span>Cape Town</span>
                 </h1>
 
                 <p className="text-lg sm:text-xl text-slate-600 max-w-xl leading-relaxed mx-auto lg:mx-0">
-                  From Grade 8 to Matric, we provide personalized STEM mentorship and innovative mobile tools that South Africa’s future leaders need to succeed.
+                  CAPS-aligned tutoring for Grades 8–12 and matric rewrite learners, online or in person in Mfuleni, Cape Town. Practise exam-style questions and ask us about subjects, programmes and availability.
                 </p>
               </div>
 
@@ -688,7 +566,7 @@ export default function Home() {
                   size="lg"
                   className="h-14 px-8 text-base bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full shadow-xl shadow-[#7949fe]/30 hover:shadow-2xl hover:scale-105 transition-all duration-300"
                 >
-                  <a href="https://forms.gle/sh3Be1fF8gD1qt9G9" target="_blank" rel="noopener noreferrer">Enroll Now!</a>
+                  <a href="/contact">Enquire About Tutoring</a>
                 </Button>
 
                 <Button
@@ -697,281 +575,115 @@ export default function Home() {
                   variant="outline"
                   className="h-14 px-8 text-base border-2 border-[#7949fe] text-[#7949fe] hover:bg-[#7949fe]/10 rounded-full font-bold"
                 >
-                  <a href="https://calendar.app.google/k1hbyKuD97U5g1Vf7" target="_blank" rel="noopener noreferrer">Book A Session</a>
+                  <a href="/study-materials">Explore Free Study Materials</a>
                 </Button>
               </div>
 
-              <div className="mt-12 flex items-center gap-4 text-sm font-medium text-gray-500 relative justify-center lg:justify-start">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
-                      <img loading="lazy" src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="Student" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                  <div className="w-10 h-10 rounded-full border-2 border-white bg-[#7949fe]/20 flex items-center justify-center text-[#7949fe] text-xs font-bold">
-                    +2k
-                  </div>
-                </div>
-                <p>Trusted by 2,000+ students & parents</p>
+              <div className="mt-8 text-sm font-semibold text-gray-600 lg:text-left">
+                Structured lessons. Guided practice. Assessment and progress review.
               </div>
             </motion.div>
 
-            {/* Custom Dashboard Graphic */}
             <motion.div
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative w-full max-w-md mx-auto hidden lg:block"
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="relative hidden w-full max-w-xl justify-self-end lg:block"
             >
-              <div className="absolute inset-0 bg-[#9f82f6] rounded-[3rem] rotate-3 opacity-10 scale-95 blur-2xl transform translate-y-8" />
-
-              <div className="relative bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden">
-                {/* Dashboard Header */}
-                <div style={{ background: 'linear-gradient(to right, #7949fe, #9f82f6)' }} className="p-6 text-white">
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h3 className="font-bold text-3xl mb-1">Vitocostrian Mableka</h3>
-                      <p className="text-white/70 text-lg">Grade 12</p>
-                    </div>
-                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-                      <svg className="w-7 h-7 text-[#E85D52]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Progress Cards */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="relative w-12 h-12">
-                          <svg className="w-12 h-12 transform -rotate-90">
-                            <circle
-                              cx="24"
-                              cy="24"
-                              r="20"
-                              stroke="rgba(255,255,255,0.3)"
-                              strokeWidth="4"
-                              fill="none"
-                            />
-                            <circle
-                              cx="24"
-                              cy="24"
-                              r="20"
-                              stroke="white"
-                              strokeWidth="4"
-                              fill="none"
-                              strokeDasharray="125.6"
-                              strokeDashoffset="31.4"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="text-xl font-bold">Level 4</div>
-                        </div>
-                      </div>
-                      <div className="text-xs text-white/70">530 XP total</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#FFB74D] to-[#FFA726] rounded-full flex items-center justify-center">
-                          <span className="text-2xl">🔥</span>
-                        </div>
-                        <div>
-                          <div className="text-xl font-bold">3 days</div>
-                        </div>
-                      </div>
-                      <div className="text-xs text-white/70">Current streak</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dashboard Body */}
-                <div className="p-6 bg-gray-50/50">
-                  <div className="space-y-3">
-                    {/* Equations course */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                      className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h5 className="font-bold text-gray-900 text-lg mb-2">Equations and Inequalities</h5>
-                          <p className="text-xs text-gray-600 leading-relaxed">
-                            Master solving linear, quadratic, exponential, logarithmic equations, and inequalities.
-                          </p>
-                        </div>
-                        <button className="ml-4 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors flex-shrink-0">
-                          <ChevronRight />
-                        </button>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: '50%' }}
-                            transition={{ duration: 1, delay: 0.5 }}
-                            className="bg-[#9987ed] h-full rounded-full"
-                          ></motion.div>
-                        </div>
-                        <p className="text-gray-500 text-xs text-right font-medium">50% complete</p>
-                      </div>
-                    </motion.div>
-
-                    {/* Newton's Laws course */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.4 }}
-                      className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h5 className="font-bold text-gray-900 text-lg mb-2">Newton's Laws of Motion</h5>
-                          <p className="text-xs text-gray-600 leading-relaxed">
-                            Learn how forces affect motion using Newton's three laws.
-                          </p>
-                        </div>
-                        <button className="ml-4 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors flex-shrink-0">
-                          <ChevronRight />
-                        </button>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: '40%' }}
-                            transition={{ duration: 1, delay: 0.6 }}
-                            className="bg-[#9987ed] h-full rounded-full"
-                          ></motion.div>
-                        </div>
-                        <p className="text-gray-500 text-xs text-right font-medium">40% complete</p>
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
-
-                {/* Bottom navigation */}
-                <div className="border-t border-gray-200 bg-white px-4 py-3">
-                  <div className="flex items-center justify-around">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setActiveTab('home')}
-                      className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${activeTab === 'home' ? 'text-[#9987ed]' : 'text-gray-400'
-                        }`}
-                    >
-                      <HomeIcon />
-                      <span className="text-xs font-medium">Home</span>
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setActiveTab('learn')}
-                      className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${activeTab === 'learn' ? 'text-[#9987ed]' : 'text-gray-400'
-                        }`}
-                    >
-                      <BookIcon />
-                      <span className="text-xs font-medium">Learn</span>
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setActiveTab('tutor')}
-                      className={`flex flex-col items-center gap-1 px-6 py-2 rounded-xl transition-colors relative ${activeTab === 'tutor' ? 'text-[#9987ed]' : 'text-gray-400'
-                        }`}
-                    >
-                      {activeTab === 'tutor' && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-[#9987ed]/10 rounded-full -z-10"
-                        />
-                      )}
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${activeTab === 'tutor' ? 'bg-[#9987ed] ring-4 ring-[#9987ed]/20' : 'bg-gray-200'
-                        }`}>
-                        <UsersIcon />
-                      </div>
-                      <span className="text-xs font-medium">Tutor</span>
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setActiveTab('exams')}
-                      className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${activeTab === 'exams' ? 'text-[#9987ed]' : 'text-gray-400'
-                        }`}
-                    >
-                      <FileIcon />
-                      <span className="text-xs font-medium">Exams</span>
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setActiveTab('profile')}
-                      className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${activeTab === 'profile' ? 'text-[#9987ed]' : 'text-gray-400'
-                        }`}
-                    >
-                      <UserIcon />
-                      <span className="text-xs font-medium">Profile</span>
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
+              <div className="absolute -inset-4 rounded-[2.5rem] bg-[#7949fe]/10 blur-2xl" aria-hidden="true" />
+              <img
+                src="/images/tutoring.jpeg"
+                alt="Viva Tutorials tutor teaching a Mathematics lesson at a whiteboard"
+                fetchPriority="high"
+                className="relative aspect-[4/5] w-full rounded-[2rem] object-cover object-center shadow-2xl"
+              />
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Stats Ribbon */}
-      <div className="bg-[#1a0b2e] text-white py-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
-          <AnimatedCounter value="3+" label="Expert Tutors" />
-          <AnimatedCounter value="5" label="Years of Excellence" />
-          <AnimatedCounter value="95%" label="Success Rate" />
-          <AnimatedCounter value="3+" label="Locations" />
+      <section id="delivery-options" className="bg-gray-50 py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <SectionHeading subtitle="Flexible Learning Options" title="Choose How You Want to Learn" />
+          <p className="mx-auto -mt-8 mb-12 max-w-3xl text-center leading-7 text-gray-600">
+            Every learner has different needs and circumstances. Viva Tutorials offers online and in-person tutoring, giving learners the option to receive academic support in a format that suits them.
+          </p>
+          <div className="grid gap-6 md:grid-cols-3">
+            {[
+              {
+                icon: Laptop,
+                title: 'Online Tutoring',
+                description: 'Learn from home with scheduled online lessons designed to help you understand difficult concepts, work through examples and practise relevant questions. Online tutoring gives learners access to academic support without needing to travel to the classroom.',
+                href: '/contact?subject=Online%20tutoring',
+                cta: 'Enquire About Online Lessons',
+              },
+              {
+                icon: MapPin,
+                title: 'In-Person Tutoring in Mfuleni',
+                description: 'Join face-to-face tutoring in Mfuleni, Cape Town. Work through challenging topics, ask questions, practise problem-solving methods and strengthen your understanding with guided academic support.',
+                href: '/contact?subject=In-person%20tutoring%20in%20Mfuleni',
+                cta: 'Enquire About In-Person Lessons',
+              },
+              {
+                icon: BookOpen,
+                title: 'Support Across Your Subjects',
+                description: 'Choose support for the subjects you need, based on the available timetable and programme options. Ask about online or in-person delivery for each subject and whether a combination of both formats can be arranged.',
+                href: '/services',
+                cta: 'Explore Our Subjects',
+              },
+            ].map(({ icon: Icon, title, description, href, cta }) => (
+              <article key={title} className="rounded-3xl border border-gray-100 bg-white p-7 shadow-sm">
+                <Icon className="mb-5 h-9 w-9 text-[#7949fe]" aria-hidden="true" />
+                <h3 className="mb-3 text-xl font-bold text-gray-900">{title}</h3>
+                <p className="mb-6 leading-7 text-gray-600">{description}</p>
+                <a className="font-bold text-[#7949fe] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7949fe]" href={href}>
+                  {cta} <ArrowRight className="ml-1 inline h-4 w-4" aria-hidden="true" />
+                </a>
+              </article>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Services Grid (WordPress Style) */}
       <section id="services" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <SectionHeading
-            subtitle="What We Offer"
-            title="Our Services"
+            subtitle="Our Services"
+            title="How We Support Learners"
           />
+          <p className="mx-auto -mt-8 mb-12 max-w-3xl text-center leading-7 text-gray-600">
+            Our approach combines teaching, guided practice and study resources to help learners work towards a stronger understanding of their subjects.
+          </p>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 icon: Users,
-                title: "In-Person Tutoring",
-                desc: "Personalized one-on-one sessions at your home or our learning centers, tailored to your pace and learning style.",
-                color: "text-blue-600",
-                bg: "bg-blue-50"
+                title: "Structured Tutoring",
+                desc: "Receive explanations and guided support in the subjects and grade levels offered by Viva Tutorials. Lessons focus on understanding concepts, working through examples and practising relevant questions.",
+                color: "text-[#7949fe]",
+                bg: "bg-[#7949fe]/10",
+                href: "/services",
+                cta: "Explore Tutoring Services",
               },
               {
-                icon: Laptop,
-                title: "Hybrid/Combined Learning",
-                desc: "Flexible combination of in-person and online tutoring designed to fit your schedule and maximize results.",
+                icon: Check,
+                title: "Assessment and Revision",
+                desc: "Use appropriate assessment and revision activities to check understanding, identify gaps and prepare for school assessments and examinations, where included in the selected programme.",
                 color: "text-[#7949fe]",
-                bg: "bg-[#7949fe]/10"
+                bg: "bg-[#7949fe]/10",
+                href: "/services",
+                cta: "Discuss Assessment Support",
               },
               {
                 icon: BookOpen,
-                title: "Comprehensive Study Material",
-                desc: "Access to curated notes, practice tests, and resources aligned with the CAPS curriculum.",
-                color: "text-pink-600",
-                bg: "bg-pink-50"
+                title: "Study Materials",
+                desc: "Explore study notes, practice questions and revision resources designed to support learning beyond scheduled tutoring sessions. Availability and any charges are shown with each resource.",
+                color: "text-[#7949fe]",
+                bg: "bg-[#7949fe]/10",
+                href: "/study-materials",
+                cta: "Explore Study Materials",
               }
             ].map((service, idx) => (
               <motion.div
@@ -984,8 +696,8 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">{service.title}</h3>
                 <p className="text-gray-600 leading-relaxed mb-8">{service.desc}</p>
-                <a href="/services" className="inline-flex items-center font-bold text-[#1a0b2e] hover:text-[#7949fe] transition-colors uppercase text-sm tracking-wide">
-                  Learn More <ArrowRight className="w-4 h-4 ml-2" />
+                <a href={service.href} className="inline-flex items-center font-bold text-[#1a0b2e] hover:text-[#7949fe] transition-colors text-sm tracking-wide focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7949fe]">
+                  {service.cta} <ArrowRight className="w-4 h-4 ml-2" />
                 </a>
               </motion.div>
             ))}
@@ -997,9 +709,12 @@ export default function Home() {
       <section id="subjects" className="py-24 bg-gradient-to-b from-white to-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <SectionHeading
-            subtitle="Our Curriculum"
-            title="Subjects We Excel In"
+            subtitle="Our Subjects"
+            title="CAPS-Aligned Tutoring for Grades 8–12"
           />
+          <p className="mx-auto -mt-8 mb-12 max-w-3xl text-center leading-7 text-gray-600">
+            Build a stronger foundation, improve your understanding of important concepts and prepare for assessments with structured support in Mathematics and Science subjects. Our academic support is organised around the learner's grade, subject requirements and learning needs.
+          </p>
 
           <Tabs defaultValue="stem" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-1 mb-12 bg-white border border-gray-200 p-1 rounded-full shadow-sm">
@@ -1017,41 +732,57 @@ export default function Home() {
                     title: "Mathematics",
                     icon: "/integration.png",
                     gradient: "from-blue-500 to-cyan-500",
-                    description: "Pure Maths & Maths Literacy from Grade 8-12",
-                    topics: ["Algebra", "Calculus", "Trigonometry", "Statistics"],
-                    students: "150+ students"
+                    grade: "Grades 8–9",
+                    description: "Strengthen your understanding of number patterns, algebra, equations, functions, geometry, measurement and other grade-appropriate mathematical concepts through explanations and guided practice.",
+                    topics: ["Number patterns", "Algebra and equations", "Geometry", "Measurement"],
+                  },
+                  {
+                    title: "Natural Sciences",
+                    icon: "/physics.png",
+                    gradient: "from-[#7949fe] to-[#ff7849]",
+                    grade: "Grades 8–9",
+                    description: "Develop your understanding of scientific concepts through structured explanations, practical examples, questions and revision aligned with the relevant grade's curriculum.",
+                    topics: ["Scientific concepts", "Practical examples", "Questions and revision"],
+                  },
+                  {
+                    title: "Mathematics",
+                    icon: "/integration.png",
+                    gradient: "from-blue-500 to-cyan-500",
+                    grade: "Grades 10–12",
+                    description: "Develop problem-solving skills and improve your understanding of algebra, functions, trigonometry, calculus where applicable, probability, statistics and other curriculum topics relevant to your grade.",
+                    topics: ["Algebra and functions", "Trigonometry", "Calculus where applicable", "Probability and statistics"],
+                  },
+                  {
+                    title: "Mathematical Literacy",
+                    icon: "/maths.png",
+                    gradient: "from-orange-500 to-red-500",
+                    grade: "Grades 10–12",
+                    description: "Build confidence in applying mathematics to everyday situations, including financial mathematics, measurement, maps, data handling and other CAPS curriculum topics relevant to your grade.",
+                    topics: ["Financial mathematics", "Measurement", "Maps", "Data handling"],
                   },
                   {
                     title: "Physical Sciences",
                     icon: "/physics.png",
                     gradient: "from-[#7949fe] to-[#ff7849]",
-                    description: "Physics & Chemistry combined curriculum",
-                    topics: ["Mechanics", "Waves", "Organic Chemistry", "Electrostatics"],
-                    students: "120+ students"
+                    grade: "Grades 10–12",
+                    description: "Strengthen your understanding of physics and chemistry through explanations, worked calculations, scientific principles and exam-style practice.",
+                    topics: ["Physics", "Chemistry", "Worked calculations", "Exam-style practice"],
                   },
                   {
                     title: "Life Sciences",
                     icon: "/genetic-engineering.png",
                     gradient: "from-green-500 to-emerald-500",
-                    description: "Biology & Life Sciences for all grades",
-                    topics: ["Genetics", "Ecology", "Human Biology", "Evolution"],
-                    students: "80+ students"
+                    grade: "Grades 10–12",
+                    description: "Study biological concepts through structured explanations, diagrams, terminology, application questions and exam preparation relevant to your grade.",
+                    topics: ["Biological concepts", "Diagrams and terminology", "Application questions", "Exam preparation"],
                   },
                   {
-                    title: "Computer Science",
-                    icon: "💻",
-                    gradient: "from-indigo-500 to-blue-500",
-                    description: "IT, CAT & Programming fundamentals",
-                    topics: ["Algorithms", "Python", "Web Dev", "Data Structures"],
-                    students: "420+ students"
-                  },
-                  {
-                    title: "Mathematical Literacy",
-                    icon: "📐",
-                    gradient: "from-orange-500 to-red-500",
-                    description: "Technical drawing & design principles",
-                    topics: ["Projections", "CAD", "Drafting", "3D Modeling"],
-                    students: "280+ students"
+                    title: "Matric Rewrite Tutoring",
+                    icon: null,
+                    gradient: "from-[#7949fe] to-[#ff7849]",
+                    grade: "Matric rewrite learners",
+                    description: "Preparing to rewrite your matric examinations? Get structured support in the relevant subjects, identify topics that need attention, practise examination-style questions and review your progress as you prepare. Support is subject to the available programme and timetable.",
+                    topics: ["Mathematics", "Mathematical Literacy", "Physical Sciences", "Life Sciences"],
                   },
                   // { 
                   //   title: "Geography", 
@@ -1074,23 +805,22 @@ export default function Home() {
                     <Card className="h-full border-2 border-[#7949fe]/30 hover:border-[#7949fe] transition-all duration-300 hover:shadow-2xl bg-white overflow-hidden">
                       <div className={`h-2 bg-gradient-to-r ${subject.gradient}`} />
                       <CardHeader className="pb-4">
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="mb-4">
                           <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300`}>
-                            <img
-                              loading="lazy"
-                              src={subject.icon}
-                              alt={subject.title}
-                              className="w-12 h-12 object-contain"
-                            />
+                            {subject.icon ? (
+                              <img
+                                loading="lazy"
+                                src={subject.icon}
+                                alt=""
+                                className="w-12 h-12 object-contain"
+                              />
+                            ) : <BookOpen className="h-8 w-8 text-[#7949fe]" aria-hidden="true" />}
                           </div>
-                          <Badge variant="secondary" className="bg-[#7949fe]/10 text-[#7949fe] border border-[#7949fe]/20">
-                            <Users className="w-3 h-3 mr-1" />
-                            {subject.students}
-                          </Badge>
                         </div>
                         <CardTitle className="text-2xl font-bold text-gray-900 group-hover:text-[#7949fe] transition-colors">
                           {subject.title}
                         </CardTitle>
+                        <p className="mb-2 text-sm font-semibold text-[#7949fe]">{subject.grade}</p>
                         <CardDescription className="text-gray-600 text-base">
                           {subject.description}
                         </CardDescription>
@@ -1118,7 +848,7 @@ export default function Home() {
                           }}
                           className="w-full text-[#ff7849] hover:text-[#ff7849] hover:bg-[#ff7849]/10 font-bold group bg-transparent"
                         >
-                          View Syllabus
+                          View Subject Overview
                           <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </CardFooter>
@@ -1315,19 +1045,18 @@ export default function Home() {
             viewport={{ once: true }}
             className="mt-12 md:mt-16 text-center bg-white rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 shadow-xl border-2 border-[#7949fe]/20 mx-2 sm:mx-0"
           >
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Don't See Your Subject?</h3>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-3 md:mb-4">Not Sure Which Subject Support You Need?</h3>
             <p className="text-gray-600 text-sm sm:text-base md:text-lg mb-6 md:mb-8 max-w-2xl mx-auto px-2">
-              We offer personalized tutoring for many other subjects. Contact us to discuss your specific learning needs.
+              Ask us to confirm whether support is currently available for your grade, subject and preferred lesson format.
             </p>
 
-            {/* Updated Button with onClick */}
             <Button
               onClick={() => setIsModalOpen(true)}
               size="lg"
               className="w-full sm:w-auto bg-[#7949fe] hover:bg-[#5a4ecf] text-white px-6 sm:px-10 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold"
             >
               <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              Request a Subject
+              Find the Right Subject Support
             </Button>
           </motion.div>
 
@@ -1346,15 +1075,64 @@ export default function Home() {
         </div>
       </section>
 
+      <section id="learning-approach" className="bg-gray-50 py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <SectionHeading subtitle="Our Approach" title="A Structured Approach to Learning" />
+          <p className="mx-auto -mt-8 mb-12 max-w-3xl text-center leading-7 text-gray-600">
+            Progress starts with understanding what a learner knows, where they need support and what they should work on next. Viva Tutorials uses a structured learning approach to support understanding, practice and review.
+          </p>
+          <ol className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                title: 'Enquire and Identify Your Needs',
+                description: "Tell us the learner's grade, subjects, learning challenges and academic goals. This helps establish which support options may be appropriate.",
+              },
+              {
+                title: 'Identify Learning Gaps',
+                description: 'Where applicable, use previous results and diagnostic assessments to identify topics that require further attention.',
+              },
+              {
+                title: 'Learn Through Guided Practice',
+                description: 'Work through explanations, worked examples and relevant practice questions to develop understanding and problem-solving skills.',
+              },
+              {
+                title: 'Assess and Review',
+                description: 'Use assessments, corrections and feedback, where included in the selected programme, to identify strengths and areas for further improvement.',
+              },
+              {
+                title: 'Continue With a Clearer Focus',
+                description: 'Use the review of previous work to plan what the learner should practise or revisit next.',
+              },
+            ].map((step, index) => (
+              <li key={step.title} className="rounded-3xl border border-gray-100 bg-white p-7 shadow-sm">
+                <span className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#7949fe]/10 font-bold text-[#7949fe]" aria-hidden="true">
+                  {index + 1}
+                </span>
+                <h3 className="mb-3 text-xl font-bold text-gray-900">{step.title}</h3>
+                <p className="leading-7 text-gray-600">{step.description}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-10 text-center">
+            <a href="/contact" className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#7949fe] px-7 py-3 font-bold text-white transition-colors hover:bg-[#5a4ecf] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7949fe]">
+              Discuss Your Learning Goals
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Study Materials Section */}
       <section id="materials" className="py-24 bg-gradient-to-b from-white to-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <SectionHeading
-            subtitle="Study Resources"
-            title="Study Materials & Resources"
+            subtitle="Learn Beyond the Lesson"
+            title="Study Materials and Exam Practice"
           />
           <p className="mx-auto mb-4 max-w-2xl text-center text-base text-gray-600 md:text-lg">
-            Browse {studyMaterials.filter((material) => material.isFree).length} free Grade 12 study PDFs and {studyMaterials.filter((material) => !material.isFree).length} premium practice resources, with more grades and exam sessions being added.
+            Keep practising between lessons with study resources that help you revisit concepts, work through questions and prepare for assessments. Explore available Mathematics and Science materials by subject, grade and topic.
+          </p>
+          <p className="mx-auto mb-8 max-w-2xl text-center leading-7 text-gray-600">
+            Use these resources to reinforce what you have learned, identify questions you still find difficult and prepare for further practice.
           </p>
 
           <div className="mb-12 flex justify-center">
@@ -1362,7 +1140,7 @@ export default function Home() {
               href="/study-materials"
               className="inline-flex items-center gap-2 rounded-full border border-[#7949fe]/20 bg-[#7949fe]/5 px-5 py-3 text-sm font-semibold text-[#7949fe] transition-colors hover:bg-[#7949fe]/10"
             >
-              Explore the full library <ArrowRight className="h-4 w-4" />
+              Explore All Study Materials <ArrowRight className="h-4 w-4" />
             </a>
           </div>
 
@@ -1386,36 +1164,21 @@ export default function Home() {
                       </Badge>
                       <div className="text-right">
                         <div className="text-xl font-extrabold text-[#1a0b2e]">{material.price}</div>
-                        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                          {material.pages} pages
-                        </div>
+                        {material.pages && (
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                            {material.pages} pages
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    <div className="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-inner">
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="rounded-full bg-slate-900 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-white">
-                          PDF
-                        </span>
-                        <span className="text-[10px] font-medium text-slate-500">
-                          {material.isFree ? 'First page' : 'Preview locked'}
-                        </span>
+                    <div className="mb-4 flex min-h-28 items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                      <FileIcon />
+                      <div>
+                        <p className="font-bold text-slate-800">{material.subject} · Grade {material.grade}</p>
+                        <p className="mt-1 text-sm text-slate-600">{material.subtitle} · PDF resource</p>
+                        <p className="mt-1 text-sm text-slate-500">{material.examSession ?? 'Study resource'}</p>
                       </div>
-
-                      {material.isFree ? (
-                        <iframe
-                          src={`${material.file}#page=1&view=FitH`}
-                          title={`${material.title} first page`}
-                          className="h-52 w-full rounded-xl border border-slate-200 bg-white"
-                        />
-                      ) : (
-                        <div className="flex h-52 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-5 text-center">
-                          <div>
-                            <div className="mb-2 text-sm font-bold text-slate-700">Premium PDF</div>
-                            <p className="text-xs leading-5 text-slate-500">This document is delivered after successful PayFast payment.</p>
-                          </div>
-                        </div>
-                      )}
                     </div>
 
                     <CardHeader className="p-0 pb-3">
@@ -1468,7 +1231,7 @@ export default function Home() {
                   <DialogHeader className="px-6 pb-4 pt-6 pr-14 text-left">
                     <DialogTitle className="text-xl font-bold text-white">{previewMaterial.title}</DialogTitle>
                     <DialogDescription className="text-slate-300">
-                      Free PDF preview · Page 1 of {previewMaterial.pages}
+                      {previewMaterial.pages ? `Free PDF preview · Page 1 of ${previewMaterial.pages}` : 'Free PDF preview'}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="bg-slate-800 px-3 pb-5 sm:px-8">
@@ -1478,7 +1241,7 @@ export default function Home() {
                       className="h-[58vh] min-h-[360px] w-full rounded-2xl border border-white/10 bg-white sm:h-[68vh] sm:min-h-[480px]"
                     />
                     <div className="mt-4 flex flex-col items-stretch gap-4 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between">
-                      <span>Showing page 1 of {previewMaterial.pages}.</span>
+                      <span>{previewMaterial.pages ? `Showing page 1 of ${previewMaterial.pages}.` : 'Showing the first page.'}</span>
                       <a
                         href={previewMaterial.file}
                         download
@@ -1503,13 +1266,13 @@ export default function Home() {
             viewport={{ once: true }}
             className="mt-12 md:mt-16 text-center bg-gradient-to-r from-[#7949fe] to-[#ff7849] rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 shadow-xl mx-2 sm:mx-0"
           >
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 md:mb-4">Explore Complete Study Library</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 md:mb-4">Explore the Available Study Library</h3>
             <p className="text-white/90 text-sm sm:text-base mb-5 md:mb-6 px-2">
-              Access materials for all grades (8-12), all subjects, and download free resources or purchase premium study packs.
+              Browse the available Mathematics and Science resources by subject, grade and topic. Resource prices and access options are shown with each item.
             </p>
             <a href="/study-materials">
               <Button className="w-full sm:w-auto bg-white text-[#7949fe] hover:bg-gray-100 px-6 sm:px-10 py-4 sm:py-6 rounded-full text-sm sm:text-base md:text-lg font-bold">
-                View All Materials
+                Explore All Study Materials
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </Button>
             </a>
@@ -1517,72 +1280,57 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Tables */}
       <section id="pricing" className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-6">
-          <SectionHeading subtitle="Pricing Plans" title="Affordable Learning Packages" />
-
-          <div className="flex justify-center mb-12">
-            <div className="bg-gray-100 p-1 rounded-full inline-flex">
-              <Button variant="ghost" className="rounded-full bg-white shadow-sm text-[#7949fe] font-bold px-6">Monthly</Button>
-              <Button variant="ghost" className="rounded-full text-gray-500 font-medium px-6 hover:text-[#7949fe]">Quarterly (Save 15%)</Button>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 items-start">
-            {[
-              { name: "Basic", price: "R500", color: "border-gray-200", features: ["4 sessions per month", "Group classes (max 6)", "Digital study materials", "Email support", "Progress tracking"] },
-              { name: "Standard", price: "R850", color: "border-[#7949fe]", popular: true, features: ["8 sessions per month", "Small group (max 3)", "Printed & digital materials", "WhatsApp support", "Monthly assessments", "Parent-teacher meetings"] },
-              { name: "Premium", price: "R1200", color: "border-gray-200", features: ["12 sessions per month", "One-on-one tutoring", "Complete resource library", "24/7 tutor access", "Weekly progress reports", "Exam preparation workshops", "University application guidance"] }
-            ].map((plan, idx) => (
-              <div
-                key={idx}
-                className={`relative bg-white rounded-3xl p-8 border-2 ${plan.popular ? 'border-[#7949fe] shadow-2xl scale-105 z-10' : 'border-gray-100 shadow-lg'} transition-all`}
-              >
-                {plan.popular && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#7949fe] text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
-                    Most Popular
-                  </div>
-                )}
-                <div className="text-center mb-8">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                  <div className="flex items-center justify-center gap-1">
-                    <span className="text-4xl font-extrabold text-[#1a0b2e]">{plan.price}</span>
-                    <span className="text-gray-500 font-medium text-sm">/month</span>
-                  </div>
-                </div>
-                <div className="space-y-4 mb-8">
-                  {plan.features.map((feat, fIdx) => (
-                    <div key={fIdx} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                        <Check className="w-3 h-3 text-green-600" />
-                      </div>
-                      <span className="text-gray-600 text-sm">{feat}</span>
-                    </div>
-                  ))}
-                </div>
-                <Button asChild className={`w-full py-6 rounded-xl font-bold ${plan.popular ? 'bg-[#7949fe] hover:bg-[#5a4ecf]' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>
-                  <a href={`/contact?plan=${encodeURIComponent(plan.name)}`}>Choose {plan.name}</a>
-                </Button>
-              </div>
-            ))}
+          <SectionHeading subtitle="Tutoring Options" title="Find a Tutoring Option That Fits Your Needs" />
+          <p className="mx-auto -mt-8 max-w-3xl text-center leading-7 text-gray-600">
+            Tutoring requirements vary by grade, subject selection and delivery format. Explore the available programmes and fees, then contact us to confirm the subjects, timetable and package that best fit your needs.
+          </p>
+          <p className="mx-auto mt-4 max-w-3xl text-center leading-7 text-gray-600">
+            Before enrolling, confirm what your selected package includes, the scheduled lesson frequency, the delivery mode, the billing terms and the current availability.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+            <a href="/pricing" className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#7949fe] px-7 py-3 font-bold text-white transition-colors hover:bg-[#5a4ecf] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7949fe]">
+              View Tutoring Fees
+            </a>
+            <a href="/services" className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-[#7949fe] px-7 py-3 font-bold text-[#7949fe] transition-colors hover:bg-[#7949fe]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7949fe]">
+              Explore Tutoring Options
+            </a>
           </div>
         </div>
       </section>
 
-      {/* Testimonial Carousel Style */}
-      <section className="py-24 bg-gray-50 overflow-hidden">
+      <section id="why-viva" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div>
-              <SectionHeading align="left" subtitle="Testimonials" title="What Our Learners Say" />
-              <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-                Hear from our students and parents about their transformative learning experiences with Viva Tutorials.
-              </p>
-              <Button className="bg-[#1a0b2e] text-white px-8 py-6 rounded-full text-lg">Read More Stories</Button>
-            </div>
-
-            <TestimonialCarousel />
+          <SectionHeading subtitle="Why Viva Tutorials" title="Support Built Around the Learner" />
+          <p className="mx-auto -mt-8 mb-12 max-w-3xl text-center leading-7 text-gray-600">
+            Viva Tutorials focuses on helping learners strengthen their understanding, practise important concepts and approach their academic work with a clearer plan.
+          </p>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                title: 'CAPS-Aligned Support',
+                description: 'Learning support organised around the relevant South African school curriculum and grade-level requirements.',
+              },
+              {
+                title: 'Online and In-Person Options',
+                description: 'Choose online tutoring or enquire about face-to-face lessons in Mfuleni, Cape Town.',
+              },
+              {
+                title: 'Focused Practice',
+                description: 'Work through examples and questions to improve understanding and identify topics that need further attention.',
+              },
+              {
+                title: 'A Clear Learning Process',
+                description: 'Where provided by the selected programme, assessments and feedback help learners and parents understand what has been covered and what needs more practice.',
+              },
+            ].map((item) => (
+              <article key={item.title} className="rounded-3xl border border-gray-100 bg-white p-6">
+                <Check className="mb-4 h-7 w-7 text-[#7949fe]" aria-hidden="true" />
+                <h3 className="mb-3 text-lg font-bold text-gray-900">{item.title}</h3>
+                <p className="leading-7 text-gray-600">{item.description}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -1613,7 +1361,7 @@ export default function Home() {
                     className="block w-full cursor-zoom-in overflow-hidden rounded-xl bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#7949fe]/30"
                   >
                     <img
-                      loading={index < 3 ? 'eager' : 'lazy'}
+                      loading="lazy"
                       decoding="async"
                       src={image.src}
                       alt={image.alt}
@@ -1648,23 +1396,83 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
+      <section id="faq" className="py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <SectionHeading subtitle="Frequently Asked Questions" title="Questions About Viva Tutorials" />
+          <div className="space-y-7">
+            {[
+              {
+                question: 'Do you offer online and in-person lessons?',
+                answer: 'Yes. Viva Tutorials offers both online and in-person tutoring. In-person lessons are associated with Mfuleni, Cape Town, while online lessons allow learners to receive support remotely. Contact us to confirm the current timetable and available options for your subjects.',
+              },
+              {
+                question: 'Which grades does Viva Tutorials support?',
+                answer: 'Viva Tutorials provides academic support for Grades 8–12, as well as matric rewrite learners, in the subjects offered by the programme.',
+              },
+              {
+                question: 'Which subjects can I get help with?',
+                answer: 'The core subjects include Mathematics and Natural Sciences for Grades 8–9, and Mathematics, Mathematical Literacy, Physical Sciences and Life Sciences for Grades 10–12 and relevant matric rewrite programmes. Subject availability should be confirmed before enrolment.',
+              },
+              {
+                question: 'Is the tutoring aligned with CAPS?',
+                answer: 'The learning support is designed around the relevant South African CAPS curriculum and grade-level subject requirements.',
+              },
+              {
+                question: 'Can I choose online lessons for one subject and in-person lessons for another?',
+                answer: 'Ask us about combining delivery modes across subjects. Arrangements depend on the available timetable, subject and programme.',
+              },
+              {
+                question: 'How does the enrolment process work?',
+                answer: "Start by completing the enquiry or enrolment process. Provide the learner's grade, selected subjects and learning needs so that the appropriate programme and available timetable can be discussed. Any diagnostic assessment or further onboarding steps will be explained as part of the applicable programme.",
+              },
+              {
+                question: 'Do you provide study materials?',
+                answer: 'Available study resources can be explored through the Study Materials section of the website. The library may include notes, revision resources and practice questions. Resource availability and any associated charges are shown with the relevant material.',
+              },
+              {
+                question: 'How do I find out about fees?',
+                answer: 'Visit the Pricing page or contact Viva Tutorials for the current fees, package inclusions, lesson frequency and available delivery options before enrolling.',
+              },
+              {
+                question: 'How do parents find out about learner progress?',
+                answer: 'Progress communication depends on the learner’s programme and the assessment and feedback processes available. Ask about the reporting and feedback arrangements before enrolment.',
+              },
+            ].map(({ question, answer }) => (
+              <article key={question} className="border-b border-gray-200 pb-6">
+                <h3 className="text-lg font-bold text-gray-900">{question}</h3>
+                <p className="mt-2 leading-7 text-gray-600">{answer}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto bg-[#1a0b2e] rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#7949fe]/20 via-transparent to-[#ff7849]/20" aria-hidden="true" />
           <div className="relative z-10">
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">Ready to Transform Your Learning?</h2>
-            <p className="text-white/60 text-lg md:text-xl max-w-2xl mx-auto mb-10">
-              Take the first step towards academic excellence. Join hundreds of students achieving their goals with Viva Tutorials.
+            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">Let&apos;s Plan the Learner&apos;s Next Step</h2>
+            <p className="text-white/80 text-lg md:text-xl max-w-3xl mx-auto mb-5">
+              Whether the learner needs help strengthening foundational concepts, preparing for school assessments or revising matric subjects, Viva Tutorials offers online and in-person tutoring options designed to support the learning process.
+            </p>
+            <p className="text-white/80 text-base md:text-lg max-w-3xl mx-auto mb-10">
+              Tell us the learner&apos;s grade, subjects and goals. We can then discuss suitable support options and the currently available timetable.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button asChild className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">
-                <a href="https://forms.gle/sh3Be1fF8gD1qt9G9" target="_blank" rel="noopener noreferrer">Enroll Now</a>
+                <a href="/contact">Enquire About Tutoring</a>
               </Button>
-              <Button asChild variant="outline" className="border-white/20 hover:bg-white/10 py-6 px-10 rounded-full text-lg font-bold">
-                <a href="/contact">Contact Us</a>
+              <Button asChild variant="outline" className="border-white/20 text-white hover:bg-white/10 py-6 px-10 rounded-full text-lg font-bold">
+                <a href="/study-materials">Explore Study Materials</a>
               </Button>
             </div>
+            <p className="mt-8 text-sm text-white/75">
+              Questions about subjects, fees or lesson availability?{' '}
+              <a href="/contact" className="font-bold text-white underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+                Contact Viva Tutorials using the details on our contact page.
+              </a>
+            </p>
           </div>
         </div>
       </section>
