@@ -784,14 +784,7 @@ export default function Home() {
                     description: "Preparing to rewrite your matric examinations? Get structured support in the relevant subjects, identify topics that need attention, practise examination-style questions and review your progress as you prepare. Support is subject to the available programme and timetable.",
                     topics: ["Mathematics", "Mathematical Literacy", "Physical Sciences", "Life Sciences"],
                   },
-                  // { 
-                  //   title: "Geography", 
-                  //   icon: "🌍",
-                  //   gradient: "from-teal-500 to-cyan-500",
-                  //   description: "Physical & Human Geography studies",
-                  //   topics: ["Climatology", "Geomorphology", "Urban Studies", "GIS"],
-                  //   students: "510+ students"
-                  // }
+
                 ].map((subject, idx) => (
                   <motion.div
                     key={idx}
