@@ -595,7 +595,7 @@ export default function Home() {
                 src="/images/tutoring.jpeg"
                 alt="Viva Tutorials tutor teaching a Mathematics lesson at a whiteboard"
                 fetchPriority="high"
-                className="relative aspect-[4/5] w-full rounded-[2rem] object-cover object-center shadow-2xl"
+                className="relative aspect-[4/5] w-full rounded-[2rem] object-center shadow-2xl"
               />
             </motion.div>
           </div>
