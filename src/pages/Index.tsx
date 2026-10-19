@@ -1220,31 +1220,33 @@ export default function Home() {
           </div>
 
           <Dialog open={Boolean(previewMaterial)} onOpenChange={(open) => !open && setPreviewMaterial(null)}>
-            <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto border-0 bg-slate-950 p-0 text-white shadow-2xl sm:rounded-3xl">
+            <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden border-0 bg-slate-950 p-0 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-white shadow-2xl sm:h-[82dvh] sm:min-h-[480px] sm:max-h-[900px] sm:w-[calc(100%-2rem)] sm:max-w-4xl sm:rounded-3xl sm:pt-0 sm:pb-0">
               {previewMaterial && (
                 <>
-                  <DialogHeader className="px-6 pb-4 pt-6 pr-14 text-left">
-                    <DialogTitle className="text-xl font-bold text-white">{previewMaterial.title}</DialogTitle>
-                    <DialogDescription className="text-slate-300">
+                  <DialogHeader className="shrink-0 space-y-1 px-4 py-3 pr-14 text-left sm:px-6 sm:py-5">
+                    <DialogTitle className="text-base font-bold leading-snug text-white sm:text-xl">{previewMaterial.title}</DialogTitle>
+                    <DialogDescription className="text-xs text-slate-300 sm:text-sm">
                       {previewMaterial.pages ? `Free PDF preview · Page 1 of ${previewMaterial.pages}` : 'Free PDF preview'}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="bg-slate-800 px-3 pb-5 sm:px-8">
+                  <div className="min-h-0 flex-1 bg-slate-800 p-2 sm:px-8 sm:pb-5">
                     <iframe
                       src={`${previewMaterial.file}#page=1&view=FitH`}
                       title={`${previewMaterial.title} PDF preview`}
-                      className="h-[58vh] min-h-[360px] w-full rounded-2xl border border-white/10 bg-white sm:h-[68vh] sm:min-h-[480px]"
+                      className="h-full min-h-0 w-full rounded-xl border border-white/10 bg-white sm:rounded-2xl"
                     />
-                    <div className="mt-4 flex flex-col items-stretch gap-4 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between">
-                      <span>{previewMaterial.pages ? `Showing page 1 of ${previewMaterial.pages}.` : 'Showing the first page.'}</span>
-                      <a
-                        href={getStudyMaterialDownloadUrl(previewMaterial)}
-                        download={getStudyMaterialFileName(previewMaterial)}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 py-2 font-bold text-slate-900 transition-colors hover:bg-slate-200"
-                      >
-                        Download PDF
-                      </a>
-                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-col gap-2 border-t border-white/10 bg-slate-950 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <span className="text-xs text-slate-300 sm:text-sm">
+                      {previewMaterial.pages ? `${previewMaterial.pages} pages · Scroll in the viewer to read` : 'Scroll in the viewer to read'}
+                    </span>
+                    <a
+                      href={getStudyMaterialDownloadUrl(previewMaterial)}
+                      download={getStudyMaterialFileName(previewMaterial)}
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-900 transition-colors hover:bg-slate-200 sm:w-auto"
+                    >
+                      Download PDF
+                    </a>
                   </div>
                 </>
               )}
