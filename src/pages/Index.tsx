@@ -20,7 +20,7 @@ import Footer from '@/components/Footer';
 import { FaYoutube, FaFacebook, FaTiktok } from "react-icons/fa6";
 import SubjectRequestModal from '@/components/SubjectRequestModal';
 import SyllabusModal from '@/components/SyllabusModal';
-import { studyMaterials } from '@/lib/studyMaterials';
+import { getStudyMaterialDownloadUrl, getStudyMaterialFileName, studyMaterials } from '@/lib/studyMaterials';
 
 const communityImages = [
   { src: '/images/inclass.jfif', alt: 'Students studying together in class' },
@@ -1195,8 +1195,8 @@ export default function Home() {
                     <CardFooter className="flex flex-col gap-2 p-0 sm:flex-row">
                       {material.isFree ? (
                         <a
-                          href={material.file}
-                          download
+                          href={getStudyMaterialDownloadUrl(material)}
+                          download={getStudyMaterialFileName(material)}
                           className="inline-flex min-h-12 w-full flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-3 py-3 text-center text-sm font-bold text-white transition-all hover:from-emerald-600 hover:to-green-700"
                         >
                           Download PDF
@@ -1238,8 +1238,8 @@ export default function Home() {
                     <div className="mt-4 flex flex-col items-stretch gap-4 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between">
                       <span>{previewMaterial.pages ? `Showing page 1 of ${previewMaterial.pages}.` : 'Showing the first page.'}</span>
                       <a
-                        href={previewMaterial.file}
-                        download
+                        href={getStudyMaterialDownloadUrl(previewMaterial)}
+                        download={getStudyMaterialFileName(previewMaterial)}
                         className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 py-2 font-bold text-slate-900 transition-colors hover:bg-slate-200"
                       >
                         Download PDF

@@ -4,7 +4,19 @@
       "includeFiles": "private/materials/**"
     }
   },
+  "headers": [
+    {
+      "source": "/download/:path*",
+      "headers": [
+        {
+          "key": "Content-Disposition",
+          "value": "attachment"
+        }
+      ]
+    }
+  ],
   "rewrites": [
+    { "source": "/download/:path*", "destination": "/materials/:path*" },
     { "source": "/about", "destination": "/about/index.html" },
     { "source": "/services", "destination": "/services/index.html" },
     { "source": "/pricing", "destination": "/pricing/index.html" },

@@ -16,6 +16,14 @@ export type StudyMaterial = {
   includes: string[];
 };
 
+export function getStudyMaterialFileName(material: StudyMaterial) {
+  return material.file.split('/').pop() ?? 'study-material.pdf';
+}
+
+export function getStudyMaterialDownloadUrl(material: StudyMaterial) {
+  return `/download/${encodeURIComponent(getStudyMaterialFileName(material))}`;
+}
+
 export const studyMaterials: StudyMaterial[] = [
   {
     title: 'Grade 12 Algebra Equations and Inequalities Practice',

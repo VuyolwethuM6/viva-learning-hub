@@ -29,7 +29,7 @@ export default function Analytics() {
         });
       } else {
         const url = new URL(href, window.location.origin);
-        if (/^\/materials\/.*\.pdf$/i.test(url.pathname)) {
+        if (/^\/(?:materials|download)\/.*\.pdf$/i.test(url.pathname)) {
           trackAnalyticsEvent("resource_download");
         } else if (url.origin === window.location.origin) {
           trackAnalyticsEvent("navigation_click", { destination: url.pathname });

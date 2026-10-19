@@ -7,7 +7,7 @@ import StickyHeader from '@/components/StickyHeader';
 import Footer from '@/components/Footer';
 import MaterialPurchaseDialog from '@/components/MaterialPurchaseDialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { studyMaterials, type StudyMaterial } from '@/lib/studyMaterials';
+import { getStudyMaterialDownloadUrl, getStudyMaterialFileName, studyMaterials, type StudyMaterial } from '@/lib/studyMaterials';
 
 type Filter = 'all' | 'free' | 'paid';
 type GradeFilter = 'all' | StudyMaterial['grade'];
@@ -199,14 +199,11 @@ export default function StudyMaterials() {
 
                       <div className={`relative mt-5 flex h-40 items-center justify-center overflow-hidden rounded-xl border border-slate-200/80 bg-gradient-to-br ${material.accent}`}>
                         {material.isFree ? (
-                          <iframe
-                            src={`${material.file}#page=1&view=FitH&toolbar=0&navpanes=0`}
-                            title={`${material.title} first-page preview`}
-                            aria-hidden="true"
-                            loading="lazy"
-                            tabIndex={-1}
-                            className="pointer-events-none absolute inset-0 h-full w-full bg-white"
-                          />
+                          <div className="text-center text-[#1a0b2e]">
+                            <FileText className="mx-auto h-9 w-9 text-emerald-700" strokeWidth={1.5} />
+                            <p className="mt-3 text-xs font-bold uppercase tracking-wider">Free PDF resource</p>
+                            <p className="mt-1 text-xs font-medium text-slate-600">Preview available</p>
+                          </div>
                         ) : (
                           <div className="text-center text-[#1a0b2e]">
                             <LockKeyhole className="mx-auto h-9 w-9 text-[#7949fe]" strokeWidth={1.5} />
@@ -240,8 +237,8 @@ export default function StudyMaterials() {
                         {material.isFree ? (
                           <>
                             <a
-                              href={material.file}
-                              download
+                              href={getStudyMaterialDownloadUrl(material)}
+                              download={getStudyMaterialFileName(material)}
                               className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 px-3 text-sm font-bold text-white transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2"
                             >
                               <ArrowDownToLine className="h-4 w-4" /> Download PDF
