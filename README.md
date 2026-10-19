@@ -58,12 +58,12 @@ The contact page also accepts tutoring questions and subject requests. The websi
 
 ## Analytics setup
 
-The site supports Google Analytics with a consent banner before tracking starts. To enable it locally or in deployment, add the measurement ID to your environment:
+The site loads Google Analytics automatically when a measurement ID is configured. Set it in your local environment or deployment:
 
 - Copy `.env.example` to `.env.local`
 - Set `VITE_GA_MEASUREMENT_ID` to your GA4 measurement ID, for example `G-XXXXXXXXXX`
 
-Once set, visitors can opt in from the footer analytics settings or the initial consent banner. The app tracks page views, external link clicks, phone/email clicks, resource downloads, and successful contact-form submissions only after consent is granted.
+The app tracks page views, external link clicks, phone/email clicks, resource downloads, and successful contact-form submissions. Tracking runs for visitors with analytics enabled in their browser; disclose this use in the Privacy Policy and review applicable privacy requirements for your audience.
 
 ## Contact Viva Tutorials
 

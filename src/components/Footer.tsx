@@ -164,9 +164,6 @@ export default function Footer() {
           </p>
           
           <div className="flex items-center gap-6">
-            <button type="button" onClick={() => window.dispatchEvent(new Event("viva:manage-analytics"))} className="text-slate-500 hover:text-violet-400 text-sm transition-colors">
-              Analytics choices
-            </button>
             <a href="/privacy-policy" className="text-slate-500 hover:text-violet-400 text-sm transition-colors">
               Privacy Policy
             </a>

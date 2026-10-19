@@ -7,7 +7,7 @@ import { MotionConfig } from "framer-motion";
 import { lazy, Suspense } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import RouteMetadata from "./components/RouteMetadata";
-import AnalyticsConsent from "./components/AnalyticsConsent";
+import Analytics from "./components/Analytics";
 
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -55,7 +55,7 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
           Skip to main content
         </a>
         <RouteMetadata />
-        <AnalyticsConsent />
+        <Analytics />
         <Suspense fallback={<div className="min-h-[50vh]" role="status" aria-label="Loading page" />}>
         <Routes>
           <Route path="/" element={<Index />} />

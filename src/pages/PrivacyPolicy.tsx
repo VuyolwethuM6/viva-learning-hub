@@ -26,8 +26,8 @@ export default function PrivacyPolicy() {
       content: "If you have questions about this Privacy Policy, contact us at info@vivatutorials.co.za."
     },
     {
-      title: "6. Optional Website Analytics",
-      content: "If Google Analytics is enabled on this website, it is loaded only after you choose to allow analytics. Page visits and broad interaction categories may then be measured to improve the site. Contact form contents, names, email addresses, and phone numbers are not sent as analytics events. You can change your choice using Analytics choices in the footer."
+      title: "6. Website Analytics",
+      content: "This website uses Google Analytics to measure visits and broad interaction categories, such as navigation, resource downloads, and clicks on contact links. Google Analytics may use cookies or similar technologies and may process technical information about your device and use of the site. Contact form contents, names, email addresses, and phone numbers are not sent as analytics events. You can limit tracking through your browser settings or privacy tools. For information about how Google processes data, see Google's Privacy Policy."
     }
   ];
 
