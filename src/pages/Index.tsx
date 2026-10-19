@@ -632,7 +632,7 @@ export default function Home() {
                 cta: 'Explore Our Subjects',
               },
             ].map(({ icon: Icon, title, description, href, cta }) => (
-              <article key={title} className="rounded-3xl border border-gray-100 bg-white p-7 shadow-sm">
+              <article key={title} className="rounded-3xl border-2 border-[#7949fe]/30 bg-white p-7 shadow-sm">
                 <Icon className="mb-5 h-9 w-9 text-[#7949fe]" aria-hidden="true" />
                 <h3 className="mb-3 text-xl font-bold text-gray-900">{title}</h3>
                 <p className="mb-6 leading-7 text-gray-600">{description}</p>
@@ -647,7 +647,7 @@ export default function Home() {
 
       {/* Services Grid (WordPress Style) */}
       <section id="services" className="py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-6 ">
           <SectionHeading
             subtitle="Our Services"
             title="How We Support Learners"
@@ -689,7 +689,7 @@ export default function Home() {
               <motion.div
                 key={idx}
                 whileHover={{ y: -10 }}
-                className="bg-white p-10 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 group"
+                className="bg-white p-10 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-300   group border-2 border-[#7949fe]/30"
               >
                 <div className={`w-20 h-20 ${service.bg} rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300`}>
                   <service.icon className={`w-10 h-10 ${service.color}`} />
@@ -707,7 +707,7 @@ export default function Home() {
 
       {/* Featured Subjects - Enhanced */}
       <section id="subjects" className="py-24 bg-gradient-to-b from-white to-white relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="max-w-7xl mx-auto px-6 relative z-10 ">
           <SectionHeading
             subtitle="Our Subjects"
             title="CAPS-Aligned Tutoring for Grades 8–12"
@@ -1097,7 +1097,7 @@ export default function Home() {
                 description: 'Use the review of previous work to plan what the learner should practise or revisit next.',
               },
             ].map((step, index) => (
-              <li key={step.title} className="rounded-3xl border border-gray-100 bg-white p-7 shadow-sm">
+              <li key={step.title} className="rounded-3xl border-2 border-[#7949fe]/30 bg-white p-7 shadow-sm">
                 <span className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#7949fe]/10 font-bold text-[#7949fe]" aria-hidden="true">
                   {index + 1}
                 </span>
@@ -1318,7 +1318,7 @@ export default function Home() {
                 description: 'Where provided by the selected programme, assessments and feedback help learners and parents understand what has been covered and what needs more practice.',
               },
             ].map((item) => (
-              <article key={item.title} className="rounded-3xl border border-gray-100 bg-white p-6">
+              <article key={item.title} className="rounded-3xl border-2 border-[#7949fe]/30 bg-white p-6">
                 <Check className="mb-4 h-7 w-7 text-[#7949fe]" aria-hidden="true" />
                 <h3 className="mb-3 text-lg font-bold text-gray-900">{item.title}</h3>
                 <p className="leading-7 text-gray-600">{item.description}</p>

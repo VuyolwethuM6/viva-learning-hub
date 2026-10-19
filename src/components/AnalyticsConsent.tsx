@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { initializeAnalytics, saveAnalyticsConsent, trackAnalyticsEvent } from "@/lib/analytics";
+import { initializeAnalytics, saveAnalyticsConsent, trackAnalyticsEvent, trackPageView } from "@/lib/analytics";
 
 const isConfigured = Boolean(import.meta.env.VITE_GA_MEASUREMENT_ID);
 
@@ -13,18 +13,18 @@ export default function AnalyticsConsent() {
       setChoice("denied");
       return;
     }
+
     const saved = window.localStorage.getItem("viva-analytics-consent");
-    if (saved === "granted" || saved === "denied") setChoice(saved);
+    if (saved === "granted" || saved === "denied") {
+      setChoice(saved);
+    }
   }, []);
 
   useEffect(() => {
     if (choice !== "granted") return;
+
     initializeAnalytics();
-    window.gtag?.("event", "page_view", {
-      page_path: location.pathname,
-      page_title: document.title,
-      page_location: `${window.location.origin}${location.pathname}`,
-    });
+    trackPageView(location.pathname, document.title);
   }, [choice, location.pathname]);
 
   useEffect(() => {
@@ -33,9 +33,13 @@ export default function AnalyticsConsent() {
       window.gtag?.("consent", "update", { analytics_storage: "denied" });
       setChoice("pending");
     };
+
     const trackLink = (event: MouseEvent) => {
+      if (choice !== "granted") return;
+
       const target = event.target;
       if (!(target instanceof Element)) return;
+
       const anchor = target.closest<HTMLAnchorElement>("a[href]");
       if (!anchor) return;
 
@@ -45,7 +49,9 @@ export default function AnalyticsConsent() {
       } else if (href.startsWith("mailto:")) {
         trackAnalyticsEvent("email_click");
       } else if (/forms\.gle|calendar\.app\.google/.test(href)) {
-        trackAnalyticsEvent("lead_cta_click", { destination: href.includes("calendar") ? "booking" : "enrollment" });
+        trackAnalyticsEvent("lead_cta_click", {
+          destination: href.includes("calendar") ? "booking" : "enrollment",
+        });
       } else {
         const url = new URL(href, window.location.origin);
         if (/^\/materials\/.*\.pdf$/i.test(url.pathname)) {
@@ -64,13 +70,15 @@ export default function AnalyticsConsent() {
       window.removeEventListener("viva:manage-analytics", openPreferences);
       document.removeEventListener("click", trackLink);
     };
-  }, []);
+  }, [choice]);
 
   if (!isConfigured || choice !== "pending") return null;
 
   const choose = (granted: boolean) => {
     saveAnalyticsConsent(granted);
-    window.gtag?.("consent", "update", { analytics_storage: granted ? "granted" : "denied" });
+    if (window.gtag) {
+      window.gtag("consent", "update", { analytics_storage: granted ? "granted" : "denied" });
+    }
     setChoice(granted ? "granted" : "denied");
   };
 

@@ -56,6 +56,15 @@ Viva Tutorials is based in Mfuleni, Cape Town. In-person options are available i
 
 The contact page also accepts tutoring questions and subject requests. The website says the team aims to respond to enquiries within one business day.
 
+## Analytics setup
+
+The site supports Google Analytics with a consent banner before tracking starts. To enable it locally or in deployment, add the measurement ID to your environment:
+
+- Copy `.env.example` to `.env.local`
+- Set `VITE_GA_MEASUREMENT_ID` to your GA4 measurement ID, for example `G-XXXXXXXXXX`
+
+Once set, visitors can opt in from the footer analytics settings or the initial consent banner. The app tracks page views, external link clicks, phone/email clicks, resource downloads, and successful contact-form submissions only after consent is granted.
+
 ## Contact Viva Tutorials
 
 - Phone: [+27 73 391 3206](tel:+27733913206)
