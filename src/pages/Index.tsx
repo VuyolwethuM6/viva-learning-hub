@@ -26,7 +26,9 @@ const communityImages = [
   { src: '/images/inclass.jfif', alt: 'Students studying together in class' },
   { src: '/images/incamp.jfif', alt: 'Students learning together at camp' },
   { src: '/images/tutoring.jpeg', alt: 'Tutor supporting a student during a lesson' },
-  { src: '/images/success.jfif', alt: 'Students celebrating their academic success' },
+  { src: '/images/vivatutorials-feedback session.jpeg', alt: 'Tutor providing feedback to students during a study session' },
+  { src: '/images/vivatutorials friday-assessments.jpeg', alt: 'Students completing assessment questions in a classroom' },
+  { src: '/images/vivatutorials-assessment.jpeg', alt: 'Students working through a mathematics mock exam' },
 ];
 
 // --- Theme Components ---
