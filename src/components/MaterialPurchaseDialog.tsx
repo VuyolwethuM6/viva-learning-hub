@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { useRef, useState, type FormEvent } from 'react';
+import { ArrowRight, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,14 +15,17 @@ export default function MaterialPurchaseDialog({ material, open, onOpenChange }:
   const [customer, setCustomer] = useState({ firstName: '', lastName: '', email: '', phone: '' });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const submissionStarted = useRef(false);
 
   const submitCheckout = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!material || material.isFree) return;
+    if (!material || material.isFree || submissionStarted.current) return;
+    submissionStarted.current = true;
     setSubmitting(true);
     setError('');
     const timeoutController = new AbortController();
     const timeout = window.setTimeout(() => timeoutController.abort(), 15000);
+    let redirecting = false;
 
     try {
       const response = await fetch('/api/payfast/checkout', {
@@ -55,13 +58,17 @@ export default function MaterialPurchaseDialog({ material, open, onOpenChange }:
       });
       document.body.appendChild(form);
       form.submit();
+      redirecting = true;
     } catch (checkoutError) {
       setError(checkoutError instanceof Error && checkoutError.name === 'AbortError'
         ? 'Checkout timed out. Please try again.'
         : checkoutError instanceof Error ? checkoutError.message : 'The checkout service could not be reached.');
     } finally {
       window.clearTimeout(timeout);
-      setSubmitting(false);
+      if (!redirecting) {
+        submissionStarted.current = false;
+        setSubmitting(false);
+      }
     }
   };
 
@@ -94,9 +101,9 @@ export default function MaterialPurchaseDialog({ material, open, onOpenChange }:
               <Input required type="tel" autoComplete="tel" value={customer.phone} onChange={(event) => setCustomer({ ...customer, phone: event.target.value })} className="mt-2" />
             </label>
             {error && <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>}
-            <Button type="submit" disabled={submitting} className="mt-5 min-h-12 w-full rounded-lg bg-[#7949fe] font-bold text-white hover:bg-[#6237e8]">
-              {submitting ? 'Connecting to PayFast...' : `Continue to PayFast · ${material.price}`}
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button type="submit" disabled={submitting} aria-busy={submitting} className="mt-5 min-h-12 w-full rounded-lg bg-[#7949fe] font-bold text-white hover:bg-[#6237e8] disabled:cursor-wait disabled:opacity-70">
+              {submitting ? 'Redirecting to PayFast...' : `Continue to PayFast · ${material.price}`}
+              {submitting ? <LoaderCircle className="ml-2 h-4 w-4 animate-spin" /> : <ArrowRight className="ml-2 h-4 w-4" />}
             </Button>
           </form>
         )}

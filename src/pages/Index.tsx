@@ -136,11 +136,13 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
   const [customer, setCustomer] = useState({ firstName: '', lastName: '', email: '', phone: '' });
   const [checkoutError, setCheckoutError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submissionStarted = useRef(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!material) return;
+    if (!material || submissionStarted.current) return;
 
+    submissionStarted.current = true;
     setIsSubmitting(true);
     console.info('[PayFast] Starting checkout', {
       product: material.title,
@@ -156,9 +158,11 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
     }));
 
     setCheckoutError('');
+    let redirecting = false;
+    let timeout;
     try {
       const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 15000);
+      timeout = window.setTimeout(() => controller.abort(), 15000);
       const response = await fetch('/api/payfast/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -195,13 +199,18 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
       document.body.appendChild(form);
       console.info('[PayFast] Submitting signed checkout form', { endpoint: checkout.endpoint });
       form.submit();
+      redirecting = true;
     } catch (error) {
       console.error('[PayFast] Checkout request failed', error);
       setCheckoutError(error.name === 'AbortError'
         ? 'Checkout timed out after 15 seconds. Check that the deployed /api/payfast/checkout endpoint is reachable.'
         : 'The checkout service could not be reached. Check the browser console and deployed API settings.');
     } finally {
-      setIsSubmitting(false);
+      window.clearTimeout(timeout);
+      if (!redirecting) {
+        submissionStarted.current = false;
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -237,9 +246,9 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
             </label>
 
             {checkoutError && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{checkoutError}</p>}
-            <Button type="submit" disabled={isSubmitting} className="mt-5 min-h-12 w-full rounded-xl bg-gradient-to-r from-[#7949fe] to-[#ff7849] font-bold text-white hover:from-[#5a4ecf] hover:to-[#ff6b35]">
-              {isSubmitting ? 'Connecting to PayFast...' : `Continue to PayFast · ${material.price}`}
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className="mt-5 min-h-12 w-full rounded-xl bg-gradient-to-r from-[#7949fe] to-[#ff7849] font-bold text-white hover:from-[#5a4ecf] hover:to-[#ff6b35] disabled:cursor-wait disabled:opacity-70">
+              {isSubmitting ? 'Redirecting to PayFast...' : `Continue to PayFast · ${material.price}`}
+              {isSubmitting ? <span className="ml-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <ArrowRight className="ml-2 h-4 w-4" />}
             </Button>
             <p className="mt-3 text-center text-xs leading-5 text-slate-500">Your details are used for payment processing, purchase records, and PDF delivery.</p>
           </form>
