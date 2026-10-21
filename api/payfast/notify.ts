@@ -15,6 +15,7 @@ const products: Record<string, { title: string; amount: string; file: string }> 
     file: '04. Finance Practice Questions.pdf',
   },
 };
+const payfastValidationUrl = 'https://www.payfast.co.za/eng/query/validate';
 const deliveredPaymentIds = new Set<string>();
 
 function amountInCents(value: string | undefined) {
@@ -370,12 +371,7 @@ export default async function handler(request: IncomingMessage, response: Server
       return sendText(response, 400, 'Invalid signature');
     }
 
-    const validationUrl = process.env.PAYFAST_VALIDATE_URL;
-    if (!validationUrl) {
-      console.error('[PayFast ITN] PAYFAST_VALIDATE_URL is not configured');
-      return sendText(response, 503, 'PayFast validation is not configured');
-    }
-    const validation = await fetch(validationUrl, {
+    const validation = await fetch(payfastValidationUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: raw,

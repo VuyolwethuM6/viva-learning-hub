@@ -5,6 +5,7 @@ const products: Record<string, { title: string; amount: string }> = {
   'Analytical Geometry Practice': { title: 'Analytical Geometry Practice', amount: '299.00' },
   'Finance Practice Questions': { title: 'Finance Practice Questions', amount: '399.00' },
 };
+const payfastEndpoint = 'https://www.payfast.co.za/eng/process';
 
 type CheckoutPayload = {
   material?: unknown;
@@ -79,14 +80,14 @@ export default async function handler(request: IncomingMessage, response: Server
       custom_str2: email,
     };
 
-    if (!fields.merchant_id || !process.env.PAYFAST_MERCHANT_KEY || !process.env.PAYFAST_ENDPOINT) {
+    if (!fields.merchant_id || !process.env.PAYFAST_MERCHANT_KEY) {
       console.error('[PayFast API] missing checkout configuration');
       return sendJson(response, 503, { error: 'PayFast server configuration is incomplete.' });
     }
 
     console.info('[PayFast API] checkout payload signed', { product: product.title, amount: product.amount });
     return sendJson(response, 200, {
-      endpoint: process.env.PAYFAST_ENDPOINT,
+      endpoint: payfastEndpoint,
       fields: { ...fields, signature: payfastSignature(fields, process.env.PAYFAST_PASSPHRASE) },
     });
   } catch (error) {
