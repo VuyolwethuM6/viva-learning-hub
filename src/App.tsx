@@ -15,6 +15,7 @@ const About = lazy(() => import("./pages/About"));
 const Services = lazy(() => import("./pages/Services"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Contact = lazy(() => import("./pages/Contact"));
+const Enrollment = lazy(() => import("./pages/Enrollment"));
 const OurTutors = lazy(() => import("./pages/OurTutors"));
 const SuccessStories = lazy(() => import("./pages/SuccessStories"));
 const Mathematics = lazy(() => import("./pages/Mathematics"));
@@ -63,6 +64,7 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
           <Route path="/services" element={<Services />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/enroll" element={<Enrollment />} />
           <Route path="/tutors" element={<OurTutors />} />
           <Route path="/success-stories" element={<SuccessStories />} />
           <Route path="/mathematics" element={<Mathematics />} />

@@ -58,12 +58,12 @@ const StickyHeader = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-4">
-            <Link to="/contact" className="text-sm font-semibold text-[#7949fe] hover:underline">
+            <Link to="/enroll" className="text-sm font-semibold text-[#7949fe] hover:underline">
               Book A Session
             </Link>
 
             <Button asChild className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
-              <Link to="/contact">Enroll Now!</Link>
+              <Link to="/enroll">Enroll Now!</Link>
             </Button>
           </div>
 
@@ -135,7 +135,7 @@ const StickyHeader = () => {
 
                 {/* Mobile Actions */}
                 <div className="mt-8 pt-8 border-t border-gray-200 space-y-4">
-                  <a href="/contact">
+                  <a href="/enroll">
                     <Button className="w-full bg-[#7949fe] hover:bg-[#5a4ecf] py-6 rounded-full text-lg">
                       Enroll Now!
                     </Button>

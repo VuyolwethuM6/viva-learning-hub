@@ -19,6 +19,10 @@
     "title": "Contact Viva Tutorials | Book a Tutoring Session",
     "description": "Contact Viva Tutorials about tutoring, study materials, or booking a session in Cape Town or online."
   },
+  "/enroll": {
+    "title": "Enrollment Form Preview | Viva Tutorials",
+    "description": "Preview the Viva Tutorials enrollment form, tutoring package options, learner details, and progress goals. Form data is not sent or saved."
+  },
   "/tutors": {
     "title": "Meet Our Tutors | Viva Tutorials",
     "description": "Meet the tutors supporting Grade 8-12 learners with Mathematics, Science, and other school subjects."

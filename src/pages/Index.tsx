@@ -366,7 +366,7 @@ export default function Home() {
               Book A Session
             </a>
 
-            <a href="https://forms.gle/sh3Be1fF8gD1qt9G9">
+            <a href="/enroll">
               <Button className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
                 Enroll Now!
               </Button>
@@ -454,7 +454,7 @@ export default function Home() {
                 </nav>
 
                 <div className="mt-8 pt-8 border-t border-gray-200 space-y-4">
-                  <a href="https://forms.gle/sh3Be1fF8gD1qt9G9">
+                  <a href="/enroll">
                     <Button className="w-full bg-[#7949fe] hover:bg-[#5a4ecf] py-6 rounded-full text-lg">
                       Enroll Now
                     </Button>

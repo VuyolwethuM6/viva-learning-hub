@@ -117,7 +117,7 @@ export default function Contact() {
         Have questions? We'd love to hear from you. Reach out to us and we'll get back to you as soon as possible.
       </p>
       <motion.a
-        href="/contact"
+        href="/enroll"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.6 }}

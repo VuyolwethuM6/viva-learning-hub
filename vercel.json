@@ -21,6 +21,7 @@
     { "source": "/services", "destination": "/services/index.html" },
     { "source": "/pricing", "destination": "/pricing/index.html" },
     { "source": "/contact", "destination": "/contact/index.html" },
+    { "source": "/enroll", "destination": "/enroll/index.html" },
     { "source": "/tutors", "destination": "/tutors/index.html" },
     { "source": "/success-stories", "destination": "/success-stories/index.html" },
     { "source": "/mathematics", "destination": "/mathematics/index.html" },
