@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import {
-  Phone, Mail, MapPin,
-  Check, ArrowRight, BookOpen, Users, Menu, X, Laptop, Sparkles
+  GraduationCap, Mail, MapPin,
+  Check, ArrowRight, BookOpen, Users, Laptop, Sparkles
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Footer from '@/components/Footer';
-import { FaYoutube, FaFacebook, FaTiktok } from "react-icons/fa6";
+import { TopBar, StickyHeader } from "@/components/Header";
 import SubjectRequestModal from '@/components/SubjectRequestModal';
 import SyllabusModal from '@/components/SyllabusModal';
 import { getStudyMaterialDownloadUrl, getStudyMaterialFileName, studyMaterials } from '@/lib/studyMaterials';
@@ -32,69 +32,6 @@ const communityImages = [
 ];
 
 // --- Theme Components ---
-
-const TopBar = () => (
-  <div className="fixed top-0 left-0 right-0 z-50 bg-[#1a0b2e] text-white py-2.5 text-xs font-medium border-b border-white/10">
-    <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-
-      {/* Left section */}
-      <div className="flex items-center gap-3 lg:gap-6 overflow-x-auto">
-        <a
-          href="tel:+27733913206"
-          className="flex items-center gap-2 hover:text-[#ff7849] transition-colors cursor-pointer whitespace-nowrap"
-        >
-          <Phone className="w-3.5 h-3.5 animate-[wiggle_1s_ease-in-out_infinite]" />
-          <span className="hidden sm:inline">(+27) 73 391 3206</span>
-        </a>
-
-        <a href="mailto:info@vivatutorials.co.za" className="hidden items-center gap-2 whitespace-nowrap transition-colors hover:text-[#ff7849] sm:flex">
-          <Mail className="w-3.5 h-3.5" />
-          info@vivatutorials.co.za
-        </a>
-
-        <span className="hidden items-center gap-2 whitespace-nowrap transition-colors hover:text-[#ff7849] cursor-pointer md:flex">
-          <MapPin className="w-3.5 h-3.5" />
-          Mfuleni, Cape Town, South Africa
-        </span>
-      </div>
-
-      {/* Right section */}
-      <div className="flex items-center gap-2 lg:gap-4">
-        <span className="text-white/60 hidden lg:inline">Follow Us:</span>
-
-        <div className="flex items-center gap-3">
-          <a
-            href="https://web.facebook.com/profile.php?id=61586724797551"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Facebook"
-          >
-            <FaFacebook className="w-3.5 h-3.5 hover:text-[#ff7849] transition-colors cursor-pointer" />
-          </a>
-
-          <a
-            href="https://www.youtube.com/@viva-tutorials"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="YouTube"
-          >
-            <FaYoutube className="w-3.5 h-3.5 hover:text-[#ff7849] transition-colors cursor-pointer" />
-          </a>
-
-          <a
-            href="https://www.tiktok.com/@viva.coach.vuyo?_r=1&_t=ZS-93WzVp1UbQe"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="TikTok"
-          >
-            <FaTiktok className="w-3.5 h-3.5 hover:text-[#ff7849] transition-colors cursor-pointer" />
-          </a>
-        </div>
-      </div>
-
-    </div>
-  </div>
-);
 
 const SectionHeading = ({ subtitle, title, align = "center", light = false }) => (
   <div className={`mb-16 ${align === "center" ? "text-center" : "text-left"}`}>
@@ -291,215 +228,17 @@ const PayFastButton = ({ material, onPurchase }) => {
 // --- Page Sections ---
 
 export default function Home() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSyllabusModalOpen, setIsSyllabusModalOpen] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [previewMaterial, setPreviewMaterial] = useState(null);
   const [purchaseMaterial, setPurchaseMaterial] = useState(null);
   const [selectedCommunityImage, setSelectedCommunityImage] = useState(null);
-  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    if (!isMobileMenuOpen) return;
-
-    const handleMenuKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsMobileMenuOpen(false);
-        mobileMenuButtonRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', handleMenuKeyDown);
-    return () => window.removeEventListener('keydown', handleMenuKeyDown);
-  }, [isMobileMenuOpen]);
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-[#7949fe]/20 selection:text-[#7949fe] overflow-x-hidden">
       <TopBar />
-
-      {/* Sticky Header */}
-      <header
-        className={`fixed top-[37px] left-0 right-0 z-40 transition-all duration-300 border-b ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg py-3 border-gray-100' : 'bg-white py-5 border-transparent'
-          }`}
-      >
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <a href="/" className="flex items-center gap-2">
-            <img
-              src="/viva-tutorials-logo.png"
-              alt="Viva Tutorials Logo"
-              className="h-10 w-auto"
-            />
-          </a>
-
-          <nav className="hidden lg:flex items-center gap-8 font-medium text-sm text-gray-600">
-            {[
-              { label: 'Home', path: '/' },
-              { label: 'About', path: '/about' },
-              { label: 'Study Materials', path: '/study-materials' },
-              { label: 'Services', path: '/services' },
-              { label: 'Pricing', path: '/pricing' },
-              { label: 'Contact', path: '/contact' }
-            ].map((item) => (
-              <a
-                key={item.label}
-                href={item.path}
-                className="hover:text-[#7949fe] transition-colors relative group py-2"
-              >
-                {item.label}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#7949fe] transition-all duration-300 group-hover:w-full" />
-              </a>
-            ))}
-          </nav>
-
-          <div className="hidden lg:flex items-center gap-4">
-            <a
-              href="https://calendar.app.google/k1hbyKuD97U5g1Vf7"
-              className="text-sm font-semibold text-[#7949fe] hover:underline"
-            >
-              Book A Session
-            </a>
-
-            <a href="/enroll">
-              <Button className="bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full px-6 transition-all duration-300 shadow-lg hover:shadow-[#7949fe]/20">
-                Enroll Now!
-              </Button>
-            </a>
-          </div>
-
-
-          <button
-            ref={mobileMenuButtonRef}
-            type="button"
-            className="lg:hidden p-2 text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7949fe]"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-navigation"
-          >
-            {isMobileMenuOpen ? <X /> : <Menu />}
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 bg-black/50 z-50"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-
-            {/* Slide-in Menu */}
-            <motion.div
-              id="mobile-navigation"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Mobile navigation"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'tween', duration: 0.3 }}
-              className="lg:hidden fixed top-0 right-0 bottom-0 w-[80%] max-w-sm bg-white z-50 shadow-2xl overflow-y-auto"
-            >
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-8">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src="/viva-tutorials-logo.png"
-                      alt="Viva Logo"
-                      className="w-12 h-12 object-contain" // adjust size as needed
-                    />
-
-                  </div>
-
-                  <button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 hover:bg-gray-100 rounded-full"
-                    aria-label="Close navigation menu"
-                  >
-                    <X className="w-6 h-6 text-gray-600" />
-                  </button>
-                </div>
-
-                <nav className="flex flex-col gap-2">
-                  {[
-                    { label: 'Home', path: '/' },
-                    { label: 'About', path: '/about' },
-                    { label: 'Study Materials', path: '/study-materials' },
-                    { label: 'Services', path: '/services' },
-                    { label: 'Pricing', path: '/pricing' },
-                    { label: 'Contact', path: '/contact' }
-                  ].map((item) => (
-                    <a
-                      key={item.label}
-                      href={item.path}
-                      className="text-lg font-semibold text-gray-800 py-4 px-4 hover:bg-[#7949fe]/10 rounded-lg transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </nav>
-
-                <div className="mt-8 pt-8 border-t border-gray-200 space-y-4">
-                  <a href="/enroll">
-                    <Button className="w-full bg-[#7949fe] hover:bg-[#5a4ecf] py-6 rounded-full text-lg">
-                      Enroll Now
-                    </Button>
-                  </a>
-                  <a
-                    href="https://calendar.app.google/k1hbyKuD97U5g1Vf7"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button
-                      variant="outline"
-                      className="w-full border-2 border-gray-200 py-6 rounded-full text-lg mt-4"
-                    >
-                      Book a Session
-                    </Button>
-                  </a>
-                </div>
-                <div className="mt-8 pt-8 border-t border-gray-200">
-                  <p className="text-sm font-semibold text-gray-500 mb-4">Follow Us</p>
-
-                  <div className="flex gap-4">
-                    {[
-                      { icon: FaFacebook, url: "https://web.facebook.com/profile.php?id=61586724797551", label: "Facebook" },
-                      { icon: FaTiktok, url: "https://www.tiktok.com/@viva.coach.vuyo?_r=1&_t=ZS-93WzVp1UbQe", label: "TikTok" },
-                      { icon: FaYoutube, url: "https://www.youtube.com/@viva-tutorials", label: "YouTube" },
-                    ].map(({ icon: Icon, url, label }, i) => (
-                      <a
-                        key={i}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={label}
-                        className="w-10 h-10 rounded-full bg-[#7949fe]/10 flex items-center justify-center text-[#7949fe] hover:bg-[#7949fe] hover:text-white transition-all"
-                      >
-                        <Icon className="w-5 h-5" />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <StickyHeader />
 
 <main id="main-content">
 <section id="home" className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden bg-gradient-to-b from-white to-white">
@@ -524,6 +263,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7949fe]/10 border border-[#7949fe]/30 mb-6"
               >
                 <Sparkles className="w-4 h-4 text-[#7949fe]" />
+                <GraduationCap className="h-4 w-4" />
                 <span className="text-sm font-medium text-[#7949fe]">ONLINE &amp; IN-PERSON TUTORING</span>
               </motion.div>
 

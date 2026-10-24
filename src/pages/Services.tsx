@@ -90,7 +90,7 @@ export default function Services() {
               Our Services
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
-              Comprehensive educational services designed to help you achieve your academic goals.
+              CAPS-aligned online tutoring for learners across South Africa and in-person tutoring in Mfuleni, Cape Town, designed to support your academic goals.
             </p>
           </motion.div>
 

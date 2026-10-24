@@ -2,6 +2,8 @@ import { useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, typ
 import { ArrowLeft, ArrowRight, Check, FileText, GraduationCap, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TopBar, StickyHeader } from "@/components/Header";
+import Footer from "@/components/Footer";
 
 type StudentDetails = {
   name: string;
@@ -332,7 +334,9 @@ export default function Enrollment() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <main id="main-content" className="px-3 pb-12 pt-5 sm:px-5 sm:pt-5">
+      <TopBar />
+      <StickyHeader />
+      <main id="main-content" className="px-3 pb-12 pt-32 sm:px-5 sm:pt-36">
         <div className="mx-auto max-w-[680px]">
           <section className="overflow-hidden rounded-3xl border-2 border-violet-300/70 bg-white shadow-[0_20px_40px_rgba(15,23,42,0.08)]">
             <header className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 sm:px-6">
@@ -755,6 +759,7 @@ export default function Enrollment() {
           </p>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

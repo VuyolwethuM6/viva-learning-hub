@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Home, Search, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TopBar, StickyHeader } from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,7 +14,10 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <main id="main-content" className="min-h-screen bg-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-white">
+      <TopBar />
+      <StickyHeader />
+      <main id="main-content" className="relative flex min-h-screen items-center justify-center px-4 pt-24">
       {/* Animated background gradient blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -121,7 +126,9 @@ const NotFound = () => {
           Need help? Contact us at <a className="font-semibold text-[#ff7849] underline" href="mailto:info@vivatutorials.co.za">info@vivatutorials.co.za</a>
         </motion.p>
       </motion.div>
-    </main>
+      </main>
+      <Footer />
+    </div>
   );
 };
 

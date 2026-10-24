@@ -1,23 +1,23 @@
 {
   "/": {
-    "title": "Viva Tutorials | Online & In-Person Maths and Science Tutoring",
-    "description": "Viva Tutorials offers online and in-person CAPS-aligned tutoring for Grades 8–12 and matric rewrite learners. Explore Maths and Science support and study resources."
+    "title": "Maths & Science Tutoring South Africa | Viva Tutorials",
+    "description": "CAPS-aligned Maths and Science tutoring for Grades 8–12 and Matric rewrite learners. Learn online across South Africa or in person in Mfuleni, Cape Town."
   },
   "/about": {
-    "title": "About Viva Tutorials | STEM Learning in Cape Town",
-    "description": "Learn about Viva Tutorials, our tutors, and our approach to supporting Grade 8-12 learners in Cape Town and online."
+    "title": "About Viva Tutorials | Mfuleni, Cape Town & Online",
+    "description": "Meet Viva Tutorials and learn about our CAPS-aligned academic support for Grade 8–12 and Matric rewrite learners in Mfuleni, Cape Town, and online across South Africa."
   },
   "/services": {
-    "title": "Tutoring Services for Grades 8-12 | Viva Tutorials",
-    "description": "Explore in-person, online, and group tutoring, exam preparation, and study resources for Grade 8-12 learners."
+    "title": "Tutoring in Mfuleni & Online South Africa | Viva Tutorials",
+    "description": "Explore online tutoring across South Africa and in-person tutoring in Mfuleni, Cape Town, with subject support, exam preparation, and study resources for Grades 8–12."
   },
   "/pricing": {
     "title": "Tutoring Prices and Plans | Viva Tutorials",
     "description": "Compare Viva Tutorials tutoring options and find a learning plan for your learner. Contact us to discuss availability and fees."
   },
   "/contact": {
-    "title": "Contact Viva Tutorials | Book a Tutoring Session",
-    "description": "Contact Viva Tutorials about tutoring, study materials, or booking a session in Cape Town or online."
+    "title": "Contact Tutors in Cape Town & Online | Viva Tutorials",
+    "description": "Contact Viva Tutorials about tutoring in Mfuleni, Cape Town, online lessons across South Africa, study materials, or current availability."
   },
   "/enroll": {
     "title": "Enrollment Form Preview | Viva Tutorials",
@@ -32,16 +32,16 @@
     "description": "Read learner experiences with Viva Tutorials and their tutoring journeys."
   },
   "/mathematics": {
-    "title": "Mathematics Tutoring for Grades 8-12 | Viva Tutorials",
-    "description": "Get Mathematics tutoring and exam preparation support for Grade 8-12 learners with Viva Tutorials."
+    "title": "Maths Tutoring | Mfuleni, Cape Town & Online SA",
+    "description": "Get CAPS-aligned Mathematics tutoring for Grades 8–12 and Matric rewrite learners, in person in Mfuleni, Cape Town, or online across South Africa."
   },
   "/physical-science": {
-    "title": "Physical Sciences Tutoring | Viva Tutorials",
-    "description": "Explore Physical Sciences tutoring and exam preparation for Grade 8-12 learners with Viva Tutorials."
+    "title": "Physical Sciences Tutoring | Cape Town & Online SA",
+    "description": "Explore CAPS-aligned Physical Sciences tutoring and exam preparation for high-school learners in Mfuleni, Cape Town, and online across South Africa."
   },
   "/life-sciences": {
-    "title": "Life Sciences Tutoring | Viva Tutorials",
-    "description": "Explore Life Sciences tutoring and exam preparation for Grade 8-12 learners with Viva Tutorials."
+    "title": "Life Sciences Tutoring | Cape Town & Online SA",
+    "description": "Explore CAPS-aligned Life Sciences tutoring and exam preparation for high-school learners in Mfuleni, Cape Town, and online across South Africa."
   },
   "/accounting": {
     "title": "Accounting Tutoring | Viva Tutorials",
@@ -56,12 +56,14 @@
     "description": "Explore Information Technology tutoring and exam preparation support for high-school learners with Viva Tutorials."
   },
   "/privacy-policy": {
-    "title": "Privacy Policy | Viva Tutorials",
-    "description": "Read how Viva Tutorials handles personal information when you use our website and contact our team."
+    "title": "Privacy Policy | Viva Tutorials South Africa",
+    "description": "Learn how Viva Tutorials collects, uses and protects learner and family information under POPIA for tutoring in Mfuleni, Cape Town, and online across South Africa.",
+    "indexable": true
   },
   "/terms-of-service": {
     "title": "Terms of Service | Viva Tutorials",
-    "description": "Read the terms that apply to use of the Viva Tutorials website and services."
+    "description": "Read Viva Tutorials' terms for tutoring packages, fees, payments, attendance, cancellations, learner safety, educational materials, and personal information.",
+    "indexable": true
   },
   "/study-materials": {
     "title": "Grade 8-12 Study Materials and Matric PDFs | Viva Tutorials",
