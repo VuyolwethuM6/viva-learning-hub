@@ -381,7 +381,7 @@ export default function Enrollment() {
                       <p className="mb-5 mt-1 text-[15px] text-gray-600">Tell us about the learner.</p>
                       <label className={labelClassName} htmlFor="student-name">
                         Full name
-                        <Input id="student-name" autoComplete="name" className={inputClassName} value={student.name} onChange={(event) => updateStudent("name", event.target.value)} placeholder="e.g. Sandisiwe Khwaza" aria-invalid={errors.includes("name")} />
+                        <Input id="student-name" autoComplete="name" className={inputClassName} value={student.name} onChange={(event) => updateStudent("name", event.target.value)} placeholder="e.g. Victor Mableka" aria-invalid={errors.includes("name")} />
                         {errors.includes("name") && <span className={stepErrorClassName}>Please enter the student's full name.</span>}
                       </label>
                       <div className="grid gap-3 sm:grid-cols-2">
