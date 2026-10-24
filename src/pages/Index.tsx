@@ -262,8 +262,8 @@ export default function Home() {
                 transition={{ delay: 0.2 }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#7949fe]/10 border border-[#7949fe]/30 mb-6"
               >
-                <Sparkles className="w-4 h-4 text-[#7949fe]" />
-                <GraduationCap className="h-4 w-4" />
+                 
+                <GraduationCap className="h-5 w-5 text-[#7949fe]" />
                 <span className="text-sm font-medium text-[#7949fe]">ONLINE &amp; IN-PERSON TUTORING</span>
               </motion.div>
 

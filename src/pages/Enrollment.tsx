@@ -334,19 +334,22 @@ export default function Enrollment() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <TopBar />
-      <StickyHeader />
+       <TopBar />
+       <StickyHeader />
       <main id="main-content" className="px-3 pb-12 pt-32 sm:px-5 sm:pt-36">
         <div className="mx-auto max-w-[680px]">
           <section className="overflow-hidden rounded-3xl border-2 border-violet-300/70 bg-white shadow-[0_20px_40px_rgba(15,23,42,0.08)]">
             <header className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 sm:px-6">
-              <a href="/" aria-label="Viva Tutorials home" className="flex items-center gap-2">
-                <img src="/viva-tutorials-logo.png" alt="Viva Tutorials" className="h-10 w-auto" />
+              <a href="#" aria-label="Viva Tutorials home" className="flex items-center gap-2">
+                {/* <img src="/viva-tutorials-logo.png" alt="Viva Tutorials" className="h-10 w-auto" /> */}
+                <h1 id="student-form-title" className="text-2xl font-bold leading-tight text-slate-900">Enrollment Form</h1>    
               </a>
               <span className="whitespace-nowrap text-xs font-semibold text-slate-500" aria-live="polite">
                 {completion ? "Preview" : `Step ${currentStep + 1} of ${steps.length}`}
               </span>
+ 
             </header>
+            <p className="px-4 pb-3 text-xs leading-relaxed text-gray-600 font-semibold sm:px-6">Complete this form to start your sessions.</p>
             <div className="h-1 bg-slate-200" aria-label="Form progress">
               <div
                 className="h-full bg-gradient-to-r from-[#7949fe] to-[#ff7849] transition-[width] duration-300"
@@ -759,7 +762,7 @@ export default function Enrollment() {
           </p>
         </div>
       </main>
-      <Footer />
+       
     </div>
   );
 }
