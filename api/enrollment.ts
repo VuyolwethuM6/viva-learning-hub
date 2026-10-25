@@ -1,7 +1,19 @@
 import { randomBytes } from 'node:crypto';
 import type { ServerResponse } from 'node:http';
-import { ApiRequest, HttpError, readJsonBody } from './_lib/http';
+import {
+  HttpError,
+  type ApiRequest,
+  debug,
+  describeRequest,
+  encodeStoragePath,
+  getSupabaseConfig,
+  handleError,
+  readJsonBody,
+  sendJson,
+  serviceHeaders,
+} from './_lib/http.js';
 
+const SCOPE = 'Enrollment API';
 const MAX_BODY_BYTES = 256 * 1024;
 const REPORT_CARD_TYPES = {
   pdf: 'application/pdf',
@@ -28,12 +40,6 @@ const SUBJECTS_BY_GRADE: Record<string, { maxSubjects: number; prices: number[];
 
 type JsonObject = Record<string, unknown>;
 
-function sendJson(response: ServerResponse, status: number, body: JsonObject) {
-  response.statusCode = status;
-  response.setHeader('Content-Type', 'application/json');
-  response.end(JSON.stringify(body));
-}
-
 function asObject(value: unknown): JsonObject {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as JsonObject : {};
 }
@@ -49,7 +55,12 @@ function textArray(value: unknown) {
 }
 
 function safeFileName(value: string) {
-  return value.replace(/[\\/\u0000-\u001f\u007f]/g, '_').slice(0, 255);
+  // Replace path separators and control characters (code < 32 or 127) with "_".
+  // Done with char codes instead of a regex so ESLint's no-control-regex stays quiet.
+  return Array.from(value, (char) => {
+    const code = char.charCodeAt(0);
+    return char === '/' || char === '\\' || code < 32 || code === 127 ? '_' : char;
+  }).join('').slice(0, 255);
 }
 
 function createApplicationNumber() {
@@ -57,15 +68,13 @@ function createApplicationNumber() {
   return `VT-${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-${random}`;
 }
 
-function encodeStoragePath(path: string) {
-  return path.split('/').map(encodeURIComponent).join('/');
-}
-
 export default async function handler(request: ApiRequest, response: ServerResponse) {
   if (request.method !== 'POST') return sendJson(response, 405, { error: 'Method not allowed' });
 
+  debug(SCOPE, 'request received', describeRequest(request));
+
   try {
-    const body = await readJsonBody(request, MAX_BODY_BYTES);
+    const body = await readJsonBody(request, MAX_BODY_BYTES, SCOPE);
     const student = asObject(body.student);
     const guardian = asObject(body.guardian);
     const grade = text(body.grade);
@@ -93,6 +102,7 @@ export default async function handler(request: ApiRequest, response: ServerRespo
       ...(!termsAccepted ? ['termsAccepted'] : []),
     ];
     if (missingFields.length) {
+      debug(SCOPE, 'validation failed: missing fields', { missingFields, receivedKeys: Object.keys(body) });
       return sendJson(response, 400, {
         error: `Required enrollment details are missing: ${missingFields.join(', ')}.`,
         missingFields,
@@ -111,6 +121,7 @@ export default async function handler(request: ApiRequest, response: ServerRespo
       !Number.isInteger(reportCardSize) || reportCardSize <= 0 || reportCardSize > 10 * 1024 * 1024 ||
       !Object.hasOwn(REPORT_CARD_TYPES, reportCardExtension) ||
       REPORT_CARD_TYPES[reportCardExtension as keyof typeof REPORT_CARD_TYPES] !== reportCardMimeType) {
+      debug(SCOPE, 'validation failed: dob or report card', { reportCardExtension, reportCardMimeType, reportCardSize });
       return sendJson(response, 400, { error: 'The date of birth or report card details are invalid.' });
     }
     if (text(student.phone).replace(/\D/g, '').length < 9 || text(guardian.phone).replace(/\D/g, '').length < 9) {
@@ -121,6 +132,7 @@ export default async function handler(request: ApiRequest, response: ServerRespo
     if (!gradeRules || selectedSubjects.length > gradeRules.maxSubjects ||
       selectedSubjects.some((subject) => !gradeRules.subjects.includes(subject)) ||
       new Set(selectedSubjects).size !== selectedSubjects.length) {
+      debug(SCOPE, 'validation failed: grade/subjects', { grade, subjectCount: selectedSubjects.length });
       return sendJson(response, 400, { error: 'The selected grade and subjects are not a valid package.' });
     }
 
@@ -130,7 +142,7 @@ export default async function handler(request: ApiRequest, response: ServerRespo
       application_number: applicationNumber,
       student: {
         name: studentName,
-        dob: text(student.dob),
+        dob,
         gender: text(student.gender),
         email: studentEmail,
         phone: text(student.phone),
@@ -168,24 +180,22 @@ export default async function handler(request: ApiRequest, response: ServerRespo
       }),
     };
 
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const supabase = getSupabaseConfig();
+    if (!supabase) {
+      console.error(`[${SCOPE}] SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set`);
       return sendJson(response, 503, { error: 'Supabase is not configured. Set the server-only project URL and service role key.' });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL.replace(/\/$/, '');
-    const databaseResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/submit_enrollment`, {
+    debug(SCOPE, 'calling submit_enrollment', { applicationNumber, grade, subjectCount: selectedSubjects.length, monthlyFee });
+    const databaseResponse = await fetch(`${supabase.url}/rest/v1/rpc/submit_enrollment`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-        'Content-Type': 'application/json',
-      },
+      headers: serviceHeaders(supabase.key),
       body: JSON.stringify({ p_payload: payload }),
     });
 
     if (!databaseResponse.ok) {
       const errorText = await databaseResponse.text();
-      console.error('[Enrollment API] Supabase rejected submission', { status: databaseResponse.status, error: errorText.slice(0, 300) });
+      console.error(`[${SCOPE}] Supabase rejected submission`, { status: databaseResponse.status, error: errorText.slice(0, 300) });
       return sendJson(response, 502, { error: 'Unable to save the enrollment. Please try again later.' });
     }
 
@@ -195,49 +205,52 @@ export default async function handler(request: ApiRequest, response: ServerRespo
       student_number?: string;
       storage_path?: string;
     };
+    debug(SCOPE, 'submit_enrollment result', {
+      hasId: Boolean(saved.id),
+      applicationNumberMatches: saved.application_number === applicationNumber,
+      hasStudentNumber: Boolean(saved.student_number),
+      hasStoragePath: Boolean(saved.storage_path),
+    });
     if (!saved.id || saved.application_number !== applicationNumber || !saved.student_number || !saved.storage_path) {
-      console.error('[Enrollment API] Supabase returned an invalid submission result');
+      console.error(`[${SCOPE}] Supabase returned an invalid submission result`);
       return sendJson(response, 502, { error: 'The enrollment could not be confirmed. Please contact support before retrying.' });
     }
 
     const signedUploadResponse = await fetch(
-      `${supabaseUrl}/storage/v1/object/upload/sign/learner-documents/${encodeStoragePath(saved.storage_path)}`,
+      `${supabase.url}/storage/v1/object/upload/sign/learner-documents/${encodeStoragePath(saved.storage_path)}`,
       {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-          'Content-Type': 'application/json',
-        },
+        headers: serviceHeaders(supabase.key),
         body: JSON.stringify({ upsert: false }),
       },
     );
 
     if (!signedUploadResponse.ok) {
       const errorText = await signedUploadResponse.text();
-      console.error('[Enrollment API] Could not create private upload URL', {
+      console.error(`[${SCOPE}] Could not create private upload URL`, {
         status: signedUploadResponse.status,
         error: errorText.slice(0, 300),
       });
-      await fetch(`${supabaseUrl}/rest/v1/applications?id=eq.${encodeURIComponent(saved.id)}&status=eq.draft`, {
+      // Roll back the draft so the learner can resubmit without a duplicate.
+      const rollback = await fetch(`${supabase.url}/rest/v1/applications?id=eq.${encodeURIComponent(saved.id)}&status=eq.draft`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-        },
+        headers: serviceHeaders(supabase.key),
       });
+      debug(SCOPE, 'draft rollback', { status: rollback.status });
+      if (!rollback.ok) console.error(`[${SCOPE}] Draft rollback failed`, { applicationId: saved.id, status: rollback.status });
       return sendJson(response, 502, { error: 'Secure report-card upload could not be prepared. Please try again.' });
     }
 
     const signedUpload = await signedUploadResponse.json() as { url?: string; token?: string };
     if (!signedUpload.url || !signedUpload.token) {
-      console.error('[Enrollment API] Supabase returned an incomplete signed upload response');
+      console.error(`[${SCOPE}] Supabase returned an incomplete signed upload response`);
       return sendJson(response, 502, { error: 'Secure report-card upload could not be prepared. Please contact support.' });
     }
 
-    const signedUploadUrl = new URL(`${supabaseUrl}/storage/v1${signedUpload.url}`);
+    const signedUploadUrl = new URL(`${supabase.url}/storage/v1${signedUpload.url}`);
     signedUploadUrl.searchParams.set('token', signedUpload.token);
 
+    debug(SCOPE, 'success: 201 with signed upload URL', { applicationNumber, studentNumber: saved.student_number });
     return sendJson(response, 201, {
       success: true,
       applicationId: saved.id,
@@ -250,10 +263,6 @@ export default async function handler(request: ApiRequest, response: ServerRespo
       message: 'Enrollment details saved. Uploading the report card securely.',
     });
   } catch (error) {
-    if (error instanceof HttpError) {
-      return sendJson(response, error.status, { error: error.message });
-    }
-    console.error('[Enrollment API] failed to save application', error instanceof Error ? error.message : 'Unknown error');
-    return sendJson(response, 502, { error: 'The enrollment service could not complete your request. Please try again later.' });
+    return handleError(response, error, SCOPE, 'The enrollment service could not complete your request. Please try again later.');
   }
 }
