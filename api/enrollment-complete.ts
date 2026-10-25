@@ -91,19 +91,32 @@ export default async function handler(request: ApiRequest, response: ServerRespo
         return sendJson(response, 502, { error: 'Unable to verify the uploaded report card.' });
       }
 
+      // Storage returns different field names depending on version, so read every variant.
       const fileInfo = await fileResponse.json() as {
-        size?: number;
+        size?: number | string;
+        content_type?: string;
         mimetype?: string;
-        metadata?: { size?: number; mimetype?: string };
+        metadata?: { size?: number | string; contentLength?: number | string; mimetype?: string } | null;
       };
-      const uploadedSize = Number(fileInfo.size ?? fileInfo.metadata?.size);
-      const uploadedMimeType = fileInfo.mimetype ?? fileInfo.metadata?.mimetype;
-      debug(SCOPE, 'file verification', {
-        uploadedSize,
-        expectedSize: Number(application.report_card_size),
-        uploadedMimeType: uploadedMimeType ?? null,
+      const rawSize = fileInfo.size ?? fileInfo.metadata?.size ?? fileInfo.metadata?.contentLength;
+      const uploadedSize = rawSize === undefined || rawSize === null ? NaN : Number(rawSize);
+      const extension = application.report_card_path.split('.').pop()?.toLowerCase() ?? '';
+      const mimeFromPath = extension === 'pdf' ? 'application/pdf' : extension === 'png' ? 'image/png' : 'image/jpeg';
+      const uploadedMimeType = fileInfo.content_type ?? fileInfo.mimetype ?? fileInfo.metadata?.mimetype ?? mimeFromPath;
+      const expectedSize = Number(application.report_card_size);
+      const sizeKnown = Number.isFinite(uploadedSize);
+      const sizeOk = !sizeKnown || uploadedSize === expectedSize;
+      const mimeOk = ALLOWED_MIME_TYPES.includes(uploadedMimeType);
+      // Always logged on purpose: only sizes and types, no personal data.
+      console.log(`[${SCOPE}] file verification`, {
+        uploadedSize: sizeKnown ? uploadedSize : null,
+        expectedSize,
+        uploadedMimeType,
+        sizeOk,
+        mimeOk,
+        infoKeys: Object.keys(fileInfo),
       });
-      if (uploadedSize !== Number(application.report_card_size) || !ALLOWED_MIME_TYPES.includes(uploadedMimeType ?? '')) {
+      if (!sizeOk || !mimeOk) {
         console.error(`[${SCOPE}] Uploaded report card metadata did not match application`);
         return sendJson(response, 400, { error: 'The uploaded report card did not pass file verification.' });
       }
