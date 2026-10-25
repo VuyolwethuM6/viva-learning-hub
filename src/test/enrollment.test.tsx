@@ -2,13 +2,35 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Enrollment from "@/pages/Enrollment";
 
-describe("enrollment preview", () => {
+describe("enrollment submission", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("shows the sample package and completes without sending or saving an application", () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch");
+  it("submits the application and shows the server-issued reference", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          success: true,
+          applicationId: "application-id",
+          applicationNumber: "VT-TEST-1234",
+          studentNumber: "VT-2026-000001",
+          uploadUrl: "https://project.supabase.co/storage/upload/test",
+          reportCardMimeType: "application/pdf",
+          monthlyFee: 800,
+        }),
+      } as Response)
+      .mockResolvedValueOnce(new Response(null, { status: 200 }))
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+        success: true,
+        applicationNumber: "VT-TEST-1234",
+        studentNumber: "VT-2026-000001",
+        status: "pending_review",
+        }),
+      } as Response);
     vi.spyOn(window, "scrollTo").mockImplementation(() => {});
     render(<Enrollment />);
 
@@ -44,11 +66,22 @@ describe("enrollment preview", () => {
     expect(screen.getByRole("heading", { name: "Review & confirm" })).toBeInTheDocument();
     expect(screen.getByText("report.pdf")).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText(/I accept the Viva Tutorials/));
-    fireEvent.click(screen.getByRole("button", { name: "Preview application" }));
+    fireEvent.click(screen.getByRole("button", { name: "Submit application" }));
 
-    expect(screen.getByRole("heading", { name: "Application preview complete" })).toBeInTheDocument();
-    expect(screen.getByText(/no application was submitted/i)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Enrollment submitted" })).toBeInTheDocument();
+    expect(screen.getByText("VT-2026-000001")).toBeInTheDocument();
+    expect(screen.getByText("VT-TEST-1234")).toBeInTheDocument();
     expect(screen.getByText("R800")).toBeInTheDocument();
-    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    const request = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
+    expect(request.selectedSubjects).toEqual(["Mathematics", "Physical Sciences"]);
+    expect(request.reportCardName).toBe("report.pdf");
+    expect(request.reportCardMimeType).toBe("application/pdf");
+    expect(fetchSpy.mock.calls[1][1]).toMatchObject({
+      method: "PUT",
+      headers: { "Content-Type": "application/pdf", "x-upsert": "false" },
+      body: report,
+    });
+    expect(String(fetchSpy.mock.calls[2][0])).toBe("/api/enrollment-complete");
   }, 30000);
 });

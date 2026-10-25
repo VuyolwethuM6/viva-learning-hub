@@ -26,6 +26,17 @@ type SubjectMark = {
   difficulties: string[];
 };
 
+type PendingUpload = {
+  applicationId: string;
+  applicationNumber: string;
+  studentNumber: string;
+  uploadUrl: string;
+  reportCardMimeType: string;
+  file: File;
+  firstName: string;
+  monthlyFee: number;
+};
+
 type Tier = {
   label: string;
   maxSubjects: number;
@@ -171,7 +182,15 @@ export default function Enrollment() {
   const [photoConsent, setPhotoConsent] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
-  const [completion, setCompletion] = useState<{ firstName: string; monthlyFee: number } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null);
+  const [completion, setCompletion] = useState<{
+    firstName: string;
+    monthlyFee: number;
+    applicationNumber: string;
+    studentNumber: string;
+  } | null>(null);
   const reportInput = useRef<HTMLInputElement>(null);
   const tier = tierForGrade(grade);
   const packageName = tier && selectedSubjects.length
@@ -284,15 +303,81 @@ export default function Enrollment() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleContinue = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!validateStep(currentStep)) return;
-    if (currentStep < steps.length - 1) {
-      goToStep(currentStep + 1);
-      return;
+  const finishEnrollment = async (upload: PendingUpload, retry: boolean) => {
+    const finalize = async () => {
+      const response = await fetch('/api/enrollment-complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId: upload.applicationId }),
+      });
+      const result = await response.json().catch(() => ({})) as {
+        error?: string;
+        success?: boolean;
+        applicationNumber?: string;
+        studentNumber?: string;
+        status?: string;
+      };
+      return { response, result };
+    };
+
+    if (retry) {
+      const existingUpload = await finalize();
+      if (existingUpload.response.ok && existingUpload.result.success) {
+        setCompletion({
+          firstName: upload.firstName,
+          monthlyFee: upload.monthlyFee,
+          applicationNumber: upload.applicationNumber,
+          studentNumber: upload.studentNumber,
+        });
+        setPendingUpload(null);
+        return;
+      }
+      if (existingUpload.response.status !== 409) {
+        throw new Error(existingUpload.result.error || 'Unable to verify the uploaded report card.');
+      }
     }
 
-    setCompletion({ firstName: student.name.trim().split(/\s+/)[0], monthlyFee });
+    let uploadUrl = upload.uploadUrl;
+    if (retry) {
+      const urlResponse = await fetch('/api/enrollment-upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId: upload.applicationId }),
+      });
+      const urlResult = await urlResponse.json().catch(() => ({})) as { error?: string; uploadUrl?: string };
+      if (!urlResponse.ok || !urlResult.uploadUrl) {
+        throw new Error(urlResult.error || 'Unable to prepare a secure upload retry.');
+      }
+      uploadUrl = urlResult.uploadUrl;
+    }
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': upload.reportCardMimeType,
+        'x-upsert': 'false',
+      },
+      body: upload.file,
+    });
+    if (!uploadResponse.ok && uploadResponse.status !== 409) {
+      throw new Error('The report card could not be uploaded securely. Retry the upload without resubmitting the application.');
+    }
+
+    const finalized = await finalize();
+    if (!finalized.response.ok || !finalized.result.success ||
+      finalized.result.status !== 'pending_review' ||
+      finalized.result.applicationNumber !== upload.applicationNumber ||
+      finalized.result.studentNumber !== upload.studentNumber) {
+      throw new Error(finalized.result.error || 'The file uploaded, but the application could not be finalized. Retry the secure upload step.');
+    }
+
+    setCompletion({
+      firstName: upload.firstName,
+      monthlyFee: upload.monthlyFee,
+      applicationNumber: finalized.result.applicationNumber,
+      studentNumber: finalized.result.studentNumber,
+    });
+    setPendingUpload(null);
     setStudent(emptyStudent);
     setGuardian(emptyGuardian);
     setGrade("");
@@ -306,6 +391,84 @@ export default function Enrollment() {
     if (reportInput.current) reportInput.current.value = "";
     setErrors([]);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleContinue = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!pendingUpload && !validateStep(currentStep)) return;
+    if (!pendingUpload && currentStep < steps.length - 1) {
+      goToStep(currentStep + 1);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      if (pendingUpload) {
+        await finishEnrollment(pendingUpload, true);
+        return;
+      }
+      if (!reportCard) {
+        throw new Error('Select a report card before submitting.');
+      }
+
+      const response = await fetch('/api/enrollment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student,
+          guardian,
+          grade,
+          selectedSubjects,
+          mode,
+          goals: selectedGoals,
+          marks,
+          monthlyFee,
+          reportCardName: reportCard?.name ?? '',
+          reportCardSize: reportCard?.size ?? 0,
+          reportCardMimeType: reportCard?.type ?? '',
+          termsAccepted,
+          photoConsent,
+        }),
+      });
+
+      const result = await response.json().catch(() => ({})) as {
+        error?: string;
+        success?: boolean;
+        applicationNumber?: string;
+        applicationId?: string;
+        studentNumber?: string;
+        uploadUrl?: string;
+        reportCardMimeType?: string;
+        monthlyFee?: number;
+      };
+      if (!response.ok) {
+        throw new Error(result.error || 'Unable to submit enrollment.');
+      }
+      if (!result.success || !result.applicationNumber || !result.applicationId ||
+        !result.studentNumber || !result.uploadUrl || !result.reportCardMimeType ||
+        typeof result.monthlyFee !== 'number') {
+        throw new Error('The enrollment response could not be confirmed. Please contact support before retrying.');
+      }
+
+      const pending: PendingUpload = {
+        firstName: student.name.trim().split(/\s+/)[0],
+        monthlyFee: result.monthlyFee,
+        applicationNumber: result.applicationNumber,
+        applicationId: result.applicationId,
+        studentNumber: result.studentNumber,
+        uploadUrl: result.uploadUrl,
+        reportCardMimeType: result.reportCardMimeType,
+        file: reportCard,
+      };
+      setPendingUpload(pending);
+      await finishEnrollment(pending, false);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Unable to submit enrollment.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleSubject = (subject: string) => {
@@ -552,7 +715,7 @@ export default function Enrollment() {
                             <FileText className="h-5 w-5 shrink-0 text-[#7949fe]" />
                             <div className="min-w-0 flex-1">
                               <span className="block truncate text-sm font-semibold text-slate-900">{reportCard.name}</span>
-                              <span className="text-xs text-slate-500">{formatFileSize(reportCard.size)} · stays in this browser preview only</span>
+                              <span className="text-xs text-slate-500">{formatFileSize(reportCard.size)} · uploaded to private learner storage on submission</span>
                             </div>
                             <button
                               type="button"
@@ -577,9 +740,9 @@ export default function Enrollment() {
                           </label>
                         )}
                         <p id="report-card-note" className="mt-2 text-xs leading-5 text-slate-500">
-                          Prototype only: the file is not uploaded or saved and is cleared when you leave this page.
+                          The report card is uploaded to private learner storage when you submit. Accepted formats: PDF, JPG, PNG; maximum 10 MB.
                         </p>
-                        {errors.includes("report") && <p className={stepErrorClassName}>Please select a report card for the preview.</p>}
+                        {errors.includes("report") && <p className={stepErrorClassName}>Please select a report card before submitting.</p>}
                         {errors.includes("report-type") && <p className={stepErrorClassName}>Choose a PDF, JPG, or PNG file.</p>}
                         {errors.includes("report-size") && <p className={stepErrorClassName}>The file must be 10 MB or smaller.</p>}
                       </div>
@@ -685,7 +848,7 @@ export default function Enrollment() {
                         </div>
                       </ReviewCard>
                       <ReviewCard title="Progress & targets" step={3} onEdit={editFromReview}>
-                        <ReviewValue label="Report card (local preview only)" value={reportCard?.name ?? ""} />
+                        <ReviewValue label="Report card (private upload)" value={reportCard?.name ?? ""} />
                         {selectedSubjects.map((subject) => {
                           const mark = marks[subject];
                           return (
@@ -727,15 +890,23 @@ export default function Enrollment() {
                         Back
                       </Button>
                     )}
-                    <Button type="submit" className="min-h-12 flex-1 rounded-xl bg-[#ff7849] px-5 font-bold text-white hover:bg-[#f2693b]">
-                      {currentStep === steps.length - 1 ? "Preview application" : "Continue"}
-                      {currentStep < steps.length - 1 && <ArrowRight className="ml-2 h-4 w-4" />}
+                    <Button type="submit" disabled={isSubmitting} className="min-h-12 flex-1 rounded-xl bg-[#ff7849] px-5 font-bold text-white hover:bg-[#f2693b] disabled:cursor-not-allowed disabled:opacity-70">
+                      {isSubmitting ? (pendingUpload ? 'Retrying secure upload…' : 'Submitting…') : pendingUpload ? 'Retry secure upload' : currentStep === steps.length - 1 ? 'Submit application' : 'Continue'}
+                      {!isSubmitting && !pendingUpload && currentStep < steps.length - 1 && <ArrowRight className="ml-2 h-4 w-4" />}
                     </Button>
                   </div>
+                  {pendingUpload && (
+                    <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                      Application {pendingUpload.applicationNumber} and learner number {pendingUpload.studentNumber} are reserved. The report card is not yet confirmed; retry the secure upload here rather than submitting a second application.
+                    </p>
+                  )}
+                  {submitError && (
+                    <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{submitError}</p>
+                  )}
                 </form>
 
                 <div className="border-t border-violet-100 bg-violet-50/60 px-4 py-3 text-center text-xs leading-5 text-slate-600 sm:px-6">
-                  <strong className="text-[#5a4ecf]">Prototype:</strong> Nothing is sent or saved when you submit. The selected report card stays in this browser preview only.
+                  <strong className="text-[#5a4ecf]">Secure flow:</strong> Your enrollment is sent to the real system backend once this form is submitted.
                 </div>
               </>
             ) : (
@@ -743,22 +914,26 @@ export default function Enrollment() {
                 <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-emerald-600 text-3xl text-white">
                   <Check className="h-8 w-8" />
                 </div>
-                <h1 className="text-2xl font-bold text-slate-900">Application preview complete</h1>
-                <p className="mt-2 text-gray-600">Thank you, <strong>{completion.firstName}</strong>. This is a prototype; no application was submitted.</p>
+                <h1 className="text-2xl font-bold text-slate-900">Enrollment submitted</h1>
+                <p className="mt-2 text-gray-600">Thank you, <strong>{completion.firstName}</strong>. Your enrollment has been received and is now in review.</p>
                 <div className="my-5 rounded-xl bg-violet-50 p-4 text-left">
+                  <span className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Student number</span>
+                  <strong className="mt-1 block text-lg font-bold text-[#7949fe]">{completion.studentNumber}</strong>
+                  <span className="mt-3 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Application reference</span>
+                  <strong className="mt-1 block text-sm font-bold text-[#7949fe]">{completion.applicationNumber}</strong>
                   <span className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Estimated monthly fee</span>
                   <strong className="mt-1 block text-2xl text-[#7949fe]">{formatCurrency(completion.monthlyFee)}</strong>
-                  <span className="text-sm text-slate-600">No payment is due and no student number has been issued.</span>
+                  <span className="text-sm text-slate-600">Your report card is stored in the private learner folder. Payment checkout is not connected yet; do not make a payment from this page.</span>
                 </div>
-                <p className="text-sm leading-6 text-slate-600">No personal information or report card was sent or stored. Payment details will only be added when the secure enrollment flow is ready.</p>
+                <p className="text-sm leading-6 text-slate-600">Your application and report card were saved securely for review. Application receipt emails and payment will be added next.</p>
                 <Button type="button" onClick={() => { setCompletion(null); goToStep(0); }} className="mt-6 rounded-xl bg-[#7949fe] px-6 font-bold text-white hover:bg-[#5a4ecf]">
-                  Start a new preview
+                  Start a new application
                 </Button>
               </section>
             )}
           </section>
           <p className="mt-3 flex items-center justify-center gap-1 text-center text-xs text-slate-500">
-            <GraduationCap className="h-4 w-4" /> Viva Tutorials enrollment preview
+            <GraduationCap className="h-4 w-4" /> Viva Tutorials enrollment
           </p>
         </div>
       </main>

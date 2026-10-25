@@ -20,8 +20,8 @@
     "description": "Contact Viva Tutorials about tutoring in Mfuleni, Cape Town, online lessons across South Africa, study materials, or current availability."
   },
   "/enroll": {
-    "title": "Enrollment Form Preview | Viva Tutorials",
-    "description": "Preview the Viva Tutorials enrollment form, tutoring package options, learner details, and progress goals. Form data is not sent or saved."
+    "title": "Enroll with Viva Tutorials",
+    "description": "Submit a secure Viva Tutorials enrollment application for tutoring, with private report-card upload and learner details."
   },
   "/tutors": {
     "title": "Meet Our Tutors | Viva Tutorials",
