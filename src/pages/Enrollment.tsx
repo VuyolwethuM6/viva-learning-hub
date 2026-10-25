@@ -807,15 +807,16 @@ export default function Enrollment() {
                       <h1 id="review-step-title" className="text-2xl font-bold leading-tight text-slate-900">Review &amp; confirm</h1>
                       <p className="mb-5 mt-1 text-[15px] text-gray-600">Check everything before submitting.</p>
 
-                      <div className="mb-3 flex flex-wrap items-center gap-3 rounded-2xl bg-gradient-to-br from-violet-200/80 via-orange-100 to-[#1a0b2e] p-4 text-white">
-                        <div className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full bg-white/15 text-lg font-extrabold">
+                      <div className="relative mb-3 flex flex-wrap items-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-br from-[#7A4AF1] to-[#2A0E8F] p-4 text-white">
+                        <span aria-hidden="true" className="pointer-events-none absolute -bottom-10 -right-8 h-32 w-32 rounded-full bg-[#F27435]/20" />
+                        <div className="relative z-10 grid h-[52px] w-[52px] shrink-0 place-items-center rounded-xl border border-white/35 bg-white/20 text-lg font-extrabold">
                           {student.name.trim().split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <div className="relative z-10 min-w-0 flex-1">
                           <h2 className="break-words text-lg font-bold">{student.name}</h2>
                           <p className="text-sm text-white/80">{grade} · {mode}</p>
                         </div>
-                        <div className="text-left sm:text-right">
+                        <div className="relative z-10 text-left sm:text-right">
                           <strong className="block text-2xl">{formatCurrency(monthlyFee)}</strong>
                           <span className="text-xs text-white/80">{packageName} · per month</span>
                         </div>
