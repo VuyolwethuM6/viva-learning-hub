@@ -2,6 +2,12 @@
   "functions": {
     "api/payfast/notify.ts": {
       "includeFiles": "private/materials/**"
+    },
+    "api/admin/documents.ts": {
+      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}"
+    },
+    "api/admin/messages.ts": {
+      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}"
     }
   },
   "headers": [

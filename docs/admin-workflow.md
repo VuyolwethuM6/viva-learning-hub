@@ -4,22 +4,23 @@ Updated: 26 October 2026. This is the first admin milestone, not a completed tea
 
 ## Agreed business policies
 
-| Item | Policy |
-| --- | --- |
-| Programme | Grades 8–11 Monday–Saturday; Grade 12 Monday–Sunday including feedback; Matric Rewrite all Monday–Friday days, regardless of subject selection. Configured closures are excluded |
-| Grades 8–9 | 1 subject R350/month; 2 subjects R600/month |
-| Grades 10–12 | 1 subject R500; 2 R800; 3 R1,100/month |
-| Matric Rewrite | 1 subject R550; 2 R900; 3 R1,200/month |
-| First charge | Monthly fee × remaining scheduled programme days / total scheduled programme days in the starting calendar month, rounded once to cents |
-| First payment | Fully verified and allocated before activation |
-| First invoice due date | Agreed start date; it must be settled before activation, even if activation is requested earlier |
-| Continuing invoices | Issue on the 25th for the following calendar month |
-| Continuing payment due | 1st of the month being taught, including weekends/public holidays |
-| Unpaid-balance reminder | From the 3rd, only for outstanding balances |
-| Follow-up | Personal follow-up on the 7th; not automated in this milestone |
-| Suspension | Proposed agreed workflow: from the 10th after admin confirmation/notice unless an approved arrangement exists; controls are not implemented yet |
-| Withdrawal | Notice by the 20th to stop next month's charge. Later requests need a recorded, agreed final date and charge; no automatic full extra month |
-| Timezone | Africa/Johannesburg |
+| Item                    | Policy                                                                                                                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Programme               | Grades 8–11 Monday–Saturday; Grade 12 Monday–Sunday including feedback; Matric Rewrite all Monday–Friday days, regardless of subject selection. Configured closures are excluded |
+| Grades 8–9              | 1 subject R350/month; 2 subjects R600/month                                                                                                                                      |
+| Grades 10–12            | 1 subject R500; 2 R800; 3 R1,100/month                                                                                                                                           |
+| Matric Rewrite          | 1 subject R550; 2 R900; 3 R1,200/month                                                                                                                                           |
+| First charge            | Monthly fee × remaining scheduled programme days / total scheduled programme days in the starting calendar month, rounded once to cents                                          |
+| First payment           | Fully verified and allocated before activation                                                                                                                                   |
+| First invoice due date  | Agreed start date; it must be settled before activation, even if activation is requested earlier                                                                                 |
+| Continuing invoices     | Issue on the 25th for the following calendar month                                                                                                                               |
+| Invoice number          | `VT-YYYYMMNN`, using the tuition month and a shared monthly counter; minimum two-digit suffix, e.g. November's first invoice is `VT-20261101`, even if issued in October         |
+| Continuing payment due  | 1st of the month being taught, including weekends/public holidays                                                                                                                |
+| Unpaid-balance reminder | From the 3rd, only for outstanding balances                                                                                                                                      |
+| Follow-up               | Personal follow-up on the 7th; not automated in this milestone                                                                                                                   |
+| Suspension              | Proposed agreed workflow: from the 10th after admin confirmation/notice unless an approved arrangement exists; controls are not implemented yet                                  |
+| Withdrawal              | Notice by the 20th to stop next month's charge. Later requests need a recorded, agreed final date and charge; no automatic full extra month                                      |
+| Timezone                | Africa/Johannesburg                                                                                                                                                              |
 
 Example: R800 monthly fee, 22 scheduled weekdays, 11 remaining = R400 first invoice. Count actual grade-specific programme days, not a fixed 20-day month. `tuition_programmes` contains grade-level weekday arrays (ISO Monday=1 through Sunday=7). Configure closures before invoice creation; changing programme calendars also requires updating the enrollment display and reviewing future charges. `tuition_closures` contains exclusions; it is initially empty. Do not assume South African holidays are automatically excluded. Configure closures before issuing invoices. Existing invoice calculations are retained if the calendar or monthly fee later changes. The enrollment display comes from `src/lib/tuition-programme.json`; matching database programme seeds drive billing. The admin preview uses the database calendar, and every issued invoice saves the calendar label/days it used. Rewrite billing counts all five programme days, not just selected-subject teaching days.
 
@@ -28,13 +29,16 @@ No automatic deletion for unpaid applications, Google Classroom invitations, lea
 ## What is implemented
 
 - `/admin` sign-in using Supabase Auth email/password, a server-validated session and enabled `admin_users` membership on every API call.
-- Overview, searchable applications/students, private report-card link requests, intake details/marks, review notes, rejection reasons and approval.
+- Branded sign-in and responsive workspace with desktop sidebar and mobile bottom navigation. Overview totals use the loaded records and selected billing month.
+- Searchable applications/students, learner profile drawers, private report-card preview/download, intake details/marks, review notes, rejection reasons and approval. Opening a document preserves an unsaved review note.
 - Approval plus first invoice plus queued invoice notification in one database transaction. Approval moves the application to `pending_payment`; it does not activate it.
 - Invoices derived from the stored, server-calculated enrollment fee. No client-supplied amount controls an invoice.
 - Manual verified payment allocations with date, method, transaction reference, verification note and actor. Partial payments and early payment of already-issued future invoices are supported.
 - Activation only after approval and full first-invoice settlement, enforced again by the database. Active status does not provision classes or portal access.
 - Manual next-month invoice generation from the 25th and manual reminder queueing from the 3rd. Repeating a run does not duplicate learner/month invoices or invoice/month reminders.
 - Durable notification queue for invoice, payment receipt, reminder and activation messages. An admin sends one queued message at a time.
+- Branded invoice and per-payment receipt PDFs, available privately to admins and attached to their respective queued emails. Existing cream/logo email headers, purple accents and help footers have been adapted from the supplied legacy designs.
+- Confirmation dialogs for approvals, rejection, verified payment recording, activation, billing/reminder runs and sending messages.
 - Audit events for reviews, document-link requests, financial changes, activation, billing/reminder runs and notification-send attempts.
 - Other proposed dashboard sections display “Not available yet,” not sample numbers or false monitoring results.
 
@@ -49,6 +53,8 @@ For an existing intake installation, run in order:
 1. `supabase/migrations/20261025120000_learner_documents.sql` if that document migration is not already applied.
 2. `supabase/migrations/20261026090000_enrollment_email_claims.sql`. This captures the owner's previously applied “04” email SQL. It is rerunnable and does not reset existing timestamps.
 3. `supabase/migrations/20261026100000_admin_tuition.sql` for the new admin/finance schema.
+4. `supabase/migrations/20261026110000_verified_document_finalization.sql` to verify Storage metadata, persist report-card records and safely recover legacy pending-review applications.
+5. `supabase/migrations/20261026120000_monthly_invoice_numbers.sql` for tuition-month invoice numbers. This changes only newly issued numbers; existing numbers remain valid.
 
 For a new project, `supabase/schema.sql` includes all of these definitions. Run the fresh schema instead of blindly applying both paths. The files are rerunnable definitions, not a migration-history tracker.
 
@@ -64,11 +70,11 @@ An ordinary Auth account cannot grant itself membership. To revoke access, set `
 
 Server environment requirements:
 
-| Setting | Use |
-| --- | --- |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Auth validation, authorized database RPCs and private Storage signing |
-| `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL` | Tuition notification provider, verified sender, reply-to |
-| `TUITION_BANK_DETAILS_CONFIRMED=true` | Explicit release gate for sending invoice/reminder payment instructions |
+| Setting                                       | Use                                                                     |
+| --------------------------------------------- | ----------------------------------------------------------------------- |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`   | Auth validation, authorized database RPCs and private Storage signing   |
+| `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL` | Tuition notification provider, verified sender, reply-to                |
+| `TUITION_BANK_DETAILS_CONFIRMED=true`         | Explicit release gate for sending invoice/reminder payment instructions |
 
 Before setting the confirmation flag, verify `api/_lib/payment-details.ts` against the business's real bank account. This version uses those existing bank details for tuition emails; the old `PAYMENT_DEADLINE_DAYS` constant is unused. Do not enable the flag with unverified details. No `VITE_` credential variables are needed. Server settings must be assigned to the correct Vercel Preview/Production environment and the deployment restarted/rebuilt as needed.
 
@@ -81,16 +87,16 @@ Admin cookies are HttpOnly, SameSite=Strict, scoped to `/api/admin`, and Secure 
 1. Run `npm ci`, then `npx vercel dev` with the configured project, or use its Preview deployment. Vite alone does not host the APIs.
 2. Submit a synthetic enrollment with a dummy report card and controlled inboxes.
 3. Sign in at `/admin`. An authenticated non-admin must be denied, and a signed-out API request must return 401.
-4. Open Applications, inspect the report-card link and learner details/marks, and add a review note.
+4. Open Applications and a learner profile; type a review note, preview the report card, refresh its private link and download it. Close the viewer and check that the note remains. Inspect learner details and marks.
 5. Select a start date today or later that belongs to the learner’s programme; confirm the displayed estimate. Approve. Verify status is awaiting payment, one invoice exists, and one invoice message is queued.
-6. Open Finance and print/check the invoice's period, due date, programme days and amount. Before payment, activation must be unavailable.
-7. In Notifications, send the invoice message only to the authorized test inboxes. “Sent” means provider acceptance, not inbox delivery. No automatic sending or collection takes place.
+6. Open Finance and view/download the branded invoice PDF. Check the tuition-month number, period, due date, programme days and amount. Before payment, activation must be unavailable.
+7. In Notifications, confirm and send the invoice message only to the authorized test inboxes. Inspect the branded email and attached PDF. “Sent” means provider acceptance, not inbox delivery. No automatic sending or collection takes place.
 8. Check a synthetic/test payment against its source before recording it. Choose a unique bank transaction ID or cash receipt number, not the student's recurring reference. Record a partial allocation; the remaining balance must stay visible and activation remain blocked.
-9. Record the rest using another transaction ID. Send the two receipt messages; each receipt describes that payment and the balance at that event, not the entire account as universally settled.
+9. Record the rest using another transaction ID. View each receipt in the invoice's payment history and send the two receipt messages. Each email and attached PDF must describe that individual payment and the balance at that event, not the entire account as universally settled.
 10. Return to the learner record and activate. Confirm status and audit history, then send the queued activation email. No portal/classroom access should be claimed as created.
 11. Test repeating a payment request, reusing a transaction reference, over-allocation, an invalid date, an unauthorized request and a document request without an admin session.
 12. On/after the 25th, generate next month invoices twice. Verify one full invoice per eligible active learner/month, due on the 1st. On/after the 3rd, queue reminders twice and verify no duplicate notices. To test other clock dates without changing production functions, use the local database tests described below.
-13. Test mobile tables, navigation, dialog keyboard focus, printable invoice/history, expired sign-in and email-provider failure.
+13. Test mobile cards and bottom navigation, desktop tables/sidebar, stacked dialog keyboard focus, PDF open/download, expired document links/sign-in and email-provider failure. Teaching and monitoring sections should show honest placeholders.
 
 Payment methods are manual labels for verified EFT, Cash, Card or SnapScan receipts. They do not imply an integration with any of those services. No real charge is initiated by this admin workflow. Existing PDF PayFast checkout is separate.
 
@@ -101,6 +107,18 @@ The outbox leases messages to avoid concurrent sends. Provider requests use a st
 A send timeout or an acknowledgment failure is ambiguous: investigate provider history before retrying. Leases expire after two minutes. Automated retry is not running. Attempts older than 23 hours from the first attempt are blocked for manual investigation because provider idempotency windows are limited; do not clear timestamps blindly. “Sent” can also indicate a settled reminder was skipped, with the reason in `last_error`.
 
 Financial operations remain committed when notification delivery fails. Failed notification status must not be used to repeat the financial action.
+
+## Invoice numbers and private documents
+
+The monthly counter is global across learners. It resets for each tuition month and is assigned atomically inside the invoice insert transaction. `01` through `99` are followed by `100`; numbers are never truncated. Rerunning the migration preserves counters, and previously issued numbers are not renamed. Do not manually reset counters or rewrite issued numbers.
+
+PDFs use the Viva logo, licensed embedded Plus Jakarta Sans fonts, business address, recipient details and invoice/payment records. Invoice PDFs show the immutable original charge and the balance at document preparation. An admin download therefore may show a newer balance than an earlier invoice email. Receipt PDFs retain the balance snapshot from that specific payment's queued receipt, even after later payments. A receipt's identifier includes the invoice and payment UUID to distinguish partial payments. Missing receipt snapshots fail clearly rather than inventing a balance.
+
+`GET /api/admin/documents?kind=invoice|receipt|report&id=<UUID>` requires the same enabled admin session as the other admin endpoints. For an invoice use its UUID; for a receipt use the payment UUID; for a report use the application UUID. Responses are non-cacheable and document requests are audited. Financial PDFs are generated on the server without an external renderer; they are not placed in public Storage. Report previews use short-lived private signed URLs; the viewer supports refreshing expired links, opening separately and downloading through the authenticated API. Shared device users must still protect any files they download.
+
+Invoice and receipt emails include real PDF attachments generated from the message's snapshot and original invoice/payment details. Provider retries reuse the message idempotency key and stable PDF issue date. Do not deploy a different template/font/bank configuration and blindly retry an ambiguous send: changed content can conflict with the provider's existing idempotency request. Investigate provider history first. Reminders and activation notices currently have no PDF attachment.
+
+The Vercel configuration bundles the logo and private static font files into the document and message functions. Keep these assets and the font licence in Git. The business bank details continue to come from `api/_lib/payment-details.ts`, with the existing confirmation gate; the supplied legacy template is a design reference, not proof of current banking details. The address/support details are in `BRAND` in `api/_lib/tuition-document.ts` and should be checked by the owner before sending.
 
 ## Automated checks and boundaries
 
@@ -119,7 +137,7 @@ Current operational limits:
 - No cron, automatic collection/debit orders, online tuition checkout, bank import, refunds, discounts, invoice cancellation, unallocated credit ledger or one transaction split over multiple invoices.
 - One payment entry allocates one unique transaction reference to one invoice. Multi-invoice settlements need reconciliation design before recording, not invented references to bypass duplicate protection.
 - No suspension, withdrawal, reactivation, payment-arrangement management or follow-up automation yet. These policies are agreed targets, not active controls. Do not keep generating future charges for a learner who has withdrawn; pause manual billing and resolve the record with the owner until those controls exist.
-- No permanent receipt download links for families, PDF email attachments, class access, parent/student login, admin MFA or automatic reconciliation.
+- No permanent self-service receipt download links for families, class access, parent/student login, admin MFA or automatic reconciliation. Families receive PDFs through manually sent invoice/receipt emails.
 - The snapshot loads at most 500 applications, 1,000 invoices/payments and 200 recent audit/messages; it flags truncated financial data. Pagination and larger-volume reporting are future work.
 - The first invoice amount is immutable after creation. Payment entries have no edit/delete API; corrections require a reviewed database/accounting procedure until reversal workflows exist.
 
@@ -128,3 +146,11 @@ Do not enable unattended billing until lifecycle controls (withdrawals, suspensi
 ## Synthetic test cleanup
 
 Financial and audit records deliberately do not cascade away with an application. Use a disposable test project or a reviewed cleanup transaction in the SQL Editor: identify the exact synthetic application UUID, remove its tuition messages, payment allocations, invoices and audit entries, then remove the application and its private Storage object. Do not apply broad delete statements to production. Do not reset invoice or learner sequences to hide gaps.
+
+## Missing report-card records on legacy applications
+
+A deployed function can have the correct name/signature but a different body. The owner reported an application with a real private Storage object and no `learner_documents` row; inspection also found no expected insert in the deployed finalizer. The finalization repair migration updates the function without resetting applications, email timestamps or financial records.
+
+The repaired function checks the private bucket, exact object path, known size, allowed MIME/extension and expected application metadata. It inserts a missing document record for a draft or pending-review application, verifies a matching existing record on retry, and rejects inconsistent metadata. It returns `document_id` as confirmation. The completion API now calls it for both statuses and checks that result before reporting success or attempting email. Apply this SQL migration before deploying that API change.
+
+SQL Editor invocation of the repaired function does not send emails. For a legacy application, resolve its MIME from the stored object's metadata, call the function for that exact application, inspect its returned `document_id`, then refresh admin and retry approval. Do not fabricate document rows or remove the approval guard.

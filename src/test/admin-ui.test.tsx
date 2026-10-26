@@ -24,6 +24,7 @@ const view = () =>
     </HelmetProvider>,
   );
 beforeEach(() => {
+  vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   if (!HTMLDialogElement.prototype.showModal)
     HTMLDialogElement.prototype.showModal = function () {};
   if (!HTMLDialogElement.prototype.close)
@@ -125,6 +126,14 @@ describe("admin interface", () => {
     fireEvent.click(
       within(dialog).getByRole("button", { name: "Approve and issue invoice" }),
     );
+    const confirm = await screen.findByRole("dialog", {
+      name: "Approve this application?",
+    });
+    fireEvent.click(
+      within(confirm).getByRole("button", {
+        name: "Approve and issue invoice",
+      }),
+    );
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
@@ -215,11 +224,19 @@ describe("admin interface", () => {
         .getByRole("button", { name: "Record verified payment" })
         .closest("form")!,
     );
-    await screen.findByRole("alert");
-    fireEvent.submit(
-      screen
-        .getByRole("button", { name: "Record verified payment" })
-        .closest("form")!,
+    const confirmation = await screen.findByRole("dialog", {
+      name: "Confirm verified payment?",
+    });
+    fireEvent.click(
+      within(confirmation).getByRole("button", {
+        name: "Record verified payment",
+      }),
+    );
+    await within(confirmation).findByRole("alert");
+    fireEvent.click(
+      within(confirmation).getByRole("button", {
+        name: "Record verified payment",
+      }),
     );
     await waitFor(() =>
       expect(
@@ -237,6 +254,54 @@ describe("admin interface", () => {
       .map(([, init]) => JSON.parse(String(init?.body)));
     expect(requests[0].paymentId).toBe(requests[1].paymentId);
     expect(requests[0].amountCents).toBe(10000);
+  });
+  it("offers branded sign-in with password visibility control", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      json({ error: "Please sign in" }, 401),
+    );
+    view();
+    await screen.findByRole("button", { name: "Sign in" });
+    const password = screen.getByLabelText("Password");
+    expect(password).toHaveAttribute("type", "password");
+    fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+    expect(password).toHaveAttribute("type", "text");
+    expect(screen.getAllByAltText("Viva Tutorials").length).toBeGreaterThan(0);
+  });
+  it("returns from a report-card viewer without discarding a review note", async () => {
+    const fetch = network(),
+      original = fetch.getMockImplementation()!;
+    fetch.mockImplementation(async (input, init) =>
+      init?.body && JSON.parse(String(init.body)).action === "document"
+        ? json({
+            url: "https://project.supabase.co/storage/v1/object/sign/report.pdf?token=test",
+            mime: "application/pdf",
+            fileName: "report.pdf",
+          })
+        : original(input, init),
+    );
+    view();
+    await screen.findByRole("heading", { name: "Your tuition operations" });
+    fireEvent.click(screen.getByRole("button", { name: "Applications" }));
+    fireEvent.click(screen.getByRole("button", { name: "Open Test Learner" }));
+    fireEvent.change(screen.getByLabelText("Review note"), {
+      target: { value: "Keep this draft note" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /Open private report card|Report card/,
+      }),
+    );
+    const viewer = await screen.findByRole("dialog", { name: "Report card" });
+    expect(within(viewer).getByTitle("Report card")).toHaveAttribute(
+      "src",
+      expect.stringContaining("/object/sign/"),
+    );
+    fireEvent.click(
+      within(viewer).getByRole("button", { name: "Close document" }),
+    );
+    expect(screen.getByLabelText("Review note")).toHaveValue(
+      "Keep this draft note",
+    );
   });
 });
 

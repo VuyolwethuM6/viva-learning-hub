@@ -35,8 +35,10 @@ export default async function handler(
     const body = await readJsonBody(request, 16_384, "Admin records");
     if (body.action === "document") {
       const id = uuid(body.applicationId);
-      const apps = await db<{ report_card_path: string }[]>(
-        `/rest/v1/applications?id=eq.${id}&select=report_card_path`,
+      const apps = await db<
+        { report_card_path: string; report_card_name: string }[]
+      >(
+        `/rest/v1/applications?id=eq.${id}&select=report_card_path,report_card_name`,
       );
       if (!apps?.[0]?.report_card_path)
         throw new HttpError(404, "Report card not found.");
@@ -49,7 +51,19 @@ export default async function handler(
       const path = signed.signedURL || signed.signedUrl;
       if (typeof path !== "string" || !path.startsWith("/object/sign/"))
         throw new HttpError(502, "Unable to open document.");
-      return sendJson(response, 200, { url: `${config}/storage/v1${path}` });
+      const extension =
+        apps[0].report_card_path.split(".").pop()?.toLowerCase() || "";
+      const mime: Record<string, string> = {
+        pdf: "application/pdf",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+      };
+      return sendJson(response, 200, {
+        url: `${config}/storage/v1${path}`,
+        mime: mime[extension] || "application/octet-stream",
+        fileName: apps[0].report_card_name || "report-card",
+      });
     }
     const actions = [
       "approve",

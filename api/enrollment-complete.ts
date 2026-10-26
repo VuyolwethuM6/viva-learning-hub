@@ -86,7 +86,7 @@ export default async function handler(request: ApiRequest, response: ServerRespo
       return sendJson(response, 502, { error: 'The learner number is not available yet.' });
     }
 
-    if (application.status === 'draft') {
+    if (application.status === 'draft' || application.status === 'pending_review') {
       const fileResponse = await fetch(
         `${supabase.url}/storage/v1/object/info/learner-documents/${encodeStoragePath(application.report_card_path)}`,
         { headers },
@@ -146,6 +146,15 @@ export default async function handler(request: ApiRequest, response: ServerRespo
           error: errorText.slice(0, 300),
         });
         return sendJson(response, 502, { error: 'The report card uploaded, but enrollment finalization failed. Retry the completion step.' });
+      }
+      const finalized = await finalizeResponse.json().catch(() => null) as {
+        application_id?: string; application_number?: string; student_number?: string;
+        status?: string; document_id?: string;
+      } | null;
+      if (!finalized?.document_id || finalized.application_id !== applicationId ||
+          finalized.application_number !== application.application_number ||
+          finalized.student_number !== learner.student_number || finalized.status !== 'pending_review') {
+        return sendJson(response, 502, { error: 'The report card record could not be confirmed. Keep your application reference and contact support before resubmitting.' });
       }
     } else if (application.status !== 'pending_review') {
       return sendJson(response, 409, { error: 'This enrollment is not awaiting document completion.' });
