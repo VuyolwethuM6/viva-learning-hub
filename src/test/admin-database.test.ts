@@ -38,7 +38,7 @@ async function record(amountCents: number, overrides: object = {}) {
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(
-    `create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key);create schema storage;create table storage.objects(id uuid,bucket_id text,name text,metadata jsonb);create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);`,
+    `create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key,email text);create schema storage;create table storage.objects(id uuid,bucket_id text,name text,metadata jsonb);create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);`,
   );
   const sql = readFileSync("supabase/schema.sql", "utf8").replace(
     'create extension if not exists "pgcrypto";',
@@ -46,7 +46,10 @@ beforeAll(async () => {
   );
   await db.exec(sql);
   await db.exec(sql); // Bootstrap remains rerunnable.
-  await db.query("insert into auth.users values($1)", [actor]);
+  await db.query(
+    "insert into auth.users(id,email) values($1,'admin@example.test')",
+    [actor],
+  );
   await db.query("insert into public.admin_users values($1,true)", [actor]);
   const result = await db.query<{ day: string }>(`select '2026-11-01' as day`);
   month = result.rows[0].day;
@@ -81,6 +84,174 @@ beforeEach(async () => {
 });
 
 describe("admin database financial invariants", () => {
+  it("cancels queued email without deleting receipt snapshots, financial records or audit history", async () => {
+    await approve();
+    await record(10000);
+    const before = (
+      await db.query<{ id: string; payload: object }>(
+        "select id,payload from public.tuition_messages where kind='receipt'",
+      )
+    ).rows[0];
+    await db.query(
+      "select public.admin_cancel_message($1,$2,'Duplicate communication is no longer needed',false)",
+      [actor, before.id],
+    );
+    expect(
+      (
+        await db.query<{ state: string; payload: object }>(
+          "select state,payload from public.tuition_messages where id=$1",
+          [before.id],
+        )
+      ).rows[0],
+    ).toMatchObject({ state: "cancelled", payload: before.payload });
+    expect(
+      (await db.query("select * from public.tuition_payments")).rows,
+    ).toHaveLength(1);
+    expect(
+      (await db.query("select * from public.tuition_invoices")).rows,
+    ).toHaveLength(1);
+    expect(
+      (
+        await db.query(
+          "select * from public.admin_audit where action='cancel_message'",
+        )
+      ).rows,
+    ).toHaveLength(1);
+    expect(
+      (
+        await db.query<{ value: unknown }>(
+          "select public.admin_claim_message($1,$2) value",
+          [actor, before.id],
+        )
+      ).rows[0].value,
+    ).toBeNull();
+    await db.query(
+      "select public.admin_cancel_message($1,$2,'Repeat request after a lost response',false)",
+      [actor, before.id],
+    );
+    expect(
+      (
+        await db.query(
+          "select * from public.admin_audit where action='cancel_message'",
+        )
+      ).rows,
+    ).toHaveLength(1);
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/20261026130000_notification_management.sql",
+        "utf8",
+      ),
+    );
+    const snap = (
+      await db.query<{
+        value: {
+          messages: { id: string; state: string; payload: object }[];
+          audit: { actor_email: string }[];
+        };
+      }>("select public.admin_snapshot($1) value", [actor])
+    ).rows[0].value;
+    expect(snap.messages.find((m) => m.id === before.id)).toMatchObject({
+      state: "cancelled",
+      payload: before.payload,
+    });
+    expect(snap.audit[0].actor_email).toBe("admin@example.test");
+  });
+  it("protects sending, attempted and completed notifications from unsafe cancellation", async () => {
+    await approve();
+    const id = (
+      await db.query<{ id: string }>("select id from public.tuition_messages")
+    ).rows[0].id;
+    await expect(
+      db.query(
+        "select public.admin_cancel_message($1,$2,'Valid reason for cancellation',false)",
+        ["99999999-9999-4999-8999-999999999999", id],
+      ),
+    ).rejects.toThrow("Admin");
+    await expect(
+      db.query("select public.admin_cancel_message($1,$2,'',false)", [
+        actor,
+        id,
+      ]),
+    ).rejects.toThrow("reason");
+    const claim = (
+      await db.query<{ value: { claim_token: string } }>(
+        "select public.admin_claim_message($1,$2) value",
+        [actor, id],
+      )
+    ).rows[0].value;
+    await expect(
+      db.query(
+        "select public.admin_cancel_message($1,$2,'Cancellation during an active send',true)",
+        [actor, id],
+      ),
+    ).rejects.toThrow("being sent");
+    await db.query("select public.admin_finish_message($1,$2,$3,false)", [
+      actor,
+      id,
+      claim.claim_token,
+    ]);
+    await expect(
+      db.query(
+        "select public.admin_cancel_message($1,$2,'Attempted email should be stopped',false)",
+        [actor, id],
+      ),
+    ).rejects.toThrow("provider history");
+    await db.query(
+      "select public.admin_cancel_message($1,$2,'Checked provider history and stopped retries',true)",
+      [actor, id],
+    );
+    await db.query("select public.admin_finish_message($1,$2,$3,true)", [
+      actor,
+      id,
+      claim.claim_token,
+    ]);
+    expect(
+      (
+        await db.query<{ state: string }>(
+          "select state from public.tuition_messages where id=$1",
+          [id],
+        )
+      ).rows[0].state,
+    ).toBe("cancelled");
+    await db.exec("set role authenticated");
+    try {
+      await expect(
+        db.query(
+          "select public.admin_cancel_message($1,$2,'Cannot call this from browser roles',true)",
+          [actor, id],
+        ),
+      ).rejects.toThrow("permission denied");
+    } finally {
+      await db.exec("reset role");
+    }
+    await db.query(
+      "update public.tuition_messages set state='sent' where id=$1",
+      [id],
+    );
+    await expect(
+      db.query(
+        "select public.admin_cancel_message($1,$2,'This was already accepted',true)",
+        [actor, id],
+      ),
+    ).rejects.toThrow("completed");
+  });
+  it("loads waiting notifications before completed history and flags a truncated queue", async () => {
+    await approve();
+    const waiting = (
+      await db.query<{ id: string }>("select id from public.tuition_messages")
+    ).rows[0].id;
+    await db.exec(
+      "insert into public.tuition_messages(invoice_id,kind,event_key,payload,state) select i.id,'invoice','history:'||n,'{}'::jsonb,'sent' from public.tuition_invoices i cross join generate_series(1,201) n",
+    );
+    const snap = (
+      await db.query<{
+        value: { messages: { id: string }[]; messages_truncated: boolean };
+      }>("select public.admin_snapshot($1) value", [actor])
+    ).rows[0].value;
+    expect(snap.messages).toHaveLength(200);
+    expect(snap.messages[0].id).toBe(waiting);
+    expect(snap.messages_truncated).toBe(true);
+  });
   it("prorates using actual weekdays minus closures and queues one invoice", async () => {
     await db.query("insert into public.tuition_closures values($1,$2)", [
       start,

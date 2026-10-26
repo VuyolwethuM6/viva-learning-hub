@@ -30,16 +30,20 @@ No automatic deletion for unpaid applications, Google Classroom invitations, lea
 
 - `/admin` sign-in using Supabase Auth email/password, a server-validated session and enabled `admin_users` membership on every API call.
 - Branded sign-in and responsive workspace with desktop sidebar and mobile bottom navigation. Overview totals use the loaded records and selected billing month.
+- Finance shows “Collection for this billing period” at the top, with a billing-month selector, amounts invoiced/collected/outstanding and collection percentage. That collection card is removed from Home. Home retains the smaller financial summary cards. Totals represent allocations to invoices for the selected tuition month, not bank deposits received within that calendar month.
 - Searchable applications/students, learner profile drawers, private report-card preview/download, intake details/marks, review notes, rejection reasons and approval. Opening a document preserves an unsaved review note.
+- Applications excludes activated learners and retains drafts, applications awaiting review/payment, rejected applications and archived application records. Students shows activated learners only. Each view has its own empty state; approving an application alone does not move it into Students.
 - Approval plus first invoice plus queued invoice notification in one database transaction. Approval moves the application to `pending_payment`; it does not activate it.
 - Invoices derived from the stored, server-calculated enrollment fee. No client-supplied amount controls an invoice.
 - Manual verified payment allocations with date, method, transaction reference, verification note and actor. Partial payments and early payment of already-issued future invoices are supported.
 - Activation only after approval and full first-invoice settlement, enforced again by the database. Active status does not provision classes or portal access.
 - Manual next-month invoice generation from the 25th and manual reminder queueing from the 3rd. Repeating a run does not duplicate learner/month invoices or invoice/month reminders.
 - Durable notification queue for invoice, payment receipt, reminder and activation messages. An admin sends one queued message at a time.
+- Notifications separates waiting items from completed history and shows the learner, invoice, saved recipients, prepared date, attempts, balance snapshot and status explanation. Unwanted pending emails can be cancelled with a reason; previously attempted emails require provider-history review first. Cancellation preserves message/receipt snapshots and financial records.
 - Branded invoice and per-payment receipt PDFs, available privately to admins and attached to their respective queued emails. Existing cream/logo email headers, purple accents and help footers have been adapted from the supplied legacy designs.
 - Confirmation dialogs for approvals, rejection, verified payment recording, activation, billing/reminder runs and sending messages.
 - Audit events for reviews, document-link requests, financial changes, activation, billing/reminder runs and notification-send attempts.
+- Audit entries use plain-language action names, learner/invoice context, administrator email and Africa/Johannesburg date/time. Payment entries show amount, method, transaction reference and verification note. Search and activity filters apply to the loaded latest 200 events; technical record data is collapsed separately. Document requests and send attempts are described as requests/attempts, not proof of viewing/delivery.
 - Other proposed dashboard sections display “Not available yet,” not sample numbers or false monitoring results.
 
 The initial application-received email remains a separate existing flow. Its claim timestamps are captured by the email migration; it is not managed in the new tuition queue. Rejection currently records a reason but does not send an automatic rejection email; contact the family separately.
@@ -55,6 +59,7 @@ For an existing intake installation, run in order:
 3. `supabase/migrations/20261026100000_admin_tuition.sql` for the new admin/finance schema.
 4. `supabase/migrations/20261026110000_verified_document_finalization.sql` to verify Storage metadata, persist report-card records and safely recover legacy pending-review applications.
 5. `supabase/migrations/20261026120000_monthly_invoice_numbers.sql` for tuition-month invoice numbers. This changes only newly issued numbers; existing numbers remain valid.
+6. `supabase/migrations/20261026130000_notification_management.sql` for audited notification cancellation and richer notification/audit snapshots. Apply before deploying the new notification controls. It preserves existing messages and financial data.
 
 For a new project, `supabase/schema.sql` includes all of these definitions. Run the fresh schema instead of blindly applying both paths. The files are rerunnable definitions, not a migration-history tracker.
 
@@ -97,6 +102,8 @@ Admin cookies are HttpOnly, SameSite=Strict, scoped to `/api/admin`, and Secure 
 11. Test repeating a payment request, reusing a transaction reference, over-allocation, an invalid date, an unauthorized request and a document request without an admin session.
 12. On/after the 25th, generate next month invoices twice. Verify one full invoice per eligible active learner/month, due on the 1st. On/after the 3rd, queue reminders twice and verify no duplicate notices. To test other clock dates without changing production functions, use the local database tests described below.
 13. Test mobile cards and bottom navigation, desktop tables/sidebar, stacked dialog keyboard focus, PDF open/download, expired document links/sign-in and email-provider failure. Teaching and monitoring sections should show honest placeholders.
+14. After activation, verify the learner appears only in Students and Applications shows its empty state if no other applications exist. Test More and logout at small portrait/landscape sizes: the menu must scroll to its final item, and all confirmation buttons must remain reachable.
+15. In Notifications, inspect saved recipients and amounts, cancel a synthetic queued message with a reason, then check Completed history and Audit. Its invoice/payment/receipt PDF must remain available. An active send cannot be cancelled. A previous attempt requires checking provider history and confirming that review; accepted/skipped messages cannot be cancelled. Cancellation cannot recall a delivered message or automatically requeue the same event.
 
 Payment methods are manual labels for verified EFT, Cash, Card or SnapScan receipts. They do not imply an integration with any of those services. No real charge is initiated by this admin workflow. Existing PDF PayFast checkout is separate.
 
@@ -107,6 +114,10 @@ The outbox leases messages to avoid concurrent sends. Provider requests use a st
 A send timeout or an acknowledgment failure is ambiguous: investigate provider history before retrying. Leases expire after two minutes. Automated retry is not running. Attempts older than 23 hours from the first attempt are blocked for manual investigation because provider idempotency windows are limited; do not clear timestamps blindly. “Sent” can also indicate a settled reminder was skipped, with the reason in `last_error`.
 
 Financial operations remain committed when notification delivery fails. Failed notification status must not be used to repeat the financial action.
+
+Cancellation removes a message from the waiting queue by marking it `cancelled`, recording the administrator, time and reason, and adding an audit event. It does not delete the row or its original payload, so per-payment receipt PDFs retain their historical balance. Repeating cancellation is idempotent, and the send claim refuses cancelled messages. The database locks the message to coordinate send/cancel requests; current send leases are protected for two minutes. Older sending/failed attempts require explicit provider-history review before cancellation. Completion of an old claim cannot overwrite a cancelled record. Cancelling an email does not undo approval, a payment, activation or the invoice, and the unique event key still prevents automatic recreation. There is currently no restore/requeue action.
+
+The notification snapshot loads at most 200 records, prioritizing waiting items over completed history. A warning appears if the view is truncated; queue/history counts refer to loaded records. Administrator emails in Audit identify the account currently associated with the event's recorded actor UUID; they are not immutable historical copies of an email address.
 
 ## Invoice numbers and private documents
 

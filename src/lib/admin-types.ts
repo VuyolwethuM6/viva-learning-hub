@@ -56,6 +56,7 @@ export type Audit = {
   id: string;
   action: string;
   actor_id: string;
+  actor_email?: string | null;
   application_id: string | null;
   created_at: string;
   details: Record<string, unknown>;
@@ -68,6 +69,20 @@ export type Message = {
   attempts: number;
   last_error: string | null;
   created_at: string;
+  sent_at?: string | null;
+  first_attempt_at?: string | null;
+  claimed_at?: string | null;
+  cancelled_at?: string | null;
+  cancelled_by?: string | null;
+  cancellation_reason?: string | null;
+  payload?: {
+    learner?: string;
+    recipients?: string[];
+    invoiceNumber?: string;
+    month?: string;
+    balanceCents?: number;
+    paidCents?: number;
+  };
 };
 export type Snapshot = {
   applications: Application[];
@@ -79,6 +94,7 @@ export type Snapshot = {
   programmes: { grade: string; label: string; weekdays: number[] }[];
   today: string;
   truncated: boolean;
+  messages_truncated?: boolean;
 };
 export const rand = (cents: number) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(
