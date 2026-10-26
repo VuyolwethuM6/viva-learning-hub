@@ -1,9 +1,8 @@
-import { useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, Check, FileText, GraduationCap, Upload, X } from "lucide-react";
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type ReactNode } from "react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Loader2, Mail, ShieldCheck, FileText, GraduationCap, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TopBar, StickyHeader } from "@/components/Header";
-import Footer from "@/components/Footer";
 
 type StudentDetails = {
   name: string;
@@ -26,15 +25,26 @@ type SubjectMark = {
   difficulties: string[];
 };
 
-type PendingUpload = {
+type ApplicationReceipt = {
+  firstName: string;
+  monthlyFee: number;
+  applicationNumber: string;
+  studentNumber: string;
+  learnerName: string;
+  guardianEmail: string;
+  studentEmail: string;
+  grade: string;
+  subjects: string[];
+  mode: string;
+};
+
+type PendingUpload = ApplicationReceipt & {
   applicationId: string;
   applicationNumber: string;
   studentNumber: string;
   uploadUrl: string;
   reportCardMimeType: string;
   file: File;
-  firstName: string;
-  monthlyFee: number;
 };
 
 type Tier = {
@@ -141,7 +151,7 @@ function ReviewCard({
     <section className="mb-3 rounded-2xl border border-violet-200 p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-[#7949fe]">{title}</h3>
-        <button type="button" onClick={() => onEdit(step)} className="rounded-md px-2 py-1 text-sm font-bold text-[#7949fe] hover:bg-violet-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#7949fe]">
+        <button type="button" aria-label={`Edit ${title} details`} onClick={() => onEdit(step)} className="rounded-md px-2 py-1 text-sm font-bold text-[#7949fe] hover:bg-violet-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#7949fe]">
           Edit
         </button>
       </div>
@@ -169,6 +179,22 @@ function TagList({ values }: { values: string[] }) {
   );
 }
 
+async function enrollmentFetch(url: string, init: RequestInit) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 60_000);
+  try {
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    // Consume the body inside the timeout, including stalled JSON responses.
+    const body = await response.json().catch((error: unknown) => {
+      if (controller.signal.aborted) throw error;
+      return {};
+    });
+    return { response, body: body && typeof body === 'object' && !Array.isArray(body) ? body : {} };
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 export default function Enrollment() {
   const [student, setStudent] = useState<StudentDetails>(emptyStudent);
   const [guardian, setGuardian] = useState<GuardianDetails>(emptyGuardian);
@@ -185,12 +211,45 @@ export default function Enrollment() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null);
-  const [completion, setCompletion] = useState<{
-    firstName: string;
-    monthlyFee: number;
-    applicationNumber: string;
-    studentNumber: string;
-  } | null>(null);
+  const [completion, setCompletion] = useState<ApplicationReceipt | null>(null);
+  const [submissionStage, setSubmissionStage] = useState('Saving your application');
+  const [submissionUncertain, setSubmissionUncertain] = useState(false);
+  const submittingRef = useRef(false);
+  const backgroundRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
+  const receiptHeadingRef = useRef<HTMLHeadingElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isSubmitting) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    const background = backgroundRef.current;
+    background?.setAttribute('inert', '');
+    document.body.style.overflow = 'hidden';
+    statusRef.current?.focus();
+    return () => {
+      background?.removeAttribute('inert');
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
+  }, [isSubmitting]);
+
+  useEffect(() => {
+    if (!isSubmitting && completion) receiptHeadingRef.current?.focus();
+    else if (!isSubmitting && submitError) errorRef.current?.focus();
+  }, [isSubmitting, completion, submitError]);
+
+  useEffect(() => {
+    if (!isSubmitting && !pendingUpload && !submissionUncertain) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [isSubmitting, pendingUpload, submissionUncertain]);
+
   const reportInput = useRef<HTMLInputElement>(null);
   const tier = tierForGrade(grade);
   const packageName = tier && selectedSubjects.length
@@ -244,7 +303,7 @@ export default function Enrollment() {
       if (reportInput.current) reportInput.current.value = "";
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size === 0 || file.size > 10 * 1024 * 1024) {
       setReportCard(null);
       setErrors((current) => [...current.filter((error) => error !== "report"), "report-size"]);
       if (reportInput.current) reportInput.current.value = "";
@@ -305,12 +364,13 @@ export default function Enrollment() {
 
   const finishEnrollment = async (upload: PendingUpload, retry: boolean) => {
     const finalize = async () => {
-      const response = await fetch('/api/enrollment-complete', {
+      setSubmissionStage('Verifying your report card');
+      const { response, body } = await enrollmentFetch('/api/enrollment-complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ applicationId: upload.applicationId }),
       });
-      const result = await response.json().catch(() => ({})) as {
+      const result = body as {
         error?: string;
         success?: boolean;
         applicationNumber?: string;
@@ -320,50 +380,55 @@ export default function Enrollment() {
       return { response, result };
     };
 
+    let finalized: Awaited<ReturnType<typeof finalize>> | undefined;
     if (retry) {
       const existingUpload = await finalize();
-      if (existingUpload.response.ok && existingUpload.result.success) {
-        setCompletion({
-          firstName: upload.firstName,
-          monthlyFee: upload.monthlyFee,
-          applicationNumber: upload.applicationNumber,
-          studentNumber: upload.studentNumber,
-        });
-        setPendingUpload(null);
-        return;
-      }
-      if (existingUpload.response.status !== 409) {
+      if (existingUpload.response.ok) {
+        finalized = existingUpload;
+      } else if (existingUpload.response.status !== 409) {
         throw new Error(existingUpload.result.error || 'Unable to verify the uploaded report card.');
       }
     }
 
-    let uploadUrl = upload.uploadUrl;
-    if (retry) {
-      const urlResponse = await fetch('/api/enrollment-upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ applicationId: upload.applicationId }),
-      });
-      const urlResult = await urlResponse.json().catch(() => ({})) as { error?: string; uploadUrl?: string };
-      if (!urlResponse.ok || !urlResult.uploadUrl) {
-        throw new Error(urlResult.error || 'Unable to prepare a secure upload retry.');
+    if (!finalized) {
+      let uploadUrl = upload.uploadUrl;
+      if (retry) {
+        setSubmissionStage('Preparing your secure upload');
+        const { response: urlResponse, body: urlBody } = await enrollmentFetch('/api/enrollment-upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ applicationId: upload.applicationId }),
+        });
+        const urlResult = urlBody as { error?: string; uploadUrl?: string };
+        if (!urlResponse.ok || !urlResult.uploadUrl) {
+          throw new Error(urlResult.error || 'Unable to prepare a secure upload retry.');
+        }
+        uploadUrl = urlResult.uploadUrl;
       }
-      uploadUrl = urlResult.uploadUrl;
-    }
 
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': upload.reportCardMimeType,
-        'x-upsert': 'false',
-      },
-      body: upload.file,
-    });
-    if (!uploadResponse.ok && uploadResponse.status !== 409) {
-      throw new Error('The report card could not be uploaded securely. Retry the upload without resubmitting the application.');
-    }
+      setSubmissionStage('Uploading your report card');
+      const uploadController = new AbortController();
+      const uploadTimeout = window.setTimeout(() => uploadController.abort(), 90_000);
+      let uploadResponse: Response;
+      try {
+        uploadResponse = await fetch(uploadUrl, {
+          signal: uploadController.signal,
+          method: 'PUT',
+          headers: {
+            'Content-Type': upload.reportCardMimeType,
+            'x-upsert': 'false',
+          },
+          body: upload.file,
+        });
+      } finally {
+        window.clearTimeout(uploadTimeout);
+      }
+      if (!uploadResponse.ok && uploadResponse.status !== 409) {
+        throw new Error('The report card could not be uploaded securely. Retry the upload without resubmitting the application.');
+      }
 
-    const finalized = await finalize();
+      finalized = await finalize();
+    }
     if (!finalized.response.ok || !finalized.result.success ||
       finalized.result.status !== 'pending_review' ||
       finalized.result.applicationNumber !== upload.applicationNumber ||
@@ -373,6 +438,12 @@ export default function Enrollment() {
 
     setCompletion({
       firstName: upload.firstName,
+      learnerName: upload.learnerName,
+      guardianEmail: upload.guardianEmail,
+      studentEmail: upload.studentEmail,
+      grade: upload.grade,
+      subjects: upload.subjects,
+      mode: upload.mode,
       monthlyFee: upload.monthlyFee,
       applicationNumber: finalized.result.applicationNumber,
       studentNumber: finalized.result.studentNumber,
@@ -395,13 +466,16 @@ export default function Enrollment() {
 
   const handleContinue = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submittingRef.current || submissionUncertain) return;
     if (!pendingUpload && !validateStep(currentStep)) return;
     if (!pendingUpload && currentStep < steps.length - 1) {
       goToStep(currentStep + 1);
       return;
     }
 
+    submittingRef.current = true;
     setIsSubmitting(true);
+    setSubmissionStage(pendingUpload ? 'Checking your saved application' : 'Saving your application');
     setSubmitError(null);
 
     try {
@@ -413,27 +487,34 @@ export default function Enrollment() {
         throw new Error('Select a report card before submitting.');
       }
 
-      const response = await fetch('/api/enrollment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          student,
-          guardian,
-          grade,
-          selectedSubjects,
-          mode,
-          goals: selectedGoals,
-          marks,
-          monthlyFee,
-          reportCardName: reportCard?.name ?? '',
-          reportCardSize: reportCard?.size ?? 0,
-          reportCardMimeType: reportCard?.type ?? '',
-          termsAccepted,
-          photoConsent,
-        }),
-      });
+      let submission: Awaited<ReturnType<typeof enrollmentFetch>>;
+      try {
+        submission = await enrollmentFetch('/api/enrollment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student,
+            guardian,
+            grade,
+            selectedSubjects,
+            mode,
+            goals: selectedGoals,
+            marks,
+            monthlyFee,
+            reportCardName: reportCard?.name ?? '',
+            reportCardSize: reportCard?.size ?? 0,
+            reportCardMimeType: reportCard?.type ?? '',
+            termsAccepted,
+            photoConsent,
+          }),
+        });
 
-      const result = await response.json().catch(() => ({})) as {
+      } catch {
+        setSubmissionUncertain(true);
+        throw new Error('We could not confirm whether your application was saved. Please contact us before submitting again to avoid a duplicate application.');
+      }
+      const { response, body } = submission;
+      const result = body as {
         error?: string;
         success?: boolean;
         applicationNumber?: string;
@@ -444,16 +525,27 @@ export default function Enrollment() {
         monthlyFee?: number;
       };
       if (!response.ok) {
+        if (response.status >= 500) {
+          setSubmissionUncertain(true);
+          throw new Error('We could not confirm whether your application was saved. Please contact us before submitting again.');
+        }
         throw new Error(result.error || 'Unable to submit enrollment.');
       }
       if (!result.success || !result.applicationNumber || !result.applicationId ||
         !result.studentNumber || !result.uploadUrl || !result.reportCardMimeType ||
-        typeof result.monthlyFee !== 'number') {
+        typeof result.monthlyFee !== 'number' || !Number.isFinite(result.monthlyFee) || result.monthlyFee <= 0) {
+        setSubmissionUncertain(true);
         throw new Error('The enrollment response could not be confirmed. Please contact support before retrying.');
       }
 
       const pending: PendingUpload = {
         firstName: student.name.trim().split(/\s+/)[0],
+        learnerName: student.name.trim(),
+        guardianEmail: guardian.email.trim(),
+        studentEmail: student.email.trim(),
+        grade,
+        subjects: [...selectedSubjects],
+        mode,
         monthlyFee: result.monthlyFee,
         applicationNumber: result.applicationNumber,
         applicationId: result.applicationId,
@@ -465,8 +557,9 @@ export default function Enrollment() {
       setPendingUpload(pending);
       await finishEnrollment(pending, false);
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Unable to submit enrollment.');
+      setSubmitError(error instanceof Error && error.name !== 'AbortError' ? error.message : 'The connection timed out. Your application reference is reserved; retry the secure upload below.');
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -496,23 +589,24 @@ export default function Enrollment() {
   const editFromReview = (step: number) => goToStep(step);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-       <TopBar />
-       <StickyHeader />
-      <main id="main-content" className="px-3 pb-12 pt-32 sm:px-5 sm:pt-36">
+    <>
+    <div ref={backgroundRef} className={`min-h-screen bg-slate-50 transition-[filter] motion-reduce:transition-none ${isSubmitting ? "blur-sm" : ""}`}>
+       <div className="print:hidden"><TopBar />
+       <StickyHeader /></div>
+      <main id="main-content" className="px-3 pb-12 pt-32 sm:px-5 sm:pt-36 print:p-0">
         <div className="mx-auto max-w-[680px]">
-          <section className="overflow-hidden rounded-3xl border-2 border-violet-300/70 bg-white shadow-[0_20px_40px_rgba(15,23,42,0.08)]">
+          <section className="overflow-hidden rounded-3xl print:border-0 print:shadow-none border-2 border-violet-300/70 bg-white shadow-[0_20px_40px_rgba(15,23,42,0.08)]">
             <header className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 sm:px-6">
-              <a href="#" aria-label="Viva Tutorials home" className="flex items-center gap-2">
+              <a href="/" aria-label="Viva Tutorials home" className="flex items-center gap-2">
                 {/* <img src="/viva-tutorials-logo.png" alt="Viva Tutorials" className="h-10 w-auto" /> */}
                 <h1 id="student-form-title" className="text-2xl font-bold leading-tight text-slate-900">Enrollment Form</h1>    
               </a>
               <span className="whitespace-nowrap text-xs font-semibold text-slate-500" aria-live="polite">
-                {completion ? "Preview" : `Step ${currentStep + 1} of ${steps.length}`}
+                {completion ? "Received" : `Step ${currentStep + 1} of ${steps.length}`}
               </span>
  
             </header>
-            <p className="px-4 pb-3 text-xs leading-relaxed text-gray-600 font-semibold sm:px-6">Complete this form to start your sessions.</p>
+            <p className="px-4 pb-3 text-xs leading-relaxed text-gray-600 font-semibold sm:px-6">{completion ? "Your application is saved and awaiting review." : "Apply for tutoring. We’ll review your details before confirming your place."}</p>
             <div className="h-1 bg-slate-200" aria-label="Form progress">
               <div
                 className="h-full bg-gradient-to-r from-[#7949fe] to-[#ff7849] transition-[width] duration-300"
@@ -537,7 +631,8 @@ export default function Enrollment() {
                   ))}
                 </nav>
 
-                <form onSubmit={handleContinue} noValidate className="px-4 pb-6 pt-5 sm:px-6 sm:pb-7">
+                <form onSubmit={handleContinue} aria-busy={isSubmitting} noValidate className="px-4 pb-6 pt-5 sm:px-6 sm:pb-7">
+                  <fieldset disabled={isSubmitting || Boolean(pendingUpload) || submissionUncertain} className="min-w-0">
                   {currentStep === 0 && (
                     <section aria-labelledby="student-step-title">
                       <h1 id="student-step-title" className="text-2xl font-bold leading-tight text-slate-900">Student details</h1>
@@ -744,7 +839,7 @@ export default function Enrollment() {
                         </p>
                         {errors.includes("report") && <p className={stepErrorClassName}>Please select a report card before submitting.</p>}
                         {errors.includes("report-type") && <p className={stepErrorClassName}>Choose a PDF, JPG, or PNG file.</p>}
-                        {errors.includes("report-size") && <p className={stepErrorClassName}>The file must be 10 MB or smaller.</p>}
+                        {errors.includes("report-size") && <p className={stepErrorClassName}>Choose a non-empty file of 10 MB or smaller.</p>}
                       </div>
 
                       <h2 className="mb-2 text-sm font-semibold text-slate-700">Your subjects</h2>
@@ -884,52 +979,71 @@ export default function Enrollment() {
                     </section>
                   )}
 
+                  </fieldset>
                   <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row">
-                    {currentStep > 0 && (
-                      <Button type="button" variant="secondary" onClick={() => goToStep(currentStep - 1)} className="min-h-12 rounded-xl bg-violet-100 px-5 font-bold text-[#7949fe] hover:bg-violet-200">
+                    {currentStep > 0 && !pendingUpload && !submissionUncertain && (
+                      <Button type="button" variant="secondary" disabled={isSubmitting} onClick={() => goToStep(currentStep - 1)} className="min-h-12 rounded-xl bg-violet-100 px-5 font-bold text-[#7949fe] hover:bg-violet-200">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back
                       </Button>
                     )}
-                    <Button type="submit" disabled={isSubmitting} className="min-h-12 flex-1 rounded-xl bg-[#ff7849] px-5 font-bold text-white hover:bg-[#f2693b] disabled:cursor-not-allowed disabled:opacity-70">
+                    <Button type="submit" disabled={isSubmitting || submissionUncertain} className="min-h-12 flex-1 rounded-xl bg-[#ff7849] px-5 font-bold text-white hover:bg-[#f2693b] disabled:cursor-not-allowed disabled:opacity-70">
                       {isSubmitting ? (pendingUpload ? 'Retrying secure upload…' : 'Submitting…') : pendingUpload ? 'Retry secure upload' : currentStep === steps.length - 1 ? 'Submit application' : 'Continue'}
                       {!isSubmitting && !pendingUpload && currentStep < steps.length - 1 && <ArrowRight className="ml-2 h-4 w-4" />}
                     </Button>
                   </div>
                   {pendingUpload && (
                     <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                      Application {pendingUpload.applicationNumber} and learner number {pendingUpload.studentNumber} are reserved. The report card is not yet confirmed; retry the secure upload here rather than submitting a second application.
+                      Application {pendingUpload.applicationNumber} and learner number {pendingUpload.studentNumber} are reserved. Completion is not yet confirmed here. Keep this page open and retry below rather than submitting a second application.
                     </p>
                   )}
                   {submitError && (
-                    <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{submitError}</p>
+                    <div ref={errorRef} tabIndex={-1} role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{submitError}<a href="/contact" className="mt-2 block underline">Contact us for help</a></div>
                   )}
                 </form>
 
                 <div className="border-t border-violet-100 bg-violet-50/60 px-4 py-3 text-center text-xs leading-5 text-slate-600 sm:px-6">
-                  <strong className="text-[#5a4ecf]">Secure flow:</strong> Your enrollment is sent to the real system backend once this form is submitted.
+                  <strong className="text-[#5a4ecf]">Your privacy matters:</strong> Your report card is uploaded to private storage for application review.
                 </div>
               </>
             ) : (
-              <section className="px-5 py-10 text-center sm:px-8">
-                <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-emerald-600 text-3xl text-white">
-                  <Check className="h-8 w-8" />
+              <section className="px-5 py-8 sm:px-8 sm:py-10" aria-labelledby="application-received-title">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 className="h-9 w-9" aria-hidden="true" /></div>
+                  <h2 ref={receiptHeadingRef} tabIndex={-1} id="application-received-title" className="text-3xl font-extrabold tracking-tight text-slate-900 focus:outline-none">Application received!</h2>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">Thank you, <strong>{completion.firstName}</strong>. Your application and report card have been saved.</p>
+                  <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900"><span className="h-2 w-2 rounded-full bg-amber-500" />Pending review</span>
                 </div>
-                <h1 className="text-2xl font-bold text-slate-900">Enrollment submitted</h1>
-                <p className="mt-2 text-gray-600">Thank you, <strong>{completion.firstName}</strong>. Your enrollment has been received and is now in review.</p>
-                <div className="my-5 rounded-xl bg-violet-50 p-4 text-left">
-                  <span className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Student number</span>
-                  <strong className="mt-1 block text-lg font-bold text-[#7949fe]">{completion.studentNumber}</strong>
-                  <span className="mt-3 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Application reference</span>
-                  <strong className="mt-1 block text-sm font-bold text-[#7949fe]">{completion.applicationNumber}</strong>
-                  <span className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Estimated monthly fee</span>
-                  <strong className="mt-1 block text-2xl text-[#7949fe]">{formatCurrency(completion.monthlyFee)}</strong>
-                  <span className="text-sm text-slate-600">Your report card is stored in the private learner folder. Payment checkout is not connected yet; do not make a payment from this page.</span>
+                <div className="my-6 rounded-2xl border border-violet-200 bg-violet-50 p-5 text-center">
+                  <p className="text-xs font-bold uppercase tracking-widest text-violet-700">Your student number</p>
+                  <p className="mt-2 break-all text-2xl font-extrabold tracking-wide text-[#5a4ecf]">{completion.studentNumber}</p>
+                  <p className="mt-2 text-xs leading-5 text-slate-600">Keep this number safe. Quote it whenever you contact us about this application.</p>
                 </div>
-                <p className="text-sm leading-6 text-slate-600">Your application and report card were saved securely for review. Application receipt emails and payment will be added next.</p>
-                <Button type="button" onClick={() => { setCompletion(null); goToStep(0); }} className="mt-6 rounded-xl bg-[#7949fe] px-6 font-bold text-white hover:bg-[#5a4ecf]">
-                  Start a new application
-                </Button>
+                <h3 className="mb-3 text-lg font-bold text-slate-900">Application summary</h3>
+                <dl className="divide-y divide-slate-100 rounded-2xl border border-slate-200 px-4">
+                  {[
+                    ['Application reference', completion.applicationNumber],
+                    ['Learner', completion.learnerName],
+                    ['Grade', completion.grade],
+                    ['Subjects', completion.subjects.join(', ')],
+                    ['Tutoring format', completion.mode],
+                    ['Monthly tuition fee', formatCurrency(completion.monthlyFee)],
+                  ].map(([label, value]) => <div key={label} className="flex flex-col gap-1 py-3 text-sm sm:flex-row sm:justify-between sm:gap-5"><dt className="text-slate-500">{label}</dt><dd className="break-words font-semibold text-slate-900 sm:max-w-[65%] sm:text-right">{value}</dd></div>)}
+                </dl>
+                <div className="mt-5 flex gap-3 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600"><ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-emerald-700" aria-hidden="true" /><p>Your report card has been verified and stored privately. This confirms receipt of your application; your place and session schedule are still subject to review.</p></div>
+                <h3 className="mb-3 mt-6 text-lg font-bold text-slate-900">What happens next?</h3>
+                <ol className="space-y-3 text-sm leading-6 text-slate-600">
+                  <li><strong className="text-slate-900">1. Application review.</strong> Our team will review your details, subjects and report card and contact you about the next steps.</li>
+                  <li><strong className="text-slate-900">2. Watch your inbox.</strong> Check the learner and parent/guardian inboxes for your application receipt, including spam or junk. If it doesn’t arrive, contact us and quote your student number.</li>
+                  <li><strong className="text-slate-900">3. Tuition arrangements.</strong> Tuition payments are not available on this page. Contact our team to confirm payment instructions and enrollment arrangements; no payment has been taken by this form.</li>
+                </ol>
+                <div className="mt-4 flex gap-3 rounded-xl border border-slate-200 p-4 text-sm"><Mail className="mt-1 h-5 w-5 shrink-0 text-violet-600" aria-hidden="true" /><div className="min-w-0"><p className="font-semibold text-slate-900">Email addresses supplied</p>{Array.from(new Set([completion.guardianEmail, completion.studentEmail].map(email => email.toLowerCase()))).map(email => <p key={email} className="mt-1 break-all text-slate-600">{email}</p>)}</div></div>
+                <p className="mt-5 text-xs leading-5 text-slate-500">Save or print this confirmation for your records. It contains personal information, so keep it private. This page is not a learner portal and is not saved after you leave or refresh.</p>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row print:hidden">
+                  <Button type="button" onClick={() => window.print()} variant="secondary" className="min-h-12 rounded-xl">Print confirmation</Button>
+                  <a href="/contact" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#7949fe] px-5 text-sm font-bold text-white hover:bg-[#5a4ecf]">Contact Viva Tutorials</a>
+                  <a href="/" className="inline-flex min-h-12 items-center justify-center px-3 text-sm font-semibold text-violet-700 underline">Back to home</a>
+                </div>
               </section>
             )}
           </section>
@@ -940,5 +1054,15 @@ export default function Enrollment() {
       </main>
        
     </div>
+    {isSubmitting && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/30 px-5 backdrop-blur-sm" onKeyDown={event => { if (event.key === 'Tab') event.preventDefault(); }}>
+        <div ref={statusRef} tabIndex={-1} role="status" aria-live="polite" aria-atomic="true" className="w-full max-w-sm rounded-3xl border border-white/70 bg-white p-8 text-center shadow-2xl outline-none">
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#7949fe] motion-reduce:animate-none" aria-hidden="true" />
+          <p className="mt-5 text-lg font-bold text-slate-900">{submissionStage}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Please keep this page open. We’ll confirm receipt once your application and report card are saved.</p>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

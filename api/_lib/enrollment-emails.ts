@@ -1,6 +1,5 @@
 import { debug, serviceHeaders } from './http.js';
 import { escapeHtml, getEmailConfig, sendEmail } from './email.js';
-import { BANK_DETAILS, PAYMENT_DEADLINE_DAYS } from './payment-details.js';
 
 const SCOPE = 'Enrollment email';
 
@@ -104,8 +103,7 @@ function section(content: string, padding = '20px 28px 8px 28px') {
   return `<tr><td class="email-card" style="background-color:#ffffff;padding:${padding};">${content}</td></tr>`;
 }
 
-export function receiptEmail(data: EnrollmentEmailData, now = new Date()) {
-  const payBy = formatDate(new Date(now.getTime() + PAYMENT_DEADLINE_DAYS * 24 * 60 * 60 * 1000));
+export function receiptEmail(data: EnrollmentEmailData) {
   const fee = formatFee(data.monthlyFee);
   const greeting = `Hello ${firstName(data.guardianName)} and ${firstName(data.learnerName)},`;
 
@@ -118,9 +116,9 @@ export function receiptEmail(data: EnrollmentEmailData, now = new Date()) {
     ),
     section(
       `<table class="email-lavender" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F0EBFF;border-left:5px solid #7A4AF1;border-radius:8px;"><tr><td style="padding:16px 18px;">
-         <div style="color:#7A4AF1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Student number and payment reference</div>
+         <div style="color:#7A4AF1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Student number</div>
          <div class="email-primary" style="color:#160F2E;font-size:22px;font-weight:800;letter-spacing:.04em;">${escapeHtml(data.studentNumber)}</div>
-         <div class="email-muted" style="color:#8878AD;font-size:12px;margin-top:4px;">Keep this safe. Use it as your payment reference.</div>
+         <div class="email-muted" style="color:#8878AD;font-size:12px;margin-top:4px;">Keep this safe. Quote it when contacting us about your application.</div>
        </td></tr></table>`,
     ),
     section(
@@ -135,21 +133,9 @@ export function receiptEmail(data: EnrollmentEmailData, now = new Date()) {
        ])}`,
     ),
     section(
-      `<div class="email-primary" style="color:#160F2E;font-size:16px;font-weight:700;margin-bottom:4px;">Pay your fees</div>
-       <p class="email-secondary" style="margin:0 0 12px 0;color:#333333;font-size:14px;line-height:1.6;">Amount to pay: <strong style="color:#7A4AF1;">${escapeHtml(fee)}</strong> (first month). Pay by EFT or bank deposit using these details:</p>
-       ${table([
-         ['Account name', BANK_DETAILS.accountName],
-         ['Bank', BANK_DETAILS.bank],
-         ['Account number', BANK_DETAILS.accountNumber],
-         ['Account type', BANK_DETAILS.accountType],
-         ['Branch code', BANK_DETAILS.branchCode],
-         ['Payment reference', data.studentNumber],
-       ])}`,
-    ),
-    section(
-      `<table class="email-orange" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fff7f1;border-left:4px solid #F27435;border-radius:6px;"><tr>
-         <td class="email-secondary" style="padding:14px 16px;color:#333333;font-size:13px;line-height:1.6;"><strong style="color:#F27435;">Please note:</strong> if we do not receive payment by <strong>${escapeHtml(payBy)}</strong> (${PAYMENT_DEADLINE_DAYS} days), your details will be deleted and you will need to apply again. Once payment is confirmed you will be enrolled in Google Classroom.</td>
-       </tr></table>`,
+      `<div class="email-primary" style="color:#160F2E;font-size:16px;font-weight:700;margin-bottom:12px;">What happens next?</div>
+       <p class="email-secondary" style="color:#333333;font-size:14px;line-height:1.7;">Our team will review your application and report card and contact you about the next steps. Your place and session schedule are still subject to review.</p>
+       <p class="email-secondary" style="color:#333333;font-size:14px;line-height:1.7;">No payment was taken by the enrollment form. Contact our team to confirm tuition payment instructions and enrollment arrangements. Keep your student number and application reference for your records.</p>`,
       '20px 28px 28px 28px',
     ),
   ].join('\n');
@@ -159,22 +145,17 @@ export function receiptEmail(data: EnrollmentEmailData, now = new Date()) {
     '',
     `Thank you for applying to Viva Tutorials. We have received the application for ${data.learnerName} and it is now pending review.`,
     '',
-    `Student number / payment reference: ${data.studentNumber}`,
+    `Student number: ${data.studentNumber}`,
     `Application reference: ${data.applicationNumber}`,
     `Grade: ${data.grade}`,
     `Subjects: ${data.subjects.join(', ') || '-'}`,
     `Mode: ${data.mode}`,
     `Monthly fee: ${fee}`,
     '',
-    `Pay by EFT or bank deposit (amount: ${fee}):`,
-    `Account name: ${BANK_DETAILS.accountName}`,
-    `Bank: ${BANK_DETAILS.bank}`,
-    `Account number: ${BANK_DETAILS.accountNumber}`,
-    `Account type: ${BANK_DETAILS.accountType}`,
-    `Branch code: ${BANK_DETAILS.branchCode}`,
-    `Payment reference: ${data.studentNumber}`,
-    '',
-    `If we do not receive payment by ${payBy}, your details will be deleted and you will need to apply again.`,
+    'Our team will review your application and report card and contact you about the next steps.',
+    'Your place and session schedule are still subject to review.',
+    'No payment was taken by the enrollment form. Contact our team to confirm tuition payment instructions and enrollment arrangements.',
+    'Keep your student number and application reference for your records.',
     '',
     'The Viva Tutorials Team',
   ].join('\n');
