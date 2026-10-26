@@ -62,6 +62,63 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 describe("admin API authorization and boundaries", () => {
+  it("cancels a notification using the verified actor without requiring or calling an email provider", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    const fetch = authorizedFetch();
+    const original = fetch.getMockImplementation()!;
+    fetch.mockImplementation(async (input, init) =>
+      String(input).endsWith("admin_cancel_message")
+        ? json({ cancelled: true })
+        : original(input),
+    );
+    const response = res();
+    await messages(
+      req("POST", {
+        action: "cancel",
+        id: actor,
+        actor: "spoofed",
+        reason: "No longer needed after contacting the family",
+        providerReviewed: false,
+      }),
+      response,
+    );
+    expect(response.statusCode).toBe(200);
+    const call = fetch.mock.calls.find(([url]) =>
+      String(url).endsWith("admin_cancel_message"),
+    );
+    expect(JSON.parse(String(call?.[1]?.body))).toEqual({
+      p_actor: actor,
+      p_id: actor,
+      p_reason: "No longer needed after contacting the family",
+      p_provider_reviewed: false,
+    });
+    expect(
+      fetch.mock.calls.some(([url]) => String(url).includes("resend.com")),
+    ).toBe(false);
+  });
+  it("denies cross-origin notification cancellation before calling the database function", async () => {
+    const fetch = authorizedFetch(),
+      response = res();
+    await messages(
+      req(
+        "POST",
+        {
+          action: "cancel",
+          id: actor,
+          reason: "Not needed",
+          providerReviewed: false,
+        },
+        { origin: "https://attacker.example" },
+      ),
+      response,
+    );
+    expect(response.statusCode).toBe(403);
+    expect(
+      fetch.mock.calls.some(([url]) =>
+        String(url).endsWith("admin_cancel_message"),
+      ),
+    ).toBe(false);
+  });
   it("rejects missing sessions before reading any records", async () => {
     const fetch = authorizedFetch();
     const response = res();

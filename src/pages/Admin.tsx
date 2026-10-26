@@ -46,8 +46,11 @@ import {
   type Application,
   type Invoice,
   type Snapshot,
+  type Message,
 } from "@/lib/admin-types";
-import { humanStatus } from "@/lib/admin-format";
+import { AuditTrail } from "@/components/admin/AuditTrail";
+import { NotificationQueue } from "@/components/admin/NotificationQueue";
+import { humanStatus, notificationName } from "@/lib/admin-format";
 import {
   Avatar,
   Badge,
@@ -226,13 +229,14 @@ export default function Admin() {
   }, [refresh]);
 
   async function run(task: () => Promise<void>) {
-    if (lock.current) return;
+    if (lock.current) return false;
     lock.current = true;
     setBusy(true);
     setError("");
     setNotice("");
     try {
       await task();
+      return true;
     } catch (e) {
       if (e instanceof ApiError && [401, 403].includes(e.status))
         clearSession();
@@ -241,6 +245,7 @@ export default function Admin() {
           ? e.message
           : "The request timed out. Refresh and check the record before retrying.",
       );
+      return false;
     } finally {
       lock.current = false;
       setBusy(false);
@@ -280,7 +285,10 @@ export default function Admin() {
         : i.due_date < (data?.today || "")
           ? "overdue"
           : "unpaid";
-  const visibleApps = apps.filter(
+  const sectionApps = apps.filter((a) =>
+    tab === "Students" ? a.status === "active" : a.status !== "active",
+  );
+  const visibleApps = sectionApps.filter(
     (a) =>
       (filter === "all" || a.status === filter) &&
       `${a.learner_name} ${a.student_number} ${a.guardian_email} ${a.application_number}`
@@ -313,7 +321,9 @@ export default function Admin() {
     (i) =>
       i.due_date < (data?.today || "") && i.amount_cents > Number(i.paid_cents),
   );
-  const queue = (data?.messages || []).filter((m) => m.state !== "sent");
+  const queue = (data?.messages || []).filter(
+    (m) => !["sent", "cancelled"].includes(m.state),
+  );
   const periods = Array.from(
     new Set([
       data?.today.slice(0, 7) || "",
@@ -323,6 +333,26 @@ export default function Admin() {
     .filter(Boolean)
     .sort()
     .reverse();
+  const periodSelect = (
+    <label className="period-select">
+      <span className="sr-only">Billing period</span>
+      <CalendarDays size={15} />
+      <select
+        aria-label="Billing period"
+        value={billingMonth}
+        onChange={(e) => setPeriod(e.target.value)}
+      >
+        {periods.map((p) => (
+          <option key={p} value={p}>
+            {new Date(`${p}-01T12:00:00Z`).toLocaleDateString("en-ZA", {
+              month: "long",
+              year: "numeric",
+            })}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
   const selectedInvoices = invoices.filter(
     (i) => i.application_id === selected?.id,
   );
@@ -560,25 +590,45 @@ export default function Admin() {
       )}
     </div>
   );
-  const history = (applicationId: string) => (
-    <div className="activity-list">
-      {data?.audit
-        .filter((a) => a.application_id === applicationId)
-        .map((a) => (
-          <article key={a.id}>
-            <span className="activity-dot" />
-            <div>
-              <strong>{humanStatus(a.action)}</strong>
-              <small>{dateLabel(a.created_at)}</small>
-              {typeof a.details.note === "string" && <p>{a.details.note}</p>}
-            </div>
-          </article>
-        ))}
-      {!data?.audit.some((a) => a.application_id === applicationId) && (
-        <p className="admin-muted">No review activity yet.</p>
-      )}
-    </div>
-  );
+  const history = (applicationId: string) =>
+    data && user ? (
+      <AuditTrail data={data} user={user} applicationId={applicationId} />
+    ) : null;
+  function sendNotification(message: Message) {
+    ask(
+      "Send this notification?",
+      <>
+        <p>
+          <strong>{notificationName(message.kind)}</strong> for{" "}
+          {message.payload?.learner || "the saved learner"}.
+        </p>
+        <p>
+          Recipients:{" "}
+          {message.payload?.recipients?.join(", ") ||
+            "The learner and parent/guardian saved for this event"}
+          .
+        </p>
+        {message.attempts > 0 && (
+          <p>
+            Check the email provider history before retrying this previously
+            attempted message.
+          </p>
+        )}
+        <p>
+          Amounts and recipients were saved when this notification was prepared.
+          Check the current invoice before sending an older notice.
+        </p>
+      </>,
+      "Send notification",
+      async () => {
+        await api("messages", { id: message.id, action: "send" });
+        await refresh();
+        setNotice(
+          "Notification processed. Review its status and delivery history.",
+        );
+      },
+    );
+  }
   if (loading)
     return (
       <main className="admin-shell admin-login">
@@ -881,8 +931,12 @@ export default function Admin() {
                         <button
                           key={name}
                           onClick={() => {
-                            navigate("Applications");
-                            setFilter(String(status));
+                            navigate(
+                              status === "active" ? "Students" : "Applications",
+                            );
+                            setFilter(
+                              status === "active" ? "all" : String(status),
+                            );
                           }}
                         >
                           <strong>{value}</strong>
@@ -899,24 +953,7 @@ export default function Admin() {
                       <span className="eyebrow">THE FINANCIAL PICTURE</span>
                       <p>Payments allocated to the selected billing period</p>
                     </div>
-                    <label className="period-select">
-                      <span className="sr-only">Billing period</span>
-                      <CalendarDays size={15} />
-                      <select
-                        aria-label="Billing period"
-                        value={billingMonth}
-                        onChange={(e) => setPeriod(e.target.value)}
-                      >
-                        {periods.map((p) => (
-                          <option key={p} value={p}>
-                            {new Date(`${p}-01T12:00:00Z`).toLocaleDateString(
-                              "en-ZA",
-                              { month: "long", year: "numeric" },
-                            )}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    {periodSelect}
                   </div>
                   <div className="kpi-grid">
                     {[
@@ -1026,38 +1063,7 @@ export default function Admin() {
                         </button>
                       ))}
                     </section>
-                    <section className="collection-card">
-                      <span className="eyebrow">
-                        COLLECTION FOR THIS BILLING PERIOD
-                      </span>
-                      <strong>{rand(collected)}</strong>
-                      <p>of {rand(billed)} invoiced</p>
-                      <div className="collection-track">
-                        <span
-                          style={{
-                            width: `${billed ? Math.min(100, (collected / billed) * 100) : 0}%`,
-                          }}
-                        />
-                      </div>
-                      <div className="collection-bottom">
-                        <div>
-                          <strong>
-                            {billed
-                              ? `${Math.round((collected / billed) * 100)}%`
-                              : "—"}
-                          </strong>
-                          <small>Collected</small>
-                        </div>
-                        <div>
-                          <strong>{rand(outstanding)}</strong>
-                          <small>Outstanding</small>
-                        </div>
-                      </div>
-                      <button onClick={() => navigate("Finance")}>
-                        Open finance
-                        <ArrowUpRight size={16} />
-                      </button>
-                    </section>
+
                     <section className="admin-card">
                       <div className="card-heading">
                         <div>
@@ -1072,27 +1078,7 @@ export default function Admin() {
                           <ChevronRight size={15} />
                         </button>
                       </div>
-                      <div className="activity-list">
-                        {data.audit.slice(0, 5).map((a) => (
-                          <article key={a.id}>
-                            <span className="activity-dot" />
-                            <div>
-                              <strong>{humanStatus(a.action)}</strong>
-                              <p>
-                                {appById(a.application_id || "")
-                                  ?.learner_name || "Tuition administration"}
-                              </p>
-                              <small>{dateLabel(a.created_at)}</small>
-                            </div>
-                          </article>
-                        ))}
-                        {!data.audit.length && (
-                          <EmptyState title="Your activity will appear here">
-                            Reviews, payments and enrollment decisions are
-                            recorded as you work.
-                          </EmptyState>
-                        )}
-                      </div>
+                      <AuditTrail data={data} user={user} limit={5} />
                     </section>
                     <section className="admin-card">
                       <div className="card-heading">
@@ -1149,7 +1135,9 @@ export default function Admin() {
                       </span>
                       <h1>{tab}</h1>
                       <p>
-                        Every learner has a story. Keep their next step clear.
+                        {tab === "Applications"
+                          ? "Review applications and follow approvals through first payment."
+                          : "Activated learners who have completed approval and first payment."}
                       </p>
                     </div>
                     <span className="record-count">
@@ -1168,27 +1156,28 @@ export default function Admin() {
                         placeholder="Search learner, student number or parent email"
                       />
                     </label>
-                    <label className="status-select">
-                      <span>Status</span>
-                      <select
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                      >
-                        <option value="all">All statuses</option>
-                        {[
-                          "draft",
-                          "pending_review",
-                          "pending_payment",
-                          "active",
-                          "rejected",
-                          "archived",
-                        ].map((status) => (
-                          <option key={status} value={status}>
-                            {humanStatus(status)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    {tab === "Applications" && (
+                      <label className="status-select">
+                        <span>Application status</span>
+                        <select
+                          value={filter}
+                          onChange={(e) => setFilter(e.target.value)}
+                        >
+                          <option value="all">All statuses</option>
+                          {[
+                            "draft",
+                            "pending_review",
+                            "pending_payment",
+                            "rejected",
+                            "archived",
+                          ].map((status) => (
+                            <option key={status} value={status}>
+                              {humanStatus(status)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                   </div>
                   <div className="learner-grid">
                     {visibleApps.map((a) => (
@@ -1221,7 +1210,9 @@ export default function Admin() {
                           onClick={() => openApplication(a)}
                           aria-label={`Open ${a.learner_name}`}
                         >
-                          View learner
+                          {tab === "Applications"
+                            ? "View application"
+                            : "View student"}
                           <ChevronRight size={17} />
                         </button>
                       </article>
@@ -1229,8 +1220,20 @@ export default function Admin() {
                   </div>
                   {!visibleApps.length && (
                     <section className="admin-card">
-                      <EmptyState title="No learners match this view">
-                        Try another name or change the status filter.
+                      <EmptyState
+                        title={
+                          sectionApps.length
+                            ? `No ${tab.toLowerCase()} match this view`
+                            : tab === "Applications"
+                              ? "No applications at the moment"
+                              : "No active students yet"
+                        }
+                      >
+                        {sectionApps.length
+                          ? "Try another name or change the filter."
+                          : tab === "Applications"
+                            ? "New enrollment applications appear here. Activated learners are listed in Students."
+                            : "Learners appear here after approval, full first-invoice payment and activation."}
                       </EmptyState>
                     </section>
                   )}
@@ -1250,6 +1253,40 @@ export default function Admin() {
                       <Wallet size={25} />
                     </span>
                   </div>
+                  <section
+                    className="collection-card finance-collection"
+                    aria-labelledby="finance-collection-title"
+                  >
+                    <div className="section-toolbar">
+                      <h2 id="finance-collection-title">
+                        Collection for this billing period
+                      </h2>
+                      {periodSelect}
+                    </div>
+                    <strong>{rand(collected)}</strong>
+                    <p>of {rand(billed)} invoiced</p>
+                    <div className="collection-track">
+                      <span
+                        style={{
+                          width: `${billed ? Math.min(100, (collected / billed) * 100) : 0}%`,
+                        }}
+                      />
+                    </div>
+                    <div className="collection-bottom">
+                      <div>
+                        <strong>
+                          {billed
+                            ? `${Math.round((collected / billed) * 100)}%`
+                            : "—"}
+                        </strong>
+                        <small>Collected</small>
+                      </div>
+                      <div>
+                        <strong>{rand(outstanding)}</strong>
+                        <small>Outstanding</small>
+                      </div>
+                    </div>
+                  </section>
                   <div className="finance-banner">
                     <CalendarDays size={22} />
                     <div>
@@ -1332,85 +1369,29 @@ export default function Admin() {
                       {queue.length} to process
                     </span>
                   </div>
-                  <section className="admin-card">
-                    <p className="admin-muted">
-                      Accepted means the email provider accepted the message,
-                      not confirmed inbox delivery. Check provider history
-                      before retrying an uncertain attempt.
-                    </p>
-                    <div className="admin-table-wrap">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>Message</th>
-                            <th>Invoice</th>
-                            <th>Status</th>
-                            <th>Attempts</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {data.messages.map((m) => (
-                            <tr key={m.id}>
-                              <td data-label="Message">
-                                <strong>{humanStatus(m.kind)}</strong>
-                                <small>{dateLabel(m.created_at)}</small>
-                              </td>
-                              <td data-label="Invoice">
-                                {invoices.find((i) => i.id === m.invoice_id)
-                                  ?.number || "Invoice record"}
-                              </td>
-                              <td data-label="Status">
-                                <Badge value={m.state} />
-                                {m.last_error && (
-                                  <p className="message-error">
-                                    {m.last_error}
-                                  </p>
-                                )}
-                              </td>
-                              <td data-label="Attempts">{m.attempts}</td>
-                              <td>
-                                {m.state !== "sent" && (
-                                  <button
-                                    disabled={busy}
-                                    onClick={() =>
-                                      ask(
-                                        "Send this notification?",
-                                        <p>
-                                          Send the {m.kind} message to the
-                                          learner and parent/guardian addresses
-                                          saved for this event. Check any
-                                          previous delivery attempt before
-                                          retrying.
-                                        </p>,
-                                        "Send notification",
-                                        async () => {
-                                          await api("messages", { id: m.id });
-                                          await refresh();
-                                          setNotice(
-                                            "Notification processed. Review its status and delivery history.",
-                                          );
-                                        },
-                                      )
-                                    }
-                                  >
-                                    <Send size={15} />
-                                    Send {m.kind}
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      {!data.messages.length && (
-                        <EmptyState title="Nothing queued yet">
-                          Invoice, payment and activation messages appear here
-                          as those events are recorded.
-                        </EmptyState>
-                      )}
-                    </div>
-                  </section>
+                  <NotificationQueue
+                    messages={data.messages}
+                    invoices={invoices}
+                    applications={apps}
+                    busy={busy}
+                    error={error}
+                    truncated={data.messages_truncated}
+                    onSend={sendNotification}
+                    onCancel={(message, reason, providerReviewed) =>
+                      run(async () => {
+                        await api("messages", {
+                          action: "cancel",
+                          id: message.id,
+                          reason,
+                          providerReviewed,
+                        });
+                        await refresh();
+                        setNotice(
+                          "Notification removed from the queue. Its history and financial records have been retained.",
+                        );
+                      })
+                    }
+                  />
                 </>
               )}
               {tab === "Audit" && (
@@ -1426,41 +1407,8 @@ export default function Admin() {
                     </div>
                     <History size={27} />
                   </div>
-                  <section className="admin-card activity-list">
-                    {data.audit.map((a) => (
-                      <article key={a.id}>
-                        <span className="activity-dot" />
-                        <div>
-                          <strong>{humanStatus(a.action)}</strong>
-                          <p>
-                            {appById(a.application_id || "")?.learner_name ||
-                              "Tuition administration"}
-                          </p>
-                          <small>
-                            {new Date(a.created_at).toLocaleString("en-ZA", {
-                              timeZone: "Africa/Johannesburg",
-                            })}{" "}
-                            ·{" "}
-                            {a.actor_id === user.id
-                              ? "Your admin account"
-                              : `Admin ${a.actor_id.slice(0, 8)}`}
-                          </small>
-                          {typeof a.details.note === "string" && (
-                            <p className="audit-note">{a.details.note}</p>
-                          )}
-                          <details className="audit-details">
-                            <summary>Record details</summary>
-                            <pre>{JSON.stringify(a.details, null, 2)}</pre>
-                          </details>
-                        </div>
-                      </article>
-                    ))}
-                    {!data.audit.length && (
-                      <EmptyState title="A fresh start">
-                        Activity will appear as applications and tuition are
-                        managed.
-                      </EmptyState>
-                    )}
+                  <section className="admin-card">
+                    <AuditTrail data={data} user={user} searchable />
                   </section>
                 </>
               )}
@@ -1531,7 +1479,11 @@ export default function Admin() {
       )}
       {selected && (
         <Dialog
-          title="Learner profile"
+          title={
+            selected.status === "active"
+              ? "Learner profile"
+              : "Application details"
+          }
           subtitle={selected.student_number}
           variant="drawer"
           close={closeProfile}

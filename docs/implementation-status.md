@@ -32,7 +32,9 @@ Updated: 26 October 2026. This describes the current working tree. “Implemente
 
 ## Database synchronization
 
-The owner's previously supplied email claim/release SQL is stored in `20261026090000_enrollment_email_claims.sql`. Admin/tuition definitions are in `20261026100000_admin_tuition.sql`. The follow-up `20261026110000_verified_document_finalization.sql` repairs deployed finalizer drift and missing legacy metadata. Apply `20261026120000_monthly_invoice_numbers.sql` afterwards for the new numbering format. These are also included in `supabase/schema.sql` for new projects and `docs/admin-setup.sql` for the guided setup path. No live SQL was executed by this coding task. The owner reported that the finalizer repair worked and subsequently confirmed running the monthly invoice-number migration. This is owner-reported deployment status; this coding task did not independently query the live definitions.
+The owner's previously supplied email claim/release SQL is stored in `20261026090000_enrollment_email_claims.sql`. Admin/tuition definitions are in `20261026100000_admin_tuition.sql`. The follow-up `20261026110000_verified_document_finalization.sql` repairs deployed finalizer drift and missing legacy metadata. `20261026120000_monthly_invoice_numbers.sql` adds the tuition-month numbering format. These are also included in `supabase/schema.sql` for new projects and `docs/admin-setup.sql` for the guided setup path. No live SQL was executed by this coding task. The owner reported that the finalizer repair worked and subsequently confirmed running the monthly invoice-number migration. This is owner-reported deployment status; this coding task did not independently query the live definitions.
+
+The new `20261026130000_notification_management.sql` still needs applying before deployment of cancellation controls. It adds cancellation metadata/state, an authorized cancellation RPC, cancelled-message send protection and richer notification/audit snapshots. Application/student separation, readable audit entries, separate queue/history views and bounded mobile dialogs are included in the current working tree.
 
 ## Next milestones
 

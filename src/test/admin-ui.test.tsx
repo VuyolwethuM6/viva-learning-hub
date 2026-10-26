@@ -90,10 +90,187 @@ function network() {
       const body = JSON.parse(String(init.body));
       if (body.action === "approve")
         snapshot.applications[0].status = "pending_payment";
+      if (url.endsWith("/messages") && body.action === "cancel")
+        snapshot.messages.find((m) => m.id === body.id)!.state = "cancelled";
       return json({ success: true });
     });
 }
 describe("admin interface", () => {
+  it("shows billing-period collection at the top of Finance and removes it from Home", async () => {
+    network();
+    view();
+    await screen.findByRole("heading", { name: "Your tuition operations" });
+    expect(
+      screen.queryByRole("heading", {
+        name: "Collection for this billing period",
+      }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Finance" }));
+    const collection = screen.getByRole("region", {
+      name: "Collection for this billing period",
+    });
+    expect(
+      within(collection).getByLabelText("Billing period"),
+    ).toBeInTheDocument();
+    expect(
+      collection.compareDocumentPosition(
+        screen.getByRole("heading", { name: "Invoice register" }),
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+  it("separates applications awaiting review or payment from activated students", async () => {
+    snapshot.applications.push({
+      ...snapshot.applications[0],
+      id: "44444444-4444-4444-8444-444444444444",
+      learner_name: "Active Learner",
+      status: "active",
+    });
+    network();
+    view();
+    await screen.findByRole("heading", { name: "Your tuition operations" });
+    fireEvent.click(screen.getByRole("button", { name: "1 Active learners" }));
+    expect(screen.getByRole("heading", { name: "Students" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Applications" }));
+    expect(
+      screen.getByRole("button", { name: "Open Test Learner" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Open Active Learner" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Students" }));
+    expect(
+      screen.getByRole("button", { name: "Open Active Learner" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Open Test Learner" }),
+    ).not.toBeInTheDocument();
+  });
+  it("shows an application empty state when only activated students exist", async () => {
+    snapshot.applications[0].status = "active";
+    network();
+    view();
+    await screen.findByRole("heading", { name: "Your tuition operations" });
+    fireEvent.click(screen.getByRole("button", { name: "Applications" }));
+    expect(
+      screen.getByText("No applications at the moment"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Open Test Learner" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Students" }));
+    expect(
+      screen.getByRole("button", { name: "Open Test Learner" }),
+    ).toBeInTheDocument();
+  });
+  it("separates waiting notifications from history and cancels with a recorded reason", async () => {
+    snapshot.messages = [
+      {
+        id: actor,
+        invoice_id: invoiceId,
+        kind: "receipt",
+        state: "pending",
+        attempts: 0,
+        last_error: null,
+        created_at: "2026-10-26T10:00:00Z",
+        payload: {
+          learner: "Test Learner",
+          invoiceNumber: "VT-20261101",
+          recipients: ["parent@example.test"],
+          paidCents: 10000,
+          balanceCents: 32667,
+        },
+      },
+      {
+        id: invoiceId,
+        invoice_id: invoiceId,
+        kind: "invoice",
+        state: "sent",
+        attempts: 1,
+        last_error: null,
+        created_at: "2026-10-25T10:00:00Z",
+      },
+    ];
+    const fetch = network();
+    view();
+    await screen.findByRole("heading", { name: "Your tuition operations" });
+    fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
+    expect(screen.getByText("parent@example.test")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Ready to send. This notification has not been sent yet.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Accepted by the email provider. Inbox delivery has not been confirmed.",
+      ),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Remove from queue" }));
+    const dialog = screen.getByRole("dialog", {
+      name: "Remove this email from the queue?",
+    });
+    fireEvent.change(within(dialog).getByLabelText("Cancellation reason"), {
+      target: { value: "Already sent payment confirmation personally" },
+    });
+    fireEvent.submit(
+      within(dialog)
+        .getByRole("button", { name: "Cancel queued email" })
+        .closest("form")!,
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("No notifications waiting")).toBeInTheDocument();
+    expect(
+      fetch.mock.calls.some(
+        ([, init]) =>
+          init?.body &&
+          JSON.parse(String(init.body)).action === "cancel" &&
+          JSON.parse(String(init.body)).reason ===
+            "Already sent payment confirmation personally",
+      ),
+    ).toBe(true);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Completed history (2)" }),
+    );
+    expect(screen.getByText("Cancelled")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Remove from queue" }),
+    ).not.toBeInTheDocument();
+  });
+  it("presents audit actions, amounts, references, administrator and local time clearly", async () => {
+    snapshot.audit = [
+      {
+        id: invoiceId,
+        action: "payment",
+        actor_id: actor,
+        actor_email: "finance@example.test",
+        application_id: appId,
+        created_at: "2026-10-26T10:00:00Z",
+        details: {
+          amountCents: 10000,
+          method: "EFT",
+          paidOn: "2026-10-26",
+          reference: "BANK-CLEAR-001",
+          note: "Matched statement and amount",
+        },
+      },
+    ];
+    network();
+    view();
+    await screen.findByRole("heading", { name: "Your tuition operations" });
+    fireEvent.click(screen.getByRole("button", { name: "Audit" }));
+    expect(screen.getByText("Verified payment recorded")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Transaction reference: BANK-CLEAR-001/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/finance@example.test/)).toBeInTheDocument();
+    expect(screen.getByText(/12:00 SAST/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Search audit history"), {
+      target: { value: "no matching event" },
+    });
+    expect(screen.getByText("No matching activity")).toBeInTheDocument();
+  });
   it("shows sign-in without leaking records for an unauthenticated request", async () => {
     const fetch = vi
       .spyOn(globalThis, "fetch")
