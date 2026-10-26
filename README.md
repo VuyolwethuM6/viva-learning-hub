@@ -1,5 +1,15 @@
 # Viva Tutorials
 
+React/TypeScript website for Viva Tutorials, with Vercel API routes for enrollment, enquiries and paid PDF delivery. Documentation reviewed on 26 October 2026.
+
+## Development documentation
+
+- [Development and architecture](docs/development.md): installation, runtime commands, repository map and checks.
+- [Implementation status and next work](docs/implementation-status.md): current behavior, verification evidence, gaps and proposed priorities.
+- [Service setup and verification](docs/supabase-setup.md): environment requirements, Supabase drift and controlled integration checks.
+
+The current baseline passes 22 mocked/local tests, lint with seven warnings, app and Node/API TypeScript checking and the production build. Live enrollment, email and payments were not independently verified in this cloud environment. The owner reports applying the enrollment email SQL in Supabase; it still needs to be saved as a repository migration and included in the fresh schema.
+
 Viva Tutorials is a South African tutoring and learning-support service for Grade 8-12 learners. Based in Mfuleni, Cape Town, we offer in-person support locally and online learning for students across South Africa.
 
 Our mission is to make high-quality, accessible STEM education more personal: helping learners understand their subjects, strengthen study skills, and grow in confidence. Viva Tutorials was founded by Vuyolwethu Mabhuleka.
@@ -38,11 +48,13 @@ The website currently lists these options:
 | Standard | R850 per month | 8 sessions per month |
 | Premium | R1,200 per month | 12 sessions per month |
 
+These prices match the public pricing page, but the enrollment form/API use subject-based fees: Grades 8–9 R350/R600; Grades 10–12 R500/R800/R1,100; Matric Rewrite R550/R900/R1,200. The two models have not been reconciled. See the [pricing decision](docs/implementation-status.md#pricing-decision-required) before changing prices or promising a package.
+
 Package inclusions and availability may change. Confirm current details with Viva Tutorials before enrolling.
 
 ## Study Materials
 
-The Study Materials library can be searched and filtered by grade, subject, topic, resource type, and exam sitting. It includes Grade 12 practice resources and exam-preparation PDFs, with free downloads and selected paid materials. Paid PDFs are emailed after the payment provider confirms a purchase. Parents or guardians should handle enquiries and purchases for learners under 18.
+The Study Materials library has text search (including topics/keywords) and filters for free/paid, grade, subject and exam sitting. The current catalogue contains six Grade 12 Mathematics PDFs: four free and two paid, priced R299 and R399. The implemented PayFast notification handler validates payment before attempting PDF delivery by email; live delivery was not verified in this review. This purchase flow is separate from tutoring enrollment payments. Parents or guardians should handle enquiries and purchases for learners under 18.
 
 ## Where We Teach
 
@@ -50,7 +62,7 @@ Viva Tutorials is based in Mfuleni, Cape Town. In-person options are available i
 
 ## Getting Started
 
-- [Enroll with Viva Tutorials](https://forms.gle/sh3Be1fF8gD1qt9G9)
+- [Enroll with Viva Tutorials](https://vivatutorials.co.za/enroll)
 - [Book a session](https://calendar.app.google/k1hbyKuD97U5g1Vf7)
 - [Browse study materials](https://vivatutorials.co.za/study-materials)
 
@@ -60,10 +72,10 @@ The contact page also accepts tutoring questions and subject requests. The websi
 
 The site loads Google Analytics automatically when a measurement ID is configured. Set it in your local environment or deployment:
 
-- Copy `.env.example` to `.env.local`
+- Create or update the Git-ignored `.env.local` without overwriting existing settings; use `.env.example` for variable names and omit unused placeholders
 - Set `VITE_GA_MEASUREMENT_ID` to your GA4 measurement ID, for example `G-XXXXXXXXXX`
 
-The app tracks page views, external link clicks, phone/email clicks, resource downloads, and successful contact-form submissions. Tracking runs for visitors with analytics enabled in their browser; disclose this use in the Privacy Policy and review applicable privacy requirements for your audience.
+The app tracks page views, external link clicks, phone/email clicks, resource downloads, and successful contact-form submissions. Initialization is controlled by the configured measurement ID; no application consent/preferences gate is implemented. Browser blocking may affect delivery. Review the analytics behavior and privacy disclosures before enabling it.
 
 ## Contact Viva Tutorials
 

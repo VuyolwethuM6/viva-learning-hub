@@ -59,13 +59,17 @@ afterEach(() => {
 
 describe('enrollment emails', () => {
   it('renders templates and escapes user input', () => {
-    const receipt = receiptEmail(data, new Date('2026-10-26T10:00:00Z'));
+    const receipt = receiptEmail(data);
     assert.ok(receipt.html.includes('VTS-2026-0031'));
-    assert.ok(receipt.html.includes('2488806516'));
+    assert.ok(receipt.html.includes('No payment was taken'));
+    assert.ok(!receipt.html.includes('2488806516'));
+    assert.ok(!receipt.html.includes('your details will be deleted'));
+    assert.ok(!receipt.html.includes('Google Classroom'));
     assert.ok(!receipt.html.includes('<b>Learner</b>'), 'learner name must be escaped');
     assert.ok(receipt.html.includes('Test &lt;b&gt;Learner&lt;/b&gt;'));
-    assert.ok(receipt.text.includes('Payment reference: VTS-2026-0031'));
-    assert.ok(receipt.html.includes('25 November 2026') || receipt.html.includes('25 November'), '30-day date');
+    assert.ok(receipt.text.includes('Student number: VTS-2026-0031'));
+    assert.ok(receipt.text.includes('No payment was taken'));
+    assert.ok(!receipt.text.includes('your details will be deleted'));
     assert.equal(receipt.subject, 'Application received: VTS-2026-0031');
     const admin = adminEmail(data);
     assert.ok(admin.html.includes('VTS-2026-0031/01-admin/report-card.png'));
