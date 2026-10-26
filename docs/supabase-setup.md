@@ -34,7 +34,7 @@ The scripts contain rerunnable guards, but do not assume replaying SQL replaces 
 
 ### Email SQL already applied by the owner
 
-The owner reports applying an additional script labeled “04” directly in Supabase. It adds these columns to `applications`:
+The owner reports previously applying an additional script labeled “04” directly in Supabase; the repository now captures it as the email migration described below. It adds these columns to `applications`:
 
 - `receipt_emailed_at timestamptz`
 - `admin_notified_at timestamptz`
@@ -49,7 +49,7 @@ It also creates:
 
 Both are `SECURITY DEFINER` functions with an empty search path and schema-qualified tables. Execute privileges are revoked from public/browser roles and granted to `service_role`.
 
-**Repository gap:** this additional SQL is not yet included in the fresh schema or migrations. The owner-provided SQL matches the application call signatures, but its deployed definition and permissions were not independently inspected here. A new database built only from repository SQL is incomplete for enrollment email sending. Capture the applied script in a reviewed migration and synchronize the fresh schema before claiming reproducible full setup. This documentation update does not apply or create migrations.
+The owner's supplied SQL is now captured in `supabase/migrations/20261026090000_enrollment_email_claims.sql` and included in `supabase/schema.sql`. Existing deployed definitions and permissions were not independently inspected here. Review and apply the migration to the correct project as needed; it preserves existing send timestamps. The new admin/tuition migration is separate. Follow [admin setup](admin-workflow.md#setup-in-supabase-and-vercel) for the full order and admin authorization.
 
 ### Read-only database verification
 
@@ -109,7 +109,7 @@ For enquiries, test contact and subject-request delivery separately with an auth
 
 ## Cleanup
 
-After verification, identify the exact synthetic application UUID and Storage path. Remove only its object and application. Application deletion cascades to linked learner, guardian, subject and document metadata records, but not automatically to the Storage object.
+After verification, identify the exact synthetic application UUID and Storage path. Remove only its object and application. Application deletion cascades to linked learner, guardian, subject and document metadata records, but not automatically to the Storage object. Once an application has admin audit or tuition records, the simple application-only deletion below is deliberately blocked by financial/history references. Use a disposable test project or the reviewed cleanup order in [admin workflow](admin-workflow.md#synthetic-test-cleanup), not cascade changes to erase financial history.
 
 ```sql
 -- Replace with the UUID recorded for the synthetic test only.
@@ -126,10 +126,10 @@ Do not reset student-number sequences to hide gaps. Remove synthetic inbox messa
 | HTML or 404 from `/api/*` | Use the Vercel runtime; Vite does not host these endpoints |
 | `503` Supabase/email configuration | Binding presence in the actual server environment; restart local runtime after changes |
 | Supabase `401/403` | Correct project, server-role binding and permissions; never share the key |
-| Missing RPC/table | Applied definitions and project selection; check the email SQL drift above |
+| Missing RPC/table | Applied definitions and project selection; verify the email/admin migrations above |
 | Draft exists but upload fails | Signed URL expiry, exact file metadata/path and Storage response; use the upload retry flow |
 | Completion succeeds but no email | Resend settings/provider history, claim RPCs, timestamps and sanitized server errors |
 | PayFast checkout `503` | Public origin and server merchant configuration |
 | PDF notification rejected or delivery fails | Merchant/amount/signature/validation result, bundled private file and email configuration |
 
-Historical notes about a previously configured Windows machine and an earlier database-only synthetic submission do not establish current cloud credentials or full live readiness. No fresh end-to-end production verification has been performed for the application-received changes. Chromium smoke checks used mocked APIs; live Supabase/Resend verification remains required.
+Historical notes about a previously configured Windows machine and an earlier database-only synthetic submission do not establish current cloud credentials or full live readiness. No fresh end-to-end production verification has been performed. Enrollment browser checks used mocked APIs. The admin browser check used actual API handlers and embedded PostgreSQL with synthetic Auth. Live Supabase/Resend verification remains required.

@@ -1,0 +1,79 @@
+import type { ServerResponse } from "node:http";
+import {
+  db,
+  privateResponse,
+  requireAdmin,
+  rpc,
+  sameOrigin,
+  uuid,
+} from "../_lib/admin.js";
+import {
+  encodeStoragePath,
+  handleError,
+  HttpError,
+  readJsonBody,
+  sendJson,
+  type ApiRequest,
+} from "../_lib/http.js";
+
+export default async function handler(
+  request: ApiRequest,
+  response: ServerResponse,
+) {
+  privateResponse(response);
+  try {
+    const actor = await requireAdmin(request);
+    if (request.method === "GET")
+      return sendJson(
+        response,
+        200,
+        await rpc("admin_snapshot", { p_actor: actor.id }),
+      );
+    if (request.method !== "POST")
+      throw new HttpError(405, "Method not allowed.");
+    sameOrigin(request);
+    const body = await readJsonBody(request, 16_384, "Admin records");
+    if (body.action === "document") {
+      const id = uuid(body.applicationId);
+      const apps = await db<{ report_card_path: string }[]>(
+        `/rest/v1/applications?id=eq.${id}&select=report_card_path`,
+      );
+      if (!apps?.[0]?.report_card_path)
+        throw new HttpError(404, "Report card not found.");
+      const signed = await db(
+        `/storage/v1/object/sign/learner-documents/${encodeStoragePath(apps[0].report_card_path)}`,
+        { method: "POST", body: JSON.stringify({ expiresIn: 60 }) },
+      );
+      await rpc("admin_log_document", { p_actor: actor.id, p_application: id });
+      const config = process.env.SUPABASE_URL!.replace(/\/$/, "");
+      const path = signed.signedURL || signed.signedUrl;
+      if (typeof path !== "string" || !path.startsWith("/object/sign/"))
+        throw new HttpError(502, "Unable to open document.");
+      return sendJson(response, 200, { url: `${config}/storage/v1${path}` });
+    }
+    const actions = [
+      "approve",
+      "reject",
+      "note",
+      "payment",
+      "activate",
+      "generate_month",
+      "queue_reminders",
+    ];
+    if (!actions.includes(String(body.action)))
+      throw new HttpError(400, "Unknown admin action.");
+    const result = await rpc("admin_mutate", {
+      p_actor: actor.id,
+      p_action: body.action,
+      p_data: body,
+    });
+    return sendJson(response, 200, { success: true, result });
+  } catch (error) {
+    return handleError(
+      response,
+      error,
+      "Admin records",
+      "The operation could not be confirmed. Refresh before trying again.",
+    );
+  }
+}

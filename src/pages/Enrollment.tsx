@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Loader2, Mail, ShieldCheck, FileText, GraduationCap, Upload, X } from "lucide-react";
+import programmes from "@/lib/tuition-programme.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TopBar, StickyHeader } from "@/components/Header";
@@ -52,7 +53,6 @@ type Tier = {
   maxSubjects: number;
   prices: number[];
   subjects: string[];
-  schedule: [string, string][];
 };
 
 const steps = ["Student", "Parent", "Tutoring", "Progress", "Review"];
@@ -73,25 +73,18 @@ const tiers: Record<"junior" | "senior" | "rewrite", Tier> = {
     maxSubjects: 2,
     prices: [350, 600],
     subjects: ["Mathematics", "Natural Sciences", "Other academic support"],
-    schedule: [["Mon – Fri", "16:00–19:00 · Afternoon sessions"], ["Saturday", "Available"]],
   },
   senior: {
     label: "Grades 10–12",
     maxSubjects: 3,
     prices: [500, 800, 1100],
     subjects: coreSubjects,
-    schedule: [["Mon – Fri", "16:00–19:00 · Afternoon sessions"], ["Saturday", "Available"]],
   },
   rewrite: {
     label: "Matric Rewrite",
     maxSubjects: 3,
     prices: [550, 900, 1200],
     subjects: coreSubjects,
-    schedule: [
-      ["Mon & Wed", "09:00–12:00 · Mathematics and Maths Literacy"],
-      ["Tue & Thu", "09:00–12:00 · Physical and Life Sciences"],
-      ["Friday", "09:00–12:00 · Assessments"],
-    ],
   },
 };
 
@@ -770,7 +763,7 @@ export default function Enrollment() {
                       {tier && (
                         <div className="mb-4 rounded-lg border-l-4 border-[#ff7849] bg-orange-50 p-3">
                           <h3 className="mb-1.5 text-sm font-bold text-slate-900">Weekly programme</h3>
-                          {[...tier.schedule, ...(grade === "Grade 12" ? [["Sunday", "Online feedback"] as [string, string]] : [])].map(([day, time]) => (
+                          {(programmes[grade as keyof typeof programmes]?.schedule || []).map(([day, time]) => (
                             <div key={day} className="grid grid-cols-[96px_1fr] gap-2.5 border-t border-black/10 py-1.5 text-[13px] first:border-0">
                               <strong>{day}</strong>
                               <span>{time}</span>

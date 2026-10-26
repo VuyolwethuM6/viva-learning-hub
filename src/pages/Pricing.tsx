@@ -8,38 +8,9 @@ import Footer from '@/components/Footer';
 
 export default function Pricing() {
   const plans = [
-    {
-      name: "Single Session",
-      price: "R150",
-      period: "/session",
-      description: "Perfect for one-time help",
-      features: ["1 tutoring session", "Chat support", "Study material access"],
-      highlighted: false
-    },
-    {
-      name: "Starter",
-      price: "R500",
-      period: "/month",
-      description: "Perfect for casual learners",
-      features: ["4 tutoring sessions", "Group classes (max 6)", "Digital study materials", "Email support", "Progress tracking"],
-      highlighted: false
-    },
-    {
-      name: "Standard",
-      price: "R850",
-      period: "/month",
-      description: "Best for dedicated learners",
-      features: ["8 sessions per month", "Small group (max 3)", "Printed & digital materials", "WhatsApp support", "Monthly assessments", "Parent-teacher meetings"],
-      highlighted: true
-    },
-    {
-      name: "Premium",
-      price: "R1200",
-      period: "/month",
-      description: "For full support & exam prep",
-      features: ["12 sessions per month", "One-on-one tutoring", "Complete resource library", "24/7 tutor access", "Weekly progress reports", "Exam workshops", "University application guidance"],
-      highlighted: false
-    }
+    { name: "Grades 8–9", price: "From R350", period: "/month", description: "Build strong foundations", features: ["1 subject: R350 per month", "2 subjects: R600 per month", "Mathematics, Natural Sciences or other academic support", "Monday–Saturday programme", "First month prorated for remaining teaching days"], highlighted: false },
+    { name: "Grades 10–12", price: "From R500", period: "/month", description: "Focused senior subject support", features: ["1 subject: R500 per month", "2 subjects: R800 per month", "3 subjects: R1,100 per month", "Mathematics or Maths Literacy, Physical Sciences, Life Sciences", "Monday–Saturday; Grade 12 includes Sunday feedback"], highlighted: true },
+    { name: "Matric Rewrite", price: "From R550", period: "/month", description: "Prepare for your next opportunity", features: ["1 subject: R550 per month", "2 subjects: R900 per month", "3 subjects: R1,200 per month", "Mathematics or Maths Literacy, Physical Sciences, Life Sciences", "Monday–Friday programme"], highlighted: false },
   ];
 
   const whyChoose = [

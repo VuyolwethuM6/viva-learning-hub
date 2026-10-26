@@ -1,0 +1,438 @@
+.admin-shell {
+  --admin-purple: #7949fe;
+  --admin-ink: #160f2e;
+  min-height: 100vh;
+  background: #eeecf8;
+  color: var(--admin-ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.admin-shell h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.25;
+  margin: 0 0 12px;
+}
+.admin-shell h2 {
+  font-size: 20px;
+  font-weight: 750;
+  margin: 0 0 12px;
+}
+.admin-shell h3 {
+  font-size: 17px;
+  font-weight: 750;
+  margin: 24px 0 12px;
+}
+.admin-shell p {
+  margin: 10px 0;
+}
+.admin-shell button,
+.admin-shell a {
+  touch-action: manipulation;
+}
+.admin-shell button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #dcd4f0;
+  border-radius: 10px;
+  background: #f5f1ff;
+  color: #582cc4;
+  font-weight: 650;
+}
+.admin-shell button:hover {
+  background: #e9e0ff;
+}
+.admin-shell button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.admin-shell button:focus-visible,
+.admin-shell a:focus-visible {
+  outline: 3px solid #ff7849;
+  outline-offset: 3px;
+}
+.admin-shell .admin-primary {
+  background: var(--admin-purple);
+  color: white;
+  border-color: var(--admin-purple);
+}
+.admin-shell .admin-danger {
+  color: #ad1e25;
+  background: #fff0f1;
+}
+.admin-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 238px;
+  padding: 25px 18px;
+  background: white;
+  border-right: 1px solid #ded7ee;
+  overflow-y: auto;
+}
+.admin-brand {
+  display: block;
+  color: #7949fe;
+  font-size: 30px;
+  font-weight: 900;
+  margin: 0 12px 35px;
+}
+.admin-brand span {
+  display: block;
+  color: #76678c;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.admin-nav-label {
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  color: #76678c;
+  padding: 0 12px;
+}
+.admin-sidebar nav {
+  display: grid;
+  gap: 5px;
+}
+.admin-sidebar nav button {
+  justify-content: flex-start;
+  background: none;
+  border: none;
+  color: #49366a;
+}
+.admin-sidebar nav button[aria-current="page"] {
+  background: #7949fe;
+  color: white;
+}
+.admin-workspace {
+  margin-left: 238px;
+}
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #ded7ee;
+}
+.admin-topbar > strong {
+  margin-right: auto;
+}
+.admin-topbar > span {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.admin-main {
+  padding: 28px;
+  max-width: 1600px;
+  margin: auto;
+}
+.admin-shell .admin-menu {
+  display: none;
+}
+.admin-card,
+.admin-hero {
+  padding: 26px;
+  border-radius: 20px;
+  margin-bottom: 22px;
+  border: 1px solid #ded7ee;
+  background: #fff;
+  box-shadow: 0 5px 20px #28115b05;
+}
+.admin-hero {
+  background: linear-gradient(120deg, #7949fe, #38156c);
+  color: white;
+}
+.admin-hero > p {
+  color: #e7dbff;
+}
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 24px;
+}
+.admin-stats > div {
+  padding: 18px;
+  background: #ffffff20;
+  border: 1px solid #ffffff40;
+  border-radius: 14px;
+}
+.admin-stats strong {
+  display: block;
+  font-size: 32px;
+}
+.admin-stats span {
+  font-size: 12px;
+}
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 22px;
+}
+.admin-muted {
+  font-size: 12px;
+  color: #786b8d;
+}
+.admin-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.admin-shell label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  margin: 12px 0;
+}
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #cfc4e3;
+  border-radius: 9px;
+  padding: 10px 12px;
+  color: #160f2e;
+  background: white;
+  font-weight: 400;
+}
+.admin-shell textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.admin-shell input:focus,
+.admin-shell textarea:focus,
+.admin-shell select:focus {
+  outline: 2px solid #7949fe;
+  outline-offset: 2px;
+}
+.admin-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.admin-shell table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+.admin-shell th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #786b8d;
+  background: #f8f6fc;
+}
+.admin-shell td,
+.admin-shell th {
+  padding: 14px 12px;
+  border-bottom: 1px solid #eee9f5;
+}
+.admin-shell td p {
+  max-width: 250px;
+  white-space: normal;
+  font-size: 12px;
+}
+.admin-badge {
+  display: inline-block;
+  background: #f1ebff;
+  color: #58329b;
+  border: 1px solid #ddd1f2;
+  border-radius: 50px;
+  padding: 3px 10px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+.admin-empty {
+  text-align: center;
+  padding: 40px;
+  color: #786b8d;
+}
+.admin-empty svg {
+  margin: 0 auto 14px;
+}
+.admin-shell dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee9f5;
+}
+.admin-shell dt {
+  color: #786b8d;
+}
+.admin-shell dd {
+  font-weight: 650;
+  text-align: right;
+  overflow-wrap: anywhere;
+  max-width: 70%;
+}
+.admin-error,
+.admin-notice {
+  border: 1px solid #f0c0c3;
+  background: #fff0f1;
+  color: #8d1d28;
+  padding: 14px;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.admin-notice {
+  border-color: #b7dec8;
+  background: #effaf4;
+  color: #216444;
+}
+.admin-login {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.admin-login .admin-card {
+  width: 100%;
+  max-width: 450px;
+}
+.admin-login svg {
+  color: #7949fe;
+  margin-bottom: 18px;
+}
+.admin-login button {
+  width: 100%;
+  margin-top: 10px;
+}
+.admin-login a {
+  text-decoration: underline;
+  color: #7949fe;
+}
+.admin-audit {
+  border-bottom: 1px solid #eee9f5;
+  padding: 14px 0;
+}
+.admin-audit > span {
+  float: right;
+  font-size: 12px;
+  color: #786b8d;
+}
+.admin-audit pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  background: #f8f6fc;
+  padding: 10px;
+  border-radius: 8px;
+}
+.admin-modal {
+  border: none;
+  border-radius: 20px;
+  padding: 26px;
+  width: min(700px, calc(100vw - 28px));
+  max-height: 90vh;
+  color: #160f2e;
+  box-shadow: 0 25px 100px #160f2e40;
+  overflow-y: auto;
+}
+.admin-modal::backdrop {
+  background: #160f2e88;
+  backdrop-filter: blur(3px);
+}
+.admin-modal header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.admin-modal header h2 {
+  margin: 0;
+}
+.admin-modal .admin-check {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+}
+.admin-modal .admin-check input {
+  width: 20px;
+  min-height: 20px;
+  margin-top: 4px;
+}
+.admin-modal button {
+  margin: 4px 0;
+}
+@media (max-width: 900px) {
+  .admin-sidebar {
+    display: none;
+    z-index: 30;
+    top: 76px;
+    width: 238px;
+  }
+  .admin-sidebar.is-open {
+    display: block;
+    box-shadow: 20px 0 50px #160f2e40;
+  }
+  .admin-workspace {
+    margin-left: 0;
+  }
+  .admin-shell .admin-menu {
+    display: inline-flex;
+  }
+  .admin-topbar {
+    padding: 12px;
+    gap: 8px;
+  }
+  .admin-topbar > span {
+    display: none;
+  }
+  .admin-main {
+    padding: 16px;
+  }
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .admin-card,
+  .admin-hero {
+    padding: 20px;
+  }
+  .admin-shell h1 {
+    font-size: 25px;
+  }
+  .admin-toolbar > label {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+@media print {
+  .admin-sidebar,
+  .admin-workspace,
+  .admin-modal > header,
+  .admin-modal > button,
+  .admin-modal > form,
+  .admin-modal > .admin-error {
+    display: none !important;
+  }
+  .admin-modal {
+    position: static;
+    max-height: none;
+    width: 100%;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    overflow: visible;
+  }
+  .admin-modal::backdrop {
+    display: none;
+  }
+  .admin-shell {
+    background: white;
+  }
+  .admin-print-invoice {
+    display: block !important;
+  }
+}

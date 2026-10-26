@@ -1,0 +1,52 @@
+{
+  "Grade 8": {
+    "label": "Grades 8–9 afternoon programme",
+    "weekdays": [1, 2, 3, 4, 5, 6],
+    "schedule": [
+      ["Mon – Fri", "16:00–19:00 · Afternoon sessions"],
+      ["Saturday", "Available"]
+    ]
+  },
+  "Grade 9": {
+    "label": "Grades 8–9 afternoon programme",
+    "weekdays": [1, 2, 3, 4, 5, 6],
+    "schedule": [
+      ["Mon – Fri", "16:00–19:00 · Afternoon sessions"],
+      ["Saturday", "Available"]
+    ]
+  },
+  "Grade 10": {
+    "label": "Grades 10–11 afternoon programme",
+    "weekdays": [1, 2, 3, 4, 5, 6],
+    "schedule": [
+      ["Mon – Fri", "16:00–19:00 · Afternoon sessions"],
+      ["Saturday", "Available"]
+    ]
+  },
+  "Grade 11": {
+    "label": "Grades 10–11 afternoon programme",
+    "weekdays": [1, 2, 3, 4, 5, 6],
+    "schedule": [
+      ["Mon – Fri", "16:00–19:00 · Afternoon sessions"],
+      ["Saturday", "Available"]
+    ]
+  },
+  "Grade 12": {
+    "label": "Grade 12 programme including Sunday feedback",
+    "weekdays": [1, 2, 3, 4, 5, 6, 7],
+    "schedule": [
+      ["Mon – Fri", "16:00–19:00 · Afternoon sessions"],
+      ["Saturday", "Available"],
+      ["Sunday", "Online feedback"]
+    ]
+  },
+  "Matric Rewrite": {
+    "label": "Matric Rewrite weekday programme",
+    "weekdays": [1, 2, 3, 4, 5],
+    "schedule": [
+      ["Mon & Wed", "09:00–12:00 · Mathematics and Maths Literacy"],
+      ["Tue & Thu", "09:00–12:00 · Physical and Life Sciences"],
+      ["Friday", "09:00–12:00 · Assessments"]
+    ]
+  }
+}

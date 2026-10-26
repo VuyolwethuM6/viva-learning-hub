@@ -4,11 +4,12 @@ React/TypeScript website for Viva Tutorials, with Vercel API routes for enrollme
 
 ## Development documentation
 
+- [Admin workflow and tuition policies](docs/admin-workflow.md): account authorization, migrations, payment rules and end-to-end testing.
 - [Development and architecture](docs/development.md): installation, runtime commands, repository map and checks.
 - [Implementation status and next work](docs/implementation-status.md): current behavior, verification evidence, gaps and proposed priorities.
 - [Service setup and verification](docs/supabase-setup.md): environment requirements, Supabase drift and controlled integration checks.
 
-The current baseline passes 22 mocked/local tests, lint with seven warnings, app and Node/API TypeScript checking and the production build. Live enrollment, email and payments were not independently verified in this cloud environment. The owner reports applying the enrollment email SQL in Supabase; it still needs to be saved as a repository migration and included in the fresh schema.
+The current milestone passes 46 tests, including embedded PostgreSQL-function tests and mocked API/UI boundaries, plus app/Node TypeScript checks and the production build. Lint has seven existing warnings. A Chromium smoke test exercised the admin interface through the actual API and embedded database with a synthetic Auth upstream. Live Supabase/Resend integration remains unverified. Email claim SQL and the new admin/tuition migration are included in Git and the fresh schema; they have not been applied to your live database by this task.
 
 Viva Tutorials is a South African tutoring and learning-support service for Grade 8-12 learners. Based in Mfuleni, Cape Town, we offer in-person support locally and online learning for students across South Africa.
 
@@ -37,20 +38,19 @@ Support is available for Grade 8-12 learners in:
 
 Subject and grade availability may vary by tutor and learning format.
 
-## Published Tutoring Packages
+## Tuition pricing and billing
 
-The website currently lists these options:
+The enrollment form and pricing page use these monthly subject-based fees:
 
-| Package | Published price | Sessions |
-| --- | ---: | ---: |
-| Single Session | R150 per session | 1 session |
-| Starter | R500 per month | 4 sessions per month |
-| Standard | R850 per month | 8 sessions per month |
-| Premium | R1,200 per month | 12 sessions per month |
+| Grade group | One subject | Two subjects | Three subjects |
+| --- | ---: | ---: | ---: |
+| Grades 8–9 | R350 | R600 | Not offered |
+| Grades 10–12 | R500 | R800 | R1,100 |
+| Matric Rewrite | R550 | R900 | R1,200 |
 
-These prices match the public pricing page, but the enrollment form/API use subject-based fees: Grades 8–9 R350/R600; Grades 10–12 R500/R800/R1,100; Matric Rewrite R550/R900/R1,200. The two models have not been reconciled. See the [pricing decision](docs/implementation-status.md#pricing-decision-required) before changing prices or promising a package.
+First-month tuition is prorated using the learner's grade programme: Grades 8–11 include Monday–Saturday; Grade 12 includes Sunday feedback as well; Matric Rewrite counts all five weekdays. Configured closures are excluded. First payment is required before activation. Continuing invoices are issued on the 25th, due on the 1st, with unpaid-balance reminders from the 3rd. Billing/reminder actions are manual in this milestone; no scheduled collection is enabled.
 
-Package inclusions and availability may change. Confirm current details with Viva Tutorials before enrolling.
+See [admin workflow and test setup](docs/admin-workflow.md) for the agreed policies, database migrations, admin account authorization and verification checklist. `/admin` provides application review, invoices, verified manual payment recording, activation and audit history. It does not yet provide teaching portals, automatic tuition payments or suspension/withdrawal controls.
 
 ## Study Materials
 
