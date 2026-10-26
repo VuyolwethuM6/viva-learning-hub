@@ -10,6 +10,7 @@ import {
   sendJson,
   serviceHeaders,
 } from './_lib/http.js';
+import { sendEnrollmentEmails } from './_lib/enrollment-emails.js';
 
 const SCOPE = 'Enrollment completion';
 const MAX_BODY_BYTES = 16 * 1024;
@@ -37,7 +38,7 @@ export default async function handler(request: ApiRequest, response: ServerRespo
     const headers = serviceHeaders(supabase.key);
 
     const applicationResponse = await fetch(
-      `${supabase.url}/rest/v1/applications?select=id,application_number,status,report_card_path,report_card_size,report_card_name&id=eq.${encodeURIComponent(applicationId)}`,
+      `${supabase.url}/rest/v1/applications?select=id,application_number,status,report_card_path,report_card_size,report_card_name,learner_name,learner_email,guardian_name,guardian_email,grade_level,tutoring_mode,selected_subjects,monthly_fee&id=eq.${encodeURIComponent(applicationId)}`,
       { headers },
     );
     if (!applicationResponse.ok) {
@@ -52,6 +53,14 @@ export default async function handler(request: ApiRequest, response: ServerRespo
       report_card_path: string | null;
       report_card_size: number | null;
       report_card_name: string | null;
+      learner_name: string;
+      learner_email: string;
+      guardian_name: string;
+      guardian_email: string;
+      grade_level: string;
+      tutoring_mode: string;
+      selected_subjects: string[] | null;
+      monthly_fee: number | string;
     }>;
     const application = applications[0];
     debug(SCOPE, 'application lookup', {
@@ -141,6 +150,23 @@ export default async function handler(request: ApiRequest, response: ServerRespo
     } else if (application.status !== 'pending_review') {
       return sendJson(response, 409, { error: 'This enrollment is not awaiting document completion.' });
     }
+
+    // Emails go out only now that the application is pending_review. Each is sent at most once
+    // (database claim), retried on a later call if it failed, and never fails the enrollment.
+    await sendEnrollmentEmails(supabase, {
+      applicationId,
+      applicationNumber: application.application_number,
+      studentNumber: learner.student_number,
+      learnerName: application.learner_name,
+      learnerEmail: application.learner_email,
+      guardianName: application.guardian_name,
+      guardianEmail: application.guardian_email,
+      grade: application.grade_level,
+      mode: application.tutoring_mode,
+      subjects: application.selected_subjects ?? [],
+      monthlyFee: Number(application.monthly_fee),
+      reportCardPath: application.report_card_path,
+    });
 
     debug(SCOPE, 'success: application is pending_review', { applicationNumber: application.application_number });
     return sendJson(response, 200, {
