@@ -30,7 +30,7 @@ export default function RouteMetadata() {
   const path = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
   const page = (pages as Record<string, PageMetadata>)[path];
   const isIndexable = Boolean(page && page.indexable !== false);
-  const metadata = page ?? {
+  const metadata = path === "/admin" ? { title: "Admin | Viva Tutorials", description: "Authorized Viva Tutorials administration." } : page ?? {
     title: "Page Not Found | Viva Tutorials",
     description: "The page you requested could not be found.",
   };
@@ -39,7 +39,7 @@ export default function RouteMetadata() {
   useEffect(() => {
     document.title = metadata.title;
     updateMeta("name", "description", metadata.description);
-    updateMeta("name", "robots", isIndexable ? "index,follow" : "noindex,follow");
+    updateMeta("name", "robots", path === "/admin" ? "noindex,nofollow" : isIndexable ? "index,follow" : "noindex,follow");
     updateMeta("property", "og:type", "website");
     updateMeta("property", "og:site_name", "Viva Tutorials");
     updateMeta("property", "og:title", metadata.title);
@@ -51,7 +51,7 @@ export default function RouteMetadata() {
     updateMeta("name", "twitter:description", metadata.description);
     updateMeta("name", "twitter:image", logoUrl);
     updateCanonical(canonical);
-  }, [canonical, isIndexable, metadata.description, metadata.title]);
+  }, [canonical, isIndexable, metadata.description, metadata.title, path]);
 
   return null;
 }

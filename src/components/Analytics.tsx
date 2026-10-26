@@ -6,12 +6,14 @@ export default function Analytics() {
   const location = useLocation();
 
   useEffect(() => {
+    if (location.pathname.startsWith("/admin")) return;
     initializeAnalytics();
     trackPageView(location.pathname, document.title);
   }, [location.pathname]);
 
   useEffect(() => {
     const trackLink = (event: MouseEvent) => {
+      if (window.location.pathname.startsWith("/admin")) return;
       const target = event.target;
       if (!(target instanceof Element)) return;
 
