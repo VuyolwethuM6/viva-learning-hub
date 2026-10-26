@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import { initializeAnalytics, trackAnalyticsEvent, trackPageView } from "@/lib/analytics";
 
 export default function Analytics() {
@@ -45,5 +46,5 @@ export default function Analytics() {
     return () => document.removeEventListener("click", trackLink);
   }, []);
 
-  return null;
+  return <VercelAnalytics />;
 }
