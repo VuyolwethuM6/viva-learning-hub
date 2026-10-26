@@ -38,7 +38,7 @@ async function record(amountCents: number, overrides: object = {}) {
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(
-    `create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key);create schema storage;create table storage.objects(id uuid);create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);`,
+    `create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key);create schema storage;create table storage.objects(id uuid,bucket_id text,name text,metadata jsonb);create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);`,
   );
   const sql = readFileSync("supabase/schema.sql", "utf8").replace(
     'create extension if not exists "pgcrypto";',
@@ -64,7 +64,7 @@ beforeEach(async () => {
     "create or replace function public.tuition_today() returns date language sql stable as $$ select date '2026-10-26' $$;",
   );
   await db.exec(
-    "truncate public.tuition_messages,public.tuition_payments,public.tuition_invoices,public.admin_audit,public.applications,public.tuition_closures cascade",
+    "truncate public.tuition_messages,public.tuition_payments,public.tuition_invoices,public.admin_audit,public.applications,public.tuition_closures,public.tuition_invoice_counters,storage.objects cascade",
   );
   await db.query(
     `insert into public.applications(id,application_number,learner_name,learner_email,guardian_name,guardian_email,grade_level,tutoring_mode,monthly_fee,status,report_card_name,report_card_size,report_card_path) values($1,'VT-TEST','Test Learner','learner@example.test','Parent','parent@example.test','Grade 10','Online',800,'pending_review','report.pdf',100,'VT-TEST/report.pdf')`,
@@ -353,5 +353,125 @@ describe("admin database financial invariants", () => {
         )
       ).rows[0].programme_weekdays,
     ).toEqual([1, 2, 3, 4, 5]);
+  });
+  it("recovers verified metadata for a legacy pending-review application and is repeatable", async () => {
+    await db.exec("delete from public.learner_documents");
+    await db.query(
+      "insert into storage.objects(bucket_id,name,metadata) values('learner-documents','VT-TEST/report.pdf',$1)",
+      [JSON.stringify({ size: 100, mimetype: "application/pdf" })],
+    );
+    await expect(approve()).rejects.toThrow("report card");
+    const result = await db.query<{ value: { document_id: string } }>(
+      "select public.finalize_enrollment_document($1,'application/pdf') value",
+      [app],
+    );
+    expect(result.rows[0].value.document_id).toBeTruthy();
+    await db.query(
+      "select public.finalize_enrollment_document($1,'application/pdf')",
+      [app],
+    );
+    expect(
+      (await db.query("select * from public.learner_documents")).rows,
+    ).toHaveLength(1);
+    expect(
+      (
+        await db.query<{ status: string }>(
+          "select status from public.applications",
+        )
+      ).rows[0].status,
+    ).toBe("pending_review");
+    await approve();
+  });
+  it("does not manufacture document records for missing or mismatched stored files", async () => {
+    await db.exec("delete from public.learner_documents");
+    await expect(
+      db.query(
+        "select public.finalize_enrollment_document($1,'application/pdf')",
+        [app],
+      ),
+    ).rejects.toThrow("not found");
+    await db.query(
+      "insert into storage.objects(bucket_id,name,metadata) values('learner-documents','VT-TEST/report.pdf',$1)",
+      [JSON.stringify({ size: 101, mimetype: "application/pdf" })],
+    );
+    await expect(
+      db.query(
+        "select public.finalize_enrollment_document($1,'application/pdf')",
+        [app],
+      ),
+    ).rejects.toThrow("size");
+    await db.exec("update storage.objects set metadata='{}'::jsonb");
+    await expect(
+      db.query(
+        "select public.finalize_enrollment_document($1,'application/pdf')",
+        [app],
+      ),
+    ).rejects.toThrow("verified");
+    expect(
+      (await db.query("select * from public.learner_documents")).rows,
+    ).toHaveLength(0);
+  });
+
+  it("numbers invoices by tuition month and grows beyond 99 without truncation", async () => {
+    await approve();
+    expect(
+      (
+        await db.query<{ number: string }>(
+          "select number from public.tuition_invoices",
+        )
+      ).rows[0].number,
+    ).toBe("VT-20261101");
+    await db.exec(
+      "update public.tuition_invoice_counters set last_number=99 where billing_month='2026-11-01'",
+    );
+    await db.exec(
+      "update public.tuition_invoices set number='VT-T-LEGACY-000001'",
+    );
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/20261026120000_monthly_invoice_numbers.sql",
+        "utf8",
+      ),
+    );
+    expect(
+      (
+        await db.query<{ number: string }>(
+          "select number from public.tuition_invoices",
+        )
+      ).rows[0].number,
+    ).toBe("VT-T-LEGACY-000001");
+    expect(
+      Number(
+        (
+          await db.query<{ last_number: number }>(
+            "select last_number from public.tuition_invoice_counters",
+          )
+        ).rows[0].last_number,
+      ),
+    ).toBe(99);
+    await db.exec(
+      "delete from public.tuition_messages;delete from public.tuition_invoices",
+    );
+    await db.exec("update public.applications set status='pending_review'");
+    await approve();
+    expect(
+      (
+        await db.query<{ number: string }>(
+          "select number from public.tuition_invoices",
+        )
+      ).rows[0].number,
+    ).toBe("VT-202611100");
+    await db.exec("update public.applications set status='active'");
+    await db.exec(
+      "create or replace function public.tuition_today() returns date language sql stable as $$ select date '2026-11-25' $$;",
+    );
+    await action("generate_month", { month: "2026-12-01" });
+    expect(
+      (
+        await db.query<{ number: string }>(
+          "select number from public.tuition_invoices where billing_month='2026-12-01'",
+        )
+      ).rows[0].number,
+    ).toBe("VT-20261201");
   });
 });

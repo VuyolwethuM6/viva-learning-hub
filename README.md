@@ -9,7 +9,7 @@ React/TypeScript website for Viva Tutorials, with Vercel API routes for enrollme
 - [Implementation status and next work](docs/implementation-status.md): current behavior, verification evidence, gaps and proposed priorities.
 - [Service setup and verification](docs/supabase-setup.md): environment requirements, Supabase drift and controlled integration checks.
 
-The current milestone passes 46 tests, including embedded PostgreSQL-function tests and mocked API/UI boundaries, plus app/Node TypeScript checks and the production build. Lint has seven existing warnings. A Chromium smoke test exercised the admin interface through the actual API and embedded database with a synthetic Auth upstream. Live Supabase/Resend integration remains unverified. Email claim SQL and the new admin/tuition migration are included in Git and the fresh schema; they have not been applied to your live database by this task.
+The current milestone includes embedded PostgreSQL-function tests, mocked API/UI checks and a Chromium workflow through the actual admin API and embedded database with synthetic Auth/Storage. Live Supabase/Resend integration remains unverified. See the development guide for verification details. Email claims, admin/tuition definitions, strict document finalization and monthly invoice numbering are included in the migrations and fresh schema; no live SQL was executed by this coding task.
 
 Viva Tutorials is a South African tutoring and learning-support service for Grade 8-12 learners. Based in Mfuleni, Cape Town, we offer in-person support locally and online learning for students across South Africa.
 
@@ -42,15 +42,15 @@ Subject and grade availability may vary by tutor and learning format.
 
 The enrollment form and pricing page use these monthly subject-based fees:
 
-| Grade group | One subject | Two subjects | Three subjects |
-| --- | ---: | ---: | ---: |
-| Grades 8–9 | R350 | R600 | Not offered |
-| Grades 10–12 | R500 | R800 | R1,100 |
-| Matric Rewrite | R550 | R900 | R1,200 |
+| Grade group    | One subject | Two subjects | Three subjects |
+| -------------- | ----------: | -----------: | -------------: |
+| Grades 8–9     |        R350 |         R600 |    Not offered |
+| Grades 10–12   |        R500 |         R800 |         R1,100 |
+| Matric Rewrite |        R550 |         R900 |         R1,200 |
 
 First-month tuition is prorated using the learner's grade programme: Grades 8–11 include Monday–Saturday; Grade 12 includes Sunday feedback as well; Matric Rewrite counts all five weekdays. Configured closures are excluded. First payment is required before activation. Continuing invoices are issued on the 25th, due on the 1st, with unpaid-balance reminders from the 3rd. Billing/reminder actions are manual in this milestone; no scheduled collection is enabled.
 
-See [admin workflow and test setup](docs/admin-workflow.md) for the agreed policies, database migrations, admin account authorization and verification checklist. `/admin` provides application review, invoices, verified manual payment recording, activation and audit history. It does not yet provide teaching portals, automatic tuition payments or suspension/withdrawal controls.
+See [admin workflow and test setup](docs/admin-workflow.md) for the agreed policies, database migrations, admin account authorization and verification checklist. The branded, responsive `/admin` workspace provides application review, private report previews, invoice/receipt PDFs, verified manual payment recording, activation and audit history. Invoice/receipt emails retain the legacy branding and attach the corresponding PDF. New invoice numbers use the tuition month: November's first invoice is `VT-20261101`, even when issued in October. Teaching portals, automatic tuition payments and suspension/withdrawal controls remain future work.
 
 ## Study Materials
 

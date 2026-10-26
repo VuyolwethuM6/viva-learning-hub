@@ -4,22 +4,25 @@ Updated: 26 October 2026. This describes the current working tree. “Implemente
 
 ## Working scope
 
-| Area | Implementation | Verification boundary |
-| --- | --- | --- |
-| Enrollment | Multi-step intake, server-priced draft, private signed report upload, retry and metadata verification | UI/API tests; prior Chromium check used mocked services |
-| Application received | Stage-aware blur/loader, duplicate-click guard, matching-reference receipt, summary/print/contact, safe unknown-outcome handling | Existing tests and browser check |
-| Receipt/admin email | Triggered after document completion; failure does not undo enrollment; claim/release functions now included in Git and fresh schema | Owner previously applied email SQL in Supabase; this task did not inspect or migrate the live DB |
-| Admin access | `/admin`, Supabase Auth session, explicit enabled admin membership, HttpOnly cookie, server-side authorization and same-origin writes | Local API authorization tests; live account setup still required |
-| Review | Private report-card link requests, learner/guardian details, marks, notes, approve/reject | Real database function tests; UI/browser checks described in development guide |
-| First invoice | Approval transaction issues prorated first invoice and queues email | Database-enforced date, programme-day, document, fee and duplicate rules |
-| Tuition payments | Manual verified allocations, unique transaction references, partial/early invoice payments, audit | Real PostgreSQL-function tests; no bank/provider reconciliation |
-| Activation | Requires approval and fully settled first invoice | Enforced in DB, not merely by a disabled button |
-| Continuing billing | Manual next-month generation from 25th; invoices due 1st; reminder queue from 3rd | Date/duplicate tests; no scheduler enabled |
-| Notifications | Durable invoice/receipt/reminder/activation queue with lease and provider idempotency key | Provider mocked; sender configuration and live tests still needed |
-| Public pricing | Grade/subject fees aligned with enrollment | Replaces conflicting legacy session-package cards |
-| PDF commerce | Existing server-signed live PayFast checkout and notification validation; paid PDF emails | Separate from tuition; no new live payment test |
-| Enquiries/analytics | Existing Resend enquiry routes and optional GA; admin route skips app analytics | Existing implementation; no full enquiry integration test |
-| Teaching/portals/monitoring | Dashboard placeholders only | No fake academic data or “healthy” claims |
+| Area                        | Implementation                                                                                                                                               | Verification boundary                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Enrollment                  | Multi-step intake, server-priced draft, private signed report upload, retry, strict stored-file metadata verification and confirmed document-record creation | UI/API tests; prior Chromium check used mocked services                                             |
+| Application received        | Stage-aware blur/loader, duplicate-click guard, matching-reference receipt, summary/print/contact, safe unknown-outcome handling                             | Existing tests and browser check                                                                    |
+| Receipt/admin email         | Triggered after document completion; failure does not undo enrollment; claim/release functions now included in Git and fresh schema                          | Owner previously applied email SQL in Supabase; this task did not inspect or migrate the live DB    |
+| Admin access                | `/admin`, Supabase Auth session, explicit enabled admin membership, HttpOnly cookie, server-side authorization and same-origin writes                        | Local API authorization tests; live account setup still required                                    |
+| Admin design                | Viva-branded login, sidebar/mobile bottom navigation, real-data overview, learner cards/profile drawers and confirmation dialogs                             | Desktop/mobile Chromium checks with synthetic records; future teaching sections remain placeholders |
+| Review                      | Private report-card link requests, learner/guardian details, marks, notes, approve/reject                                                                    | Real database function tests; UI/browser checks described in development guide                      |
+| First invoice               | Approval transaction issues prorated first invoice and queues email                                                                                          | Database-enforced date, programme-day, document, fee and duplicate rules                            |
+| Invoice numbers             | New invoices use `VT-YYYYMMNN` for the tuition month, with an atomic shared monthly counter                                                                  | Reset, rerun and 100th-invoice database tests; existing issued numbers preserved                    |
+| Financial documents         | Branded private invoice/per-payment receipt PDFs, admin preview/download and attachments in the corresponding emails                                         | Actual PDF generation and local rendering checks; live provider delivery unverified                 |
+| Tuition payments            | Manual verified allocations, unique transaction references, partial/early invoice payments, audit                                                            | Real PostgreSQL-function tests; no bank/provider reconciliation                                     |
+| Activation                  | Requires approval and fully settled first invoice                                                                                                            | Enforced in DB, not merely by a disabled button                                                     |
+| Continuing billing          | Manual next-month generation from 25th; invoices due 1st; reminder queue from 3rd                                                                            | Date/duplicate tests; no scheduler enabled                                                          |
+| Notifications               | Durable invoice/receipt/reminder/activation queue with lease and provider idempotency key                                                                    | Provider mocked; sender configuration and live tests still needed                                   |
+| Public pricing              | Grade/subject fees aligned with enrollment                                                                                                                   | Replaces conflicting legacy session-package cards                                                   |
+| PDF commerce                | Existing server-signed live PayFast checkout and notification validation; paid PDF emails                                                                    | Separate from tuition; no new live payment test                                                     |
+| Enquiries/analytics         | Existing Resend enquiry routes and optional GA; admin route skips app analytics                                                                              | Existing implementation; no full enquiry integration test                                           |
+| Teaching/portals/monitoring | Dashboard placeholders only                                                                                                                                  | No fake academic data or “healthy” claims                                                           |
 
 ## Policies and operational guidance
 
@@ -29,7 +32,7 @@ Updated: 26 October 2026. This describes the current working tree. “Implemente
 
 ## Database synchronization
 
-The owner's previously supplied email claim/release SQL is now stored in `20261026090000_enrollment_email_claims.sql`. The new admin/tuition definitions are in `20261026100000_admin_tuition.sql`. Both are included in `supabase/schema.sql` for new projects. No live SQL was executed here. Apply reviewed migrations to the intended Supabase project before testing admin endpoints.
+The owner's previously supplied email claim/release SQL is stored in `20261026090000_enrollment_email_claims.sql`. Admin/tuition definitions are in `20261026100000_admin_tuition.sql`. The follow-up `20261026110000_verified_document_finalization.sql` repairs deployed finalizer drift and missing legacy metadata. Apply `20261026120000_monthly_invoice_numbers.sql` afterwards for the new numbering format. These are also included in `supabase/schema.sql` for new projects and `docs/admin-setup.sql` for the guided setup path. No live SQL was executed by this coding task. The owner reported that the finalizer repair worked and subsequently confirmed running the monthly invoice-number migration. This is owner-reported deployment status; this coding task did not independently query the live definitions.
 
 ## Next milestones
 
@@ -45,7 +48,7 @@ The owner's previously supplied email claim/release SQL is now stored in `202610
 - No live credentials were available in the coding environment. Production integration readiness is unverified.
 - Initial public submission still lacks server idempotency and refresh recovery. Lost initial creation responses direct users to support. Email claim timestamps are duplicate suppression, not exactly-once delivery.
 - Tuition notification retries must be investigated after ambiguous outcomes; older attempts require provider-history review.
-- PDF delivery still uses process-local duplicate tracking and lacks a durable purchase ledger.
+- The separate paid study-material PDF delivery still uses process-local duplicate tracking and lacks a durable purchase ledger. This is distinct from the new tuition document PDFs/outbox.
 - Suspension/withdrawal controls are absent. The schema's status foundations do not establish completed lifecycle management.
 - Public subject pages can describe enquiry-only services outside the current enrollment subject options; confirm availability with families during review.
 - Remaining baseline lint/build warnings are documented in the development guide; they are not ignored test failures.

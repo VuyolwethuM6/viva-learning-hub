@@ -184,6 +184,8 @@ describe("admin API authorization and boundaries", () => {
         return json({
           id: actor,
           claim_token: actor,
+          invoice_id: actor,
+          created_at: "2026-10-26T10:00:00Z",
           kind: "receipt",
           payload: {
             learner: "Test",
@@ -191,14 +193,38 @@ describe("admin API authorization and boundaries", () => {
             invoiceNumber: "VT-T-1",
             month: "2026-11-01",
             recipients: ["parent@example.test"],
+            amountCents: 100,
+            dueDate: "2026-11-01",
+            paidOn: "2026-10-26",
+            method: "EFT",
+            paymentId: actor,
+            teachingDays: 20,
+            remainingDays: 20,
             paidCents: 100,
             balanceCents: 0,
           },
         });
+      if (url.includes("/rest/v1/tuition_invoices?"))
+        return json([
+          {
+            period_start: "2026-11-01",
+            period_end: "2026-11-30",
+            monthly_fee: 500,
+          },
+        ]);
+      if (url.includes("/rest/v1/tuition_payments?"))
+        return json([{ transaction_reference: "BANK-TEST-001" }]);
       if (url === "https://api.resend.com/emails") {
         expect(init?.headers).toMatchObject({
           "Idempotency-Key": `tuition-${actor}`,
         });
+        const payload = JSON.parse(String(init?.body));
+        expect(payload.attachments).toHaveLength(1);
+        expect(
+          Buffer.from(payload.attachments[0].content, "base64")
+            .subarray(0, 5)
+            .toString(),
+        ).toBe("%PDF-");
         return json({ id: "provider-id" });
       }
       if (url.endsWith("admin_finish_message")) {
@@ -210,6 +236,6 @@ describe("admin API authorization and boundaries", () => {
     const response = res();
     await messages(req("POST", { id: actor }), response);
     expect(response.statusCode).toBe(200);
-    expect(fetch).toHaveBeenCalledTimes(5);
+    expect(fetch).toHaveBeenCalledTimes(7);
   });
 });

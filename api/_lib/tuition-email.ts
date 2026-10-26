@@ -2,21 +2,8 @@ import { BANK_DETAILS } from "./payment-details.js";
 import { escapeHtml } from "./email.js";
 import { HttpError } from "./http.js";
 
-type Payload = {
-  recipients: string[];
-  invoiceNumber: string;
-  studentNumber: string;
-  learner: string;
-  month: string;
-  dueDate: string;
-  amountCents: number;
-  balanceCents: number;
-  paidCents?: number;
-  paidOn?: string;
-  method?: string;
-  remainingDays: number;
-  teachingDays: number;
-};
+import { BRAND, type TuitionPayload } from "./tuition-document.js";
+type Payload = TuitionPayload;
 const money = (cents: number) => `R${(cents / 100).toFixed(2)}`;
 export function tuitionEmail(kind: string, payload: Payload) {
   const p = payload;
@@ -46,7 +33,7 @@ export function tuitionEmail(kind: string, payload: Payload) {
   } else if (kind === "activation") {
     lines.push(
       "Your application has been approved and your first invoice is fully paid. Your enrollment is now active.",
-      "Our team will contact you to confirm your session arrangements. This email does not create a learner portal or Google Classroom invitation.",
+      "Our team will contact you to confirm your session arrangements and help you get started.",
     );
   } else {
     if (process.env.TUITION_BANK_DETAILS_CONFIRMED !== "true")
@@ -76,10 +63,19 @@ export function tuitionEmail(kind: string, payload: Payload) {
   return {
     subject: `${title}: ${p.invoiceNumber}`,
     text: lines.join("\n\n"),
-    html: `<div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#160f2e"><h1 style="color:#7949fe">${escapeHtml(title)}</h1>${lines
-      .slice(1)
-      .map((line) => `<p style="line-height:1.6">${escapeHtml(line)}</p>`)
-      .join("")}</div>`,
+    html: `<div style="background:#f4f4f4;padding:24px 10px;font-family:Arial,Helvetica,sans-serif;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:auto;background:#fff;border-radius:14px;overflow:hidden;">
+      <tr><td style="background:#f9f3ec;padding:20px 24px;text-align:center;"><img src="${BRAND.logo}" alt="Viva Tutorials" width="115" style="width:115px;height:auto;display:block;margin:auto;"></td></tr>
+      <tr><td style="padding:28px;color:#333;font-size:14px;line-height:1.7;"><span style="display:inline-block;padding:4px 10px;border-radius:20px;background:${kind === "receipt" ? "#D6F7E8" : "#F0EBFF"};color:${kind === "receipt" ? "#0FA958" : "#7A4AF1"};font-size:11px;font-weight:bold;letter-spacing:1px;">${kind === "receipt" ? "PAYMENT RECORDED" : kind === "activation" ? "WELCOME TO VIVA" : "TUITION"}</span><h1 style="font-size:23px;line-height:1.3;color:${kind === "receipt" ? "#0FA958" : "#7A4AF1"};margin:16px 0;">${escapeHtml(title)}</h1>
+      ${lines
+        .slice(1)
+        .map(
+          (line) =>
+            `<p style="margin:0 0 12px;overflow-wrap:anywhere;">${escapeHtml(line)}</p>`,
+        )
+        .join("")}
+      ${["invoice", "receipt"].includes(kind) ? '<p style="padding:16px;background:#F0EBFF;border-radius:8px;color:#5428CC;font-weight:bold;">Your branded PDF is attached. Keep it with your records.</p>' : ""}</td></tr>
+      <tr><td style="background:#f9f9f9;border-top:1px solid #DDD6F0;padding:18px 24px;color:#777;font-size:12px;">Need help? Contact <a href="mailto:${BRAND.email}" style="color:#7A4AF1;text-decoration:none;">${BRAND.email}</a><br>Viva Tutorials · ${BRAND.location}</td></tr>
+      </table></div>`,
     to: Array.from(
       new Set(
         p.recipients.map((email) => email.trim().toLowerCase()).filter(Boolean),
