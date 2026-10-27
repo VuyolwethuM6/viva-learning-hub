@@ -22,7 +22,7 @@ Updated: 27 October 2026. This describes the parent-portal release on `work` and
 | Public pricing              | Grade/subject fees aligned with enrollment                                                                                                                   | Replaces conflicting legacy session-package cards                                                   |
 | PDF commerce                | Existing server-signed live PayFast checkout and notification validation; paid PDF emails                                                                    | Separate from tuition; no new live payment test                                                     |
 | Enquiries/analytics         | Existing Resend enquiry routes and optional GA; admin route skips app analytics                                                                              | Existing implementation; no full enquiry integration test                                           |
-| Teaching/portals/monitoring | Dashboard placeholders only                                                                                                                                  | No fake academic data or “healthy” claims                                                           |
+| Teaching/portals/monitoring | Classes, tutor access, private materials and confirmed attendance implemented; academic/learner tools and monitoring remain planned                                                                                                                                  | No fake academic data or “healthy” claims                                                           |
 
 ## Policies and operational guidance
 
@@ -50,12 +50,22 @@ Implemented at `/parent`: prototype-inspired responsive orange/purple design; em
 
 [Parent setup and testing](parent-portal.md) includes the SQL, Supabase SMTP/redirect/template settings and full controlled-inbox checklist. Existing tuition email templates are separate from the Supabase Auth templates. Parent academic publishing, proof uploads, second-guardian invitations and financial account transfers after a guardian change remain future work.
 
+## Teaching foundation release
+
+Implemented: admin tutor authorization, saved teaching rooms, reusable topics/goals, class setup, active learner membership, individual session scheduling with conflict/closure checks, versioned private teaching files with upload recovery, tutor email-link access, explicit attendance/completion/corrections and per-session audit history. Parents see authorized confirmed attendance and upcoming sessions, with private staff notes excluded. The owner has not yet reported applying the teaching migration or testing its live Auth/Storage setup.
+
+Run the complete [teaching-setup.sql](teaching-setup.sql) after parent setup. [Teaching setup and tests](teaching-test-guide.md) includes the extra tutor callback, shared portal-neutral Auth email template, deployment checks and full acceptance flow. No production SQL or external email was executed by the implementation tests.
+
+Enrollment marks/targets are shown and saved with session rosters. Assessment averages, diagnostic/formative/summative recording, learner submissions, timed exams and public materials/catalog management remain future releases. Existing study-material sales are unchanged.
+
 ## Next milestones
 
-1. Apply the parent upgrade, configure Auth email settings and complete the controlled-inbox checklist.
+The owner now reports the parent portal working as expected. [Teaching workflow plan](teaching-workflow-plan.md) records the next requirements, including materials, session work/homework, timed submissions, future public catalog management and a preference for choosing options over typing. This is planned work; the teaching modules are not implemented yet.
+
+1. Apply the teaching upgrade, configure the tutor callback/shared Auth email template and complete the live class → tutor → parent attendance test.
 2. Verify the scheduler, private evidence and controlled-inbox delivery before enabling automatic dispatch.
-3. Add online tuition checkout if needed, separately from PDF sales.
-4. Implement attendance, tutor assessment publishing and learner/tutor teaching workspaces.
+3. Add learner access, assigned work/submission, marking/review/publication and timed exams.
+4. Connect admin Materials to the public catalog and preserve paid-resource purchase/delivery behavior; online tuition checkout remains separate future work.
 5. Expand MFA/account recovery, pagination, advanced statutory reporting and operational monitoring/backup verification.
 
 ## Remaining risks and limits

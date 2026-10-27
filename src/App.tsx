@@ -9,6 +9,7 @@ import { HelmetProvider } from "react-helmet-async";
 import RouteMetadata from "./components/RouteMetadata";
 import Analytics from "./components/Analytics";
 
+const Tutor = lazy(() => import("./pages/Tutor"));
 const Parent = lazy(() => import("./pages/Parent"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Index = lazy(() => import("./pages/Index"));
@@ -69,6 +70,7 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
           <Route path="/enroll" element={<Enrollment />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/parent" element={<Parent />} />
+          <Route path="/tutor" element={<Tutor />} />
           <Route path="/tutors" element={<OurTutors />} />
           <Route path="/success-stories" element={<SuccessStories />} />
           <Route path="/mathematics" element={<Mathematics />} />

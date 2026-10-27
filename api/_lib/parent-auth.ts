@@ -9,11 +9,17 @@ type AuthSession = {
   refresh_token: string;
   expires_in: number;
 };
-const cookieNames = { access: "viva_parent", refresh: "viva_parent_refresh" };
+export type PortalAudience = "parent" | "tutor";
+const names = (audience: PortalAudience) => ({
+  access: `viva_${audience}`,
+  refresh: `viva_${audience}_refresh`,
+});
 export function parentCookie(
   request: ApiRequest,
-  kind: keyof typeof cookieNames,
+  kind: "access" | "refresh",
+  audience: PortalAudience = "parent",
 ) {
+  const cookieNames = names(audience);
   return (
     (request.headers.cookie || "")
       .split(";")
@@ -22,11 +28,16 @@ export function parentCookie(
       ?.slice(cookieNames[kind].length + 1) || ""
   );
 }
-export function parentCookies(response: ServerResponse, session?: AuthSession) {
+export function parentCookies(
+  response: ServerResponse,
+  session?: AuthSession,
+  audience: PortalAudience = "parent",
+) {
+  const cookieNames = names(audience);
   const secure =
     process.env.NODE_ENV === "production" ||
     ["preview", "production"].includes(process.env.VERCEL_ENV || "");
-  const attributes = `; Path=/api/parent; HttpOnly; SameSite=Strict${secure ? "; Secure" : ""}`;
+  const attributes = `; Path=/api/${audience}; HttpOnly; SameSite=Strict${secure ? "; Secure" : ""}`;
   response.setHeader("Set-Cookie", [
     `${cookieNames.access}=${session?.access_token || ""}; Max-Age=${session ? Math.min(session.expires_in || 3600, 3600) : 0}${attributes}`,
     `${cookieNames.refresh}=${session?.refresh_token || ""}; Max-Age=${session ? 7 * 24 * 3600 : 0}${attributes}`,
@@ -38,7 +49,7 @@ export function parentEmail(value: unknown) {
     value.length > 254 ||
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
   )
-    throw new HttpError(400, "Enter your guardian email address.");
+    throw new HttpError(400, "Enter your email address.");
   return value.trim().toLowerCase();
 }
 export async function parentAuthFetch(
@@ -47,7 +58,7 @@ export async function parentAuthFetch(
   token?: string,
 ) {
   const config = getSupabaseConfig();
-  if (!config) throw new HttpError(503, "Parent sign-in is not configured.");
+  if (!config) throw new HttpError(503, "Email sign-in is not configured.");
   return fetch(`${config.url}/auth/v1/${path}`, {
     method: data ? "POST" : "GET",
     headers: {
@@ -61,7 +72,7 @@ export async function parentAuthFetch(
 }
 async function verifiedIdentity(token: string): Promise<ParentUser> {
   if (!token || token.length > 8192)
-    throw new HttpError(401, "Please sign in to your parent account.");
+    throw new HttpError(401, "Please sign in to your Viva account.");
   const response = await parentAuthFetch("user", undefined, token);
   if (!response.ok)
     throw new HttpError(401, "Your session has expired. Please sign in again.");
@@ -71,18 +82,23 @@ async function verifiedIdentity(token: string): Promise<ParentUser> {
     email_confirmed_at?: string;
   };
   if (!user.id || !user.email || !user.email_confirmed_at)
-    throw new HttpError(401, "A verified guardian email is required.");
+    throw new HttpError(401, "A verified email is required.");
   return { id: uuid(user.id), email: parentEmail(user.email) };
 }
-export async function requireParent(request: ApiRequest): Promise<ParentUser> {
-  const user = await verifiedIdentity(parentCookie(request, "access"));
+export async function requireParent(
+  request: ApiRequest,
+  audience: PortalAudience = "parent",
+): Promise<ParentUser> {
+  const user = await verifiedIdentity(
+    parentCookie(request, "access", audience),
+  );
   try {
-    await rpc("parent_assert", { p_user: user.id });
+    await rpc(`${audience}_assert`, { p_user: user.id });
   } catch (error) {
     if (error instanceof HttpError && error.status === 409)
       throw new HttpError(
         403,
-        "Parent access is unavailable. Contact Viva Tutorials.",
+        `${audience === "tutor" ? "Tutor" : "Parent"} access is unavailable. Contact Viva Tutorials.`,
       );
     throw error;
   }
@@ -92,6 +108,7 @@ export async function completeParentSession(
   response: ServerResponse,
   auth: Response,
   expectedEmail?: string,
+  audience: PortalAudience = "parent",
 ) {
   if (!auth.ok)
     throw new HttpError(
@@ -113,25 +130,26 @@ export async function completeParentSession(
       "The verified email does not match this sign-in request.",
     );
   try {
-    await rpc("parent_bind", { p_user: user.id });
+    await rpc(`${audience}_bind`, { p_user: user.id });
   } catch (error) {
     if (error instanceof HttpError && error.status === 409)
       throw new HttpError(
         403,
-        "Parent access is unavailable. Contact Viva Tutorials.",
+        `${audience === "tutor" ? "Tutor" : "Parent"} access is unavailable. Contact Viva Tutorials.`,
       );
     throw error;
   }
-  parentCookies(response, session);
+  parentCookies(response, session, audience);
   return user;
 }
 export async function limitParentAuth(
   request: ApiRequest,
   email: string,
   operation: "send" | "verify",
+  audience: PortalAudience = "parent",
 ) {
   const config = getSupabaseConfig();
-  if (!config) throw new HttpError(503, "Parent sign-in is not configured.");
+  if (!config) throw new HttpError(503, "Email sign-in is not configured.");
   const address = String(
     request.headers["x-forwarded-for"] ||
       request.socket?.remoteAddress ||
@@ -144,7 +162,7 @@ export async function limitParentAuth(
     [`${operation}_ip`, address],
   ]) {
     const hash = createHash("sha256")
-      .update(config.key + ":parent:" + kind + ":" + value)
+      .update(config.key + ":" + audience + ":" + kind + ":" + value)
       .digest("hex");
     if (
       !(await rpc<boolean>("parent_rate_limit", { p_hash: hash, p_kind: kind }))

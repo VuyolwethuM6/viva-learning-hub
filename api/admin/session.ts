@@ -22,6 +22,11 @@ export default async function handler(
 ) {
   const target = new URL(request.url || "", "http://localhost");
   if (
+    target.pathname === "/api/tutor" ||
+    target.searchParams.get("portal") === "tutor"
+  )
+    return parentHandler(request, response, "tutor");
+  if (
     target.pathname === "/api/parent" ||
     target.searchParams.get("portal") === "parent"
   )

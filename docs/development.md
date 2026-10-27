@@ -90,3 +90,11 @@ See [parent-portal.md](parent-portal.md) for the current setup and test checklis
 Local verification covers real SQL family isolation, grants/revocation, financial snapshots and document boundaries; API tests cover email-only requests, one-use link exchange, no token exposure, refresh, CSRF and private PDFs. The isolated Chromium/WebKit run used actual HTTP handlers/SQL with synthetic Auth/Storage/email. It covered staff access enablement, email-link sign-in, sibling switching, finance/document downloads, foreign-family denial, expired access-token renewal, separate admin/parent sessions, logout, used-link recovery and mobile sections/dialogs. Live SMTP/redirect/bundled-file checks still require deployment verification.
 
 Final parent release checks: 140 tests across 17 files; both TypeScript targets; lint with zero errors/seven existing warnings; production build exit 0. Browser/email/DB boundaries above still apply.
+
+## Teaching foundation release
+
+See [teaching-test-guide.md](teaching-test-guide.md). Three canonical 2026102716 migrations are combined by `scripts/sync-teaching-setup.mjs` into the SQL Editor upgrade and the fresh-schema teaching section. Classes, memberships, sessions, saved roster targets, private resource versions and audit history are service-only. `teaching-service.ts` handles authorized reads/writes/uploads/downloads; the existing records endpoint serves admin teaching; the existing session endpoint dispatches tutor requests. Role-specific parent/tutor cookies share email-link Auth utilities without sharing role grants. The 12-function hosting budget is preserved. Teaching actions do not post financial journals.
+
+`TeachingWorkspace.tsx` supplies the select-first admin and tutor screens; `/tutor` is lazy-loaded, private/noindex and excluded from analytics. `ParentTeaching.tsx` independently fetches scoped attendance so finance remains available if the teaching upgrade is absent. Staff snapshot limits are explicit and per-session history can be retrieved independently. The shared Supabase Auth template now says Open my Viva portal for both parent/tutor callbacks.
+
+Teaching release verification: 162 tests/19 files; both TypeScript targets passed; lint zero errors/seven existing warnings; production build exit 0. Actual API/SQL Chromium and WebKit flows passed with synthetic provider boundaries.
