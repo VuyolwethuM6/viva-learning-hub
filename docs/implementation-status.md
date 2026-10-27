@@ -1,6 +1,6 @@
 # Implementation status and next work
 
-Updated: 26 October 2026. This describes the current working tree. “Implemented” means code exists; “verified locally” means the stated checks ran. Neither establishes production readiness or a deployed database migration.
+Updated: 27 October 2026. This describes the accounting release on `work`. “Implemented” means code exists; “verified locally” means the stated checks ran. Neither establishes production readiness or a deployed database migration.
 
 ## Working scope
 
@@ -15,10 +15,10 @@ Updated: 26 October 2026. This describes the current working tree. “Implemente
 | First invoice               | Approval transaction issues prorated first invoice and queues email                                                                                          | Database-enforced date, programme-day, document, fee and duplicate rules                            |
 | Invoice numbers             | New invoices use `VT-YYYYMMNN` for the tuition month, with an atomic shared monthly counter                                                                  | Reset, rerun and 100th-invoice database tests; existing issued numbers preserved                    |
 | Financial documents         | Branded private invoice/per-payment receipt PDFs, admin preview/download and attachments in the corresponding emails                                         | Actual PDF generation and local rendering checks; live provider delivery unverified                 |
-| Tuition payments            | Manual verified allocations, unique transaction references, partial/early invoice payments, audit                                                            | Real PostgreSQL-function tests; no bank/provider reconciliation                                     |
+| Tuition payments            | Verified EFT/cash receipts, family allocations/advances, refunds/corrections and audit                                                            | Real PostgreSQL-function tests; statement matching verified locally, live bank activity unverified                                     |
 | Activation                  | Requires approval and fully settled first invoice                                                                                                            | Enforced in DB, not merely by a disabled button                                                     |
-| Continuing billing          | Manual next-month generation from 25th; invoices due 1st; reminder queue from 3rd                                                                            | Date/duplicate tests; no scheduler enabled                                                          |
-| Notifications               | Durable invoice/receipt/reminder/activation queue with lease and provider idempotency key                                                                    | Provider mocked; sender configuration and live tests still needed                                   |
+| Continuing billing          | Manual/opt-in scheduled generation from 25th; due 1st; reminders from 3rd; Feb–Nov billing                                                                            | Date/duplicate/seasonal tests; unattended work starts disabled                                                          |
+| Notifications               | Durable tuition/financial document queue with leases, idempotency keys and opt-in dispatch                                                                    | Provider mocked; sender configuration and live tests still needed                                   |
 | Public pricing              | Grade/subject fees aligned with enrollment                                                                                                                   | Replaces conflicting legacy session-package cards                                                   |
 | PDF commerce                | Existing server-signed live PayFast checkout and notification validation; paid PDF emails                                                                    | Separate from tuition; no new live payment test                                                     |
 | Enquiries/analytics         | Existing Resend enquiry routes and optional GA; admin route skips app analytics                                                                              | Existing implementation; no full enquiry integration test                                           |
@@ -26,7 +26,7 @@ Updated: 26 October 2026. This describes the current working tree. “Implemente
 
 ## Policies and operational guidance
 
-[Admin workflow](admin-workflow.md) is the authoritative working policy and setup/test procedure: grade-specific weekly programmes, enrollment-form prices, first payment before activation, monthly invoicing on the 25th, due on the 1st and reminders from the 3rd. It distinguishes agreed suspension/withdrawal policies from controls not built yet.
+[Admin workflow](admin-workflow.md) is the authoritative working policy and setup/test procedure: grade-specific weekly programmes, enrollment-form prices, first payment before activation, monthly invoicing on the 25th, due on the 1st and reminders from the 3rd. The accounting release implements the learner billing/lifecycle controls described in the [accounting test guide](accounting-test-guide.md).
 
 [Development guide](development.md) covers commands and architecture. [Service setup](supabase-setup.md) covers enrollment-specific configuration and verification.
 
@@ -34,16 +34,21 @@ Updated: 26 October 2026. This describes the current working tree. “Implemente
 
 The owner's previously supplied email claim/release SQL is stored in `20261026090000_enrollment_email_claims.sql`. Admin/tuition definitions are in `20261026100000_admin_tuition.sql`. The follow-up `20261026110000_verified_document_finalization.sql` repairs deployed finalizer drift and missing legacy metadata. `20261026120000_monthly_invoice_numbers.sql` adds the tuition-month numbering format. These are also included in `supabase/schema.sql` for new projects and `docs/admin-setup.sql` for the guided setup path. No live SQL was executed by this coding task. The owner reported that the finalizer repair worked and subsequently confirmed running the monthly invoice-number migration. This is owner-reported deployment status; this coding task did not independently query the live definitions.
 
-The new `20261026130000_notification_management.sql` still needs applying before deployment of cancellation controls. It adds cancellation metadata/state, an authorized cancellation RPC, cancelled-message send protection and richer notification/audit snapshots. Application/student separation, readable audit entries, separate queue/history views and bounded mobile dialogs are included in the current working tree.
+The prior notification-management release (`20261026130000_notification_management.sql`) added cancellation metadata, an authorized cancellation RPC, send protection and richer snapshots. The owner reported the preceding workspace changes working. The accounting upgrade assumes this prerequisite is installed; its actual live definition was not independently checked.
+
+## Accounting release
+
+The owner confirmed resetting test records before this implementation. The six migrations dated 20261027 are consolidated in [accounting-setup.sql](accounting-setup.sql), and included in the fresh schema. No live migration was executed by this coding task.
+
+Implemented: zero-opening ZAR/no-VAT ledger; EFT/cash receipts and multi-invoice family allocations; advance credits, refunds, credit notes and reviewed reversals; expenses/payables/evidence; bank imports, matching and timing differences; statements and financial reports/exports; owner/bookkeeper/viewer finance roles; withdrawal, suspension/return and arrangements; closed periods; and opt-in scheduled billing/outbox dispatch. Routine tuition skips December/January. The [test guide](accounting-test-guide.md) provides the release checklist and verification boundaries.
 
 ## Next milestones
 
-1. Configure a test deployment and admin account; complete live synthetic enrollment, private document, approval, invoice, payment and email verification.
-2. Add suspension, withdrawal, payment arrangements, reversals/credits and reconciliation workflows before unattended billing.
-3. Introduce scheduled monthly generation/reminders with run history, monitoring and recovery. Do not describe manual buttons as scheduled automation.
-4. Add tuition online checkout and then authorized recurring collection. Keep it separate from PDF sales and require durable payment-provider event handling.
-5. Implement class access and learner/parent/tutor portals, then attendance, materials, assessments and reports. The proposed native class spaces replace Google Classroom; this remains a later product milestone.
-6. Expand admin MFA/account recovery, pagination, durable exports and operational monitoring/backup verification.
+1. Apply accounting setup to the intended test project and complete the live synthetic checklist.
+2. Verify the scheduler, private evidence and controlled-inbox delivery before enabling automatic dispatch.
+3. Add online tuition checkout if needed, separately from PDF sales.
+4. Implement learner/parent/tutor teaching portals and class access, then academic tools.
+5. Expand MFA/account recovery, pagination, advanced statutory reporting and operational monitoring/backup verification.
 
 ## Remaining risks and limits
 
@@ -51,6 +56,6 @@ The new `20261026130000_notification_management.sql` still needs applying before
 - Initial public submission still lacks server idempotency and refresh recovery. Lost initial creation responses direct users to support. Email claim timestamps are duplicate suppression, not exactly-once delivery.
 - Tuition notification retries must be investigated after ambiguous outcomes; older attempts require provider-history review.
 - The separate paid study-material PDF delivery still uses process-local duplicate tracking and lacks a durable purchase ledger. This is distinct from the new tuition document PDFs/outbox.
-- Suspension/withdrawal controls are absent. The schema's status foundations do not establish completed lifecycle management.
+- Student lifecycle changes are recorded and affect billing; teaching access remains a manual team responsibility until portals exist.
 - Public subject pages can describe enquiry-only services outside the current enrollment subject options; confirm availability with families during review.
 - Remaining baseline lint/build warnings are documented in the development guide; they are not ignored test failures.

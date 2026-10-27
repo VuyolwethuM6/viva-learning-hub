@@ -24,6 +24,9 @@ export type TuitionPayload = {
   periodStart?: string;
   periodEnd?: string;
   subjects?: string[];
+  creditedCents?: number;
+  reversed?: boolean;
+  remainingAllocationCents?: number;
 };
 export type TuitionDocument = TuitionPayload & {
   kind: "invoice" | "receipt";
@@ -66,7 +69,7 @@ export const documentFilename = (
 ) => `${documentNumber(p, kind).replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
 
 let assets: Promise<Buffer[]> | undefined;
-async function loadAssets() {
+export async function loadTuitionAssets() {
   assets ??= Promise.all(
     [
       "public/viva-tutorials-logo.png",
@@ -81,7 +84,7 @@ async function loadAssets() {
 }
 // Creates a real branded PDF entirely on the server; no external render service receives learner data.
 export async function buildTuitionPDF(p: TuitionDocument): Promise<Uint8Array> {
-  const [logoBytes, regularBytes, boldBytes] = await loadAssets();
+  const [logoBytes, regularBytes, boldBytes] = await loadTuitionAssets();
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   const regular = await doc.embedFont(regularBytes, { subset: true });
@@ -235,6 +238,10 @@ export async function buildTuitionPDF(p: TuitionDocument): Promise<Uint8Array> {
     y -= height;
   };
   addPage();
+  if (p.reversed)
+    text("REVERSED PAYMENT RECORD — see the current account statement", {
+      bold: true,
+    });
   const fromLines = [BRAND.name, BRAND.address, BRAND.location, BRAND.email];
   const toLines = [
     p.learner,
@@ -322,11 +329,20 @@ export async function buildTuitionPDF(p: TuitionDocument): Promise<Uint8Array> {
       row("Transaction reference", p.transactionReference);
     row("Payment identifier", p.paymentId || "See payment history");
     row("Invoice balance after payment", money(p.balanceCents));
+    if (
+      typeof p.remainingAllocationCents === "number" &&
+      p.remainingAllocationCents !== p.paidCents
+    )
+      row(
+        "Current allocation after corrections",
+        money(p.remainingAllocationCents),
+      );
     heading("PAYMENT CONFIRMED");
     text(
       "This receipt covers the payment shown above. It does not confirm that other invoices are settled.",
     );
   } else {
+    if (p.creditedCents) row("Credit notes issued", money(p.creditedCents));
     row("Balance at document preparation", money(p.balanceCents));
     heading("PAYMENT DETAILS");
     if (p.bankConfirmed) {

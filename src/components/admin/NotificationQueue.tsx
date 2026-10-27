@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Ban, Loader2, Search, Send } from "lucide-react";
 import type { Application, Invoice, Message } from "@/lib/admin-types";
-import { rand } from "@/lib/admin-types";
+import { invoiceBalance, rand } from "@/lib/admin-types";
 import { auditTime, notificationName } from "@/lib/admin-format";
 import { Badge, Dialog, EmptyState } from "./AdminPrimitives";
 
@@ -46,6 +46,7 @@ export function NotificationQueue({
       ?.learner_name ||
     "Learner record unavailable";
   const numberFor = (m: Message) =>
+    m.payload?.documentNumber ||
     m.payload?.invoiceNumber ||
     invoiceFor(m)?.number ||
     "Invoice record unavailable";
@@ -62,7 +63,7 @@ export function NotificationQueue({
       return "Removed from the send queue. No further sends are allowed for this notification.";
     if (m.state === "sent")
       return m.last_error?.startsWith("Skipped:")
-        ? "No reminder was sent because this invoice was already settled."
+        ? `No email was sent. ${m.last_error.slice("Skipped: ".length)}.`
         : "Accepted by the email provider. Inbox delivery has not been confirmed.";
     if (inFlight(m))
       return "A send attempt is in progress. Refresh after it finishes.";
@@ -183,12 +184,7 @@ export function NotificationQueue({
               {invoiceFor(m) && (
                 <div>
                   <dt>Current invoice balance</dt>
-                  <dd>
-                    {rand(
-                      invoiceFor(m)!.amount_cents -
-                        Number(invoiceFor(m)!.paid_cents),
-                    )}
-                  </dd>
+                  <dd>{rand(invoiceBalance(invoiceFor(m)!))}</dd>
                 </div>
               )}
               {m.sent_at && (

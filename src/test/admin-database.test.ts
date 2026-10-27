@@ -67,7 +67,7 @@ beforeEach(async () => {
     "create or replace function public.tuition_today() returns date language sql stable as $$ select date '2026-10-26' $$;",
   );
   await db.exec(
-    "truncate public.tuition_messages,public.tuition_payments,public.tuition_invoices,public.admin_audit,public.applications,public.tuition_closures,public.tuition_invoice_counters,storage.objects cascade",
+    "truncate public.accounting_requests,public.accounting_journals,public.tuition_messages,public.tuition_payments,public.tuition_invoices,public.admin_audit,public.applications,public.tuition_closures,public.tuition_invoice_counters,storage.objects cascade",
   );
   await db.query(
     `insert into public.applications(id,application_number,learner_name,learner_email,guardian_name,guardian_email,grade_level,tutoring_mode,monthly_fee,status,report_card_name,report_card_size,report_card_path) values($1,'VT-TEST','Test Learner','learner@example.test','Parent','parent@example.test','Grade 10','Online',800,'pending_review','report.pdf',100,'VT-TEST/report.pdf')`,
@@ -437,7 +437,18 @@ describe("admin database financial invariants", () => {
     const { rows } = await db.query<{ due: string; amount_cents: number }>(
       "select due_date::text as due,amount_cents from public.tuition_invoices where billing_month='2026-12-01'",
     );
-    expect(rows).toEqual([{ due: "2026-12-01", amount_cents: 80000 }]);
+    expect(rows).toEqual([]);
+    await db.exec(
+      "create or replace function public.tuition_today() returns date language sql stable as $$ select date '2027-01-25' $$;",
+    );
+    await action("generate_month", { month: "2027-02-01" });
+    expect(
+      (
+        await db.query<{ due: string; amount_cents: number }>(
+          "select due_date::text as due,amount_cents from public.tuition_invoices where billing_month='2027-02-01'",
+        )
+      ).rows,
+    ).toEqual([{ due: "2027-02-01", amount_cents: 80000 }]);
   });
   it("queues one monthly reminder from the 3rd and skips a settled invoice at send time", async () => {
     await approve();
@@ -583,7 +594,7 @@ describe("admin database financial invariants", () => {
     ).toHaveLength(0);
   });
 
-  it("numbers invoices by tuition month and grows beyond 99 without truncation", async () => {
+  it("numbers invoices by tuition month, preserves issued numbers on rerun and grows beyond 99", async () => {
     await approve();
     expect(
       (
@@ -594,9 +605,6 @@ describe("admin database financial invariants", () => {
     ).toBe("VT-20261101");
     await db.exec(
       "update public.tuition_invoice_counters set last_number=99 where billing_month='2026-11-01'",
-    );
-    await db.exec(
-      "update public.tuition_invoices set number='VT-T-LEGACY-000001'",
     );
     await db.exec(
       readFileSync(
@@ -610,39 +618,42 @@ describe("admin database financial invariants", () => {
           "select number from public.tuition_invoices",
         )
       ).rows[0].number,
-    ).toBe("VT-T-LEGACY-000001");
-    expect(
-      Number(
-        (
-          await db.query<{ last_number: number }>(
-            "select last_number from public.tuition_invoice_counters",
-          )
-        ).rows[0].last_number,
-      ),
-    ).toBe(99);
-    await db.exec(
-      "delete from public.tuition_messages;delete from public.tuition_invoices",
+    ).toBe("VT-20261101");
+    const other = "88888888-8888-4888-8888-888888888888";
+    await db.query(
+      "insert into public.applications(id,application_number,learner_name,learner_email,guardian_name,guardian_email,grade_level,tutoring_mode,monthly_fee,status) values($1,'VT-SECOND','Second learner','second@example.test','Parent','parent@example.test','Grade 10','Online',800,'pending_review')",
+      [other],
     );
-    await db.exec("update public.applications set status='pending_review'");
-    await approve();
+    await db.query(
+      "insert into public.learners(application_id,student_number,full_name,email) values($1,'VT-SECOND','Second learner','second@example.test')",
+      [other],
+    );
+    await db.query(
+      "insert into public.learner_documents(application_id,document_type,file_name,storage_path,mime_type,size_bytes) values($1,'report_card','r.pdf','second/r.pdf','application/pdf',100)",
+      [other],
+    );
+    await action("approve", { applicationId: other, startDate: start });
     expect(
       (
         await db.query<{ number: string }>(
-          "select number from public.tuition_invoices",
+          "select number from public.tuition_invoices where application_id=$1",
+          [other],
         )
       ).rows[0].number,
     ).toBe("VT-202611100");
-    await db.exec("update public.applications set status='active'");
     await db.exec(
-      "create or replace function public.tuition_today() returns date language sql stable as $$ select date '2026-11-25' $$;",
+      "update public.applications set status='active',enrollment_state='active'",
     );
-    await action("generate_month", { month: "2026-12-01" });
+    await db.exec(
+      "create or replace function public.tuition_today() returns date language sql stable as $$ select date '2027-01-25' $$;",
+    );
+    await action("generate_month", { month: "2027-02-01" });
     expect(
       (
         await db.query<{ number: string }>(
-          "select number from public.tuition_invoices where billing_month='2026-12-01'",
+          "select number from public.tuition_invoices where billing_month='2027-02-01' order by number",
         )
       ).rows[0].number,
-    ).toBe("VT-20261201");
+    ).toBe("VT-20270201");
   });
 });

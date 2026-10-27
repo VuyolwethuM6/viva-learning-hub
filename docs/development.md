@@ -1,6 +1,6 @@
 # Development and architecture
 
-Updated: 26 October 2026. See [implementation status](implementation-status.md) and [admin workflow](admin-workflow.md).
+Updated: 27 October 2026. See [implementation status](implementation-status.md) and [admin workflow](admin-workflow.md).
 
 ## Stack and map
 
@@ -69,9 +69,13 @@ The production build includes `scripts/prerender-route-metadata.mjs`, yielding 1
 
 ## Latest verification
 
-82 tests pass across ten files: 22 existing enrollment/catalogue/email tests, 16 PostgreSQL-function tests, 10 admin API tests, 13 admin UI/estimate tests, 6 completion API tests, 9 private document API tests and 6 branded document tests. New coverage checks application/student separation, queue/history views, cancellation reasons and authorization, protected send attempts, receipt snapshot preservation, cancellation idempotency and readable audit context. Completion coverage includes legacy pending-review recovery, rejected old RPC responses and verification before email. Both TypeScript targets pass; lint has no errors and seven baseline UI Fast Refresh warnings; the production build exits 0 with the baseline warnings described above.
+The final accounting release passed 119 tests across 15 files, both TypeScript targets, lint (zero errors; seven existing Fast Refresh warnings) and the production build (exit 0; the prerender warnings described above remain). This includes real PostgreSQL ledger/domain and atomic upgrade/rerun tests, financial input/PDF tests and accounting API authorization tests.
 
-An isolated Chromium test used the actual admin HTTP handlers and actual PGlite SQL functions, with synthetic Auth/Storage and no external sends. It exercised branded desktop/mobile sign-in, navigation, the report viewer and authenticated download, preservation of an unsaved review note, confirmations, Grade 12 Sunday prorating, tuition-month invoice numbering, actual invoice/receipt PDF downloads, partial-payment activation blocking, full settlement, activation and sign-out/401. The follow-up Chromium and WebKit checks also exercised mobile More/logout dialogs at 320×568, 568×320, 390×844 and 768×1024, application/student separation, audited queue cancellation, retained receipt PDF bytes and readable searchable audit history. These use browser engines in the cloud, not a physical iPhone. This harness lived outside the checkout and is not a production demo-auth bypass. Downloaded PDFs were also rendered and their extracted text inspected; structural PDF validity alone does not prove readable glyphs.
+Accounting implementation: `api/admin/accounting.ts` handles authorized reads/writes, exports, private evidence and bearer-authorized scheduled work. `api/_lib/accounting-*` and `dispatch-tuition-message.ts` implement server validation, documents and outbox dispatch. `src/components/admin/FinanceWorkspace.tsx`, `AccountingForms.tsx`, `LearnerAccountControls.tsx` and `src/lib/accounting-*` provide the responsive UI. Six reviewed accounting migrations are consolidated into `docs/accounting-setup.sql`. Optional Supabase Cron setup is separate from the core migration; main financial automation remains disabled until configured in Finance Controls.
+
+The accounting browser run additionally covered a cash receipt/available credit, activation, credit note, refund, paid supplier expense/private evidence, cash deposit, bank CSV import/match, ledger reports and real PDF/CSV downloads. Chromium checked every Finance section at mobile width. WebKit checked the Finance sections plus More/logout at 390×844, 320×568 and 568×320, and rejected signed-out finance reads. The accounting test guide records the expected synthetic balances.
+
+An earlier isolated Chromium test used the actual admin HTTP handlers and actual PGlite SQL functions, with synthetic Auth/Storage and no external sends. It exercised branded desktop/mobile sign-in, navigation, the report viewer and authenticated download, preservation of an unsaved review note, confirmations, Grade 12 Sunday prorating, tuition-month invoice numbering, actual invoice/receipt PDF downloads, partial-payment activation blocking, full settlement, activation and sign-out/401. The follow-up Chromium and WebKit checks also exercised mobile More/logout dialogs at 320×568, 568×320, 390×844 and 768×1024, application/student separation, audited queue cancellation, retained receipt PDF bytes and readable searchable audit history. These use browser engines in the cloud, not a physical iPhone. This harness lived outside the checkout and is not a production demo-auth bypass. Downloaded PDFs were also rendered and their extracted text inspected; structural PDF validity alone does not prove readable glyphs.
 
 ## Testing boundaries
 

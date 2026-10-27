@@ -1,0 +1,1261 @@
+-- Complete accounting setup for the existing Viva admin/tuition database.
+-- Run in the Supabase SQL Editor after the confirmed test-data reset.
+-- Reruns preserve posted books. No live credentials are embedded.
+begin;
+
+-- BEGIN ACCOUNTING MIGRATIONS (canonical files: supabase/migrations/20261027*.sql)
+-- First install starts from the owner's cleared test books. Never guess legacy postings.
+do $$ begin
+  if to_regclass('public.accounting_settings') is null and
+     (exists(select 1 from public.tuition_invoices) or exists(select 1 from public.tuition_payments)) then
+    raise exception 'Accounting first install requires empty test financial tables or a reviewed opening-data import.';
+  end if;
+end $$;
+
+alter table public.admin_users add column if not exists finance_role text not null default 'owner'
+  check(finance_role in ('owner','bookkeeper','viewer'));
+create table if not exists public.accounting_settings (
+  singleton boolean primary key default true check(singleton),
+  books_start date not null default '2026-01-01',
+  closed_through date,
+  automation_enabled boolean not null default false,
+  auto_send boolean not null default false,
+  scheduler_actor uuid references auth.users(id),
+  currency text not null default 'ZAR' check(currency='ZAR'),
+  vat_enabled boolean not null default false check(not vat_enabled),
+  recognised_through date,
+  check(closed_through is null or closed_through>=books_start-1)
+);
+insert into public.accounting_settings(singleton) values(true) on conflict do nothing;
+create table if not exists public.accounting_accounts (
+  code text primary key check(code ~ '^[0-9]{4}$'), name text not null,
+  kind text not null check(kind in ('asset','liability','equity','income','expense')),
+  control_account boolean not null default false,
+  active boolean not null default true
+);
+insert into public.accounting_accounts(code,name,kind,control_account) values
+('1000','Business bank','asset',false),('1010','Cash on hand','asset',false),
+('1100','Tuition receivable','asset',true),('1200','Other assets','asset',false),
+('2000','Deferred tuition','liability',true),('2100','Family credits and advances','liability',true),
+('2200','Supplier payables','liability',true),('2300','Other liabilities','liability',false),
+('3000','Owner funding and opening capital','equity',false),
+('4000','Tuition income','income',true),('4100','Other income','income',false),
+('5000','Tutor payments','expense',false),('5010','Rent','expense',false),
+('5020','Internet and communication','expense',false),('5030','Printing and learning materials','expense',false),
+('5040','Marketing','expense',false),('5050','Bank charges','expense',false),('5090','Other operating costs','expense',false)
+on conflict(code) do nothing;
+create table if not exists public.accounting_journals (
+  id uuid primary key default gen_random_uuid(), event_key text not null unique,
+  posted_on date not null, description text not null,
+  source_kind text not null, source_id uuid,
+  actor_id uuid not null references auth.users(id),
+  reversal_of uuid unique references public.accounting_journals(id),
+  created_at timestamptz not null default now()
+);
+create table if not exists public.accounting_lines (
+  id uuid primary key default gen_random_uuid(),
+  journal_id uuid not null references public.accounting_journals(id),
+  account_code text not null references public.accounting_accounts(code),
+  amount_cents bigint not null check(amount_cents<>0 and abs(amount_cents)<=2000000000),
+  application_id uuid references public.applications(id),
+  invoice_id uuid references public.tuition_invoices(id)
+);
+create index if not exists accounting_lines_journal on public.accounting_lines(journal_id);
+create index if not exists accounting_lines_account on public.accounting_lines(account_code,journal_id);
+create index if not exists accounting_lines_invoice on public.accounting_lines(invoice_id);
+create index if not exists accounting_journals_date on public.accounting_journals(posted_on);
+create table if not exists public.accounting_counters (
+  kind text not null, month date not null, last_number bigint not null,
+  primary key(kind,month)
+);
+create table if not exists public.accounting_receipts (
+  id uuid primary key, number text not null unique,
+  application_id uuid not null references public.applications(id),
+  billing_email text not null, payer_name text not null,
+  amount_cents bigint not null check(amount_cents>0 and amount_cents<=2000000000),
+  paid_on date not null, method text not null check(method in ('EFT','Cash')),
+  reference text not null check(length(trim(reference)) between 3 and 120),
+  note text not null, actor_id uuid not null references auth.users(id),
+  journal_id uuid not null references public.accounting_journals(id),
+  reversed_at timestamptz, reversal_journal_id uuid references public.accounting_journals(id),
+  created_at timestamptz not null default now(), unique(method,reference)
+);
+alter table public.tuition_payments
+  add column if not exists receipt_id uuid references public.accounting_receipts(id);
+alter table public.tuition_payments drop constraint if exists tuition_payments_method_transaction_reference_key;
+create table if not exists public.accounting_allocation_releases (
+  id uuid primary key default gen_random_uuid(),
+  payment_id uuid not null references public.tuition_payments(id),
+  amount_cents bigint not null check(amount_cents>0),
+  reason text not null, journal_id uuid not null references public.accounting_journals(id),
+  created_at timestamptz not null default now()
+);
+create table if not exists public.accounting_credit_notes (
+  id uuid primary key, number text not null unique,
+  invoice_id uuid not null references public.tuition_invoices(id),
+  amount_cents bigint not null check(amount_cents>0), reason text not null,
+  issued_on date not null, actor_id uuid not null references auth.users(id),
+  journal_id uuid not null references public.accounting_journals(id), created_at timestamptz not null default now()
+);
+create table if not exists public.accounting_allocation_snapshots (
+  payment_id uuid primary key references public.tuition_payments(id),
+  balance_cents bigint not null,
+  created_at timestamptz not null default now()
+);
+alter table public.accounting_allocation_snapshots enable row level security;
+revoke all on public.accounting_allocation_snapshots from public,anon,authenticated;
+grant all on public.accounting_allocation_snapshots to service_role;
+alter table public.accounting_credit_notes add column if not exists reversed_at timestamptz,add column if not exists reversal_journal_id uuid references public.accounting_journals(id);
+create table if not exists public.accounting_refunds (
+  id uuid primary key, number text not null unique,
+  receipt_id uuid not null references public.accounting_receipts(id),
+  amount_cents bigint not null check(amount_cents>0),
+  paid_on date not null, method text not null check(method in ('EFT','Cash')),
+  reference text not null, reason text not null,
+  actor_id uuid not null references auth.users(id), journal_id uuid not null references public.accounting_journals(id),
+  reversed_at timestamptz, reversal_journal_id uuid references public.accounting_journals(id),
+  created_at timestamptz not null default now(), unique(method,reference)
+);
+alter table public.accounting_receipts add column if not exists replaces_receipt_id uuid references public.accounting_receipts(id);
+alter table public.accounting_receipts drop constraint if exists accounting_receipts_method_reference_key;
+alter table public.accounting_refunds drop constraint if exists accounting_refunds_method_reference_key;
+create unique index if not exists accounting_receipt_active_reference on public.accounting_receipts(method,reference) where reversed_at is null;
+create unique index if not exists accounting_refund_active_reference on public.accounting_refunds(method,reference) where reversed_at is null;
+
+create table if not exists public.accounting_suppliers (
+  id uuid primary key default gen_random_uuid(), name text not null check(length(trim(name)) between 1 and 200),
+  email text, phone text, created_at timestamptz not null default now()
+);
+create table if not exists public.accounting_bills (
+  id uuid primary key, number text not null unique,
+  supplier_id uuid not null references public.accounting_suppliers(id),
+  category text not null references public.accounting_accounts(code),
+  description text not null, issued_on date not null, due_on date not null,
+  amount_cents bigint not null check(amount_cents>0 and amount_cents<=2000000000),
+  actor_id uuid not null references auth.users(id), journal_id uuid not null references public.accounting_journals(id),
+  reversed_at timestamptz, reversal_journal_id uuid references public.accounting_journals(id),
+  created_at timestamptz not null default now()
+);
+create table if not exists public.accounting_bill_payments (
+  id uuid primary key, bill_id uuid not null references public.accounting_bills(id),
+  amount_cents bigint not null check(amount_cents>0),
+  paid_on date not null, method text not null check(method in ('EFT','Cash')),
+  reference text not null, note text not null,
+  actor_id uuid not null references auth.users(id), journal_id uuid not null references public.accounting_journals(id),
+  reversed_at timestamptz, reversal_journal_id uuid references public.accounting_journals(id),
+  created_at timestamptz not null default now(), unique(method,reference)
+);
+alter table public.accounting_bill_payments drop constraint if exists accounting_bill_payments_method_reference_key;
+create unique index if not exists accounting_bill_payment_active_reference on public.accounting_bill_payments(method,reference) where reversed_at is null;
+
+create table if not exists public.accounting_statement_batches (
+  id uuid primary key, fingerprint text not null unique, name text not null,
+  account_code text not null references public.accounting_accounts(code) check(account_code='1000'),
+  from_date date not null, to_date date not null check(to_date>=from_date),
+  opening_cents bigint not null, closing_cents bigint not null,
+  actor_id uuid not null references auth.users(id), created_at timestamptz not null default now()
+);
+create table if not exists public.accounting_statement_lines (
+  id uuid primary key default gen_random_uuid(), batch_id uuid not null references public.accounting_statement_batches(id),
+  external_id text not null unique, posted_on date not null,
+  description text not null, amount_cents bigint not null check(amount_cents<>0),
+  matched_journal_id uuid unique references public.accounting_journals(id),
+  matched_at timestamptz, matched_by uuid references auth.users(id)
+);
+alter table public.accounting_statement_batches add column if not exists voided_at timestamptz,add column if not exists void_reason text;
+alter table public.accounting_statement_lines add column if not exists voided boolean not null default false;
+alter table public.accounting_statement_batches drop constraint if exists accounting_statement_batches_fingerprint_key;
+alter table public.accounting_statement_lines drop constraint if exists accounting_statement_lines_external_id_key;
+create unique index if not exists accounting_active_statement_file on public.accounting_statement_batches(fingerprint) where voided_at is null;
+create unique index if not exists accounting_active_bank_id on public.accounting_statement_lines(external_id) where not voided;
+create table if not exists public.accounting_reconciliation_events (
+  id uuid primary key default gen_random_uuid(), statement_line_id uuid not null references public.accounting_statement_lines(id),
+  journal_id uuid not null references public.accounting_journals(id), action text not null check(action in ('match','unmatch')),
+  reason text not null, actor_id uuid not null references auth.users(id), created_at timestamptz not null default now()
+);
+create table if not exists public.accounting_bank_timing (
+  id uuid primary key default gen_random_uuid(), journal_id uuid not null unique references public.accounting_journals(id),
+  expected_on date not null, reason text not null, actor_id uuid not null references auth.users(id),
+  withdrawn_at timestamptz, withdrawal_reason text, created_at timestamptz not null default now()
+);
+create table if not exists public.accounting_period_events (
+  id uuid primary key default gen_random_uuid(), action text not null check(action in ('close','reopen')),
+  through_date date not null, reason text not null, actor_id uuid not null references auth.users(id),
+  created_at timestamptz not null default now()
+);
+create table if not exists public.accounting_runs (
+  id uuid primary key default gen_random_uuid(), run_on date not null unique,
+  state text not null check(state in ('completed','failed')), attempts integer not null default 1,
+  result jsonb not null default '{}', last_error text,
+  actor_id uuid not null references auth.users(id), created_at timestamptz not null default now(), finished_at timestamptz not null default now()
+);
+create table if not exists public.accounting_attachments (
+  id uuid primary key default gen_random_uuid(), bill_id uuid not null references public.accounting_bills(id),
+  name text not null, mime text not null check(mime in ('application/pdf','image/jpeg','image/png')),
+  size_bytes integer not null check(size_bytes between 1 and 10485760), storage_path text not null unique,
+  finalized_at timestamptz, actor_id uuid not null references auth.users(id), created_at timestamptz not null default now()
+);
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+  values('accounting-documents','accounting-documents',false,10485760,array['application/pdf','image/jpeg','image/png']) on conflict(id) do update set public=false,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
+
+alter table public.applications
+  add column if not exists enrollment_state text not null default 'not_enrolled' check(enrollment_state in ('not_enrolled','active','suspended','withdrawn')),
+  add column if not exists billing_end_date date,
+  add column if not exists withdrawn_on date,
+  add column if not exists lifecycle_reason text,
+  add column if not exists arrangement_until date,
+  add column if not exists arrangement_note text;
+alter table public.tuition_invoices
+  add column if not exists credited_cents bigint not null default 0,
+  add column if not exists recognised_cents bigint not null default 0,
+  add column if not exists earning_dates date[] not null default '{}',
+  add column if not exists journal_id uuid references public.accounting_journals(id);
+alter table public.tuition_messages alter column invoice_id drop not null;
+alter table public.tuition_messages drop constraint if exists tuition_messages_kind_check;
+alter table public.tuition_messages add constraint tuition_messages_kind_check check(kind in ('invoice','receipt','reminder','activation','account_receipt','credit_note','refund','allocation'));
+
+-- Only the server can access accounting tables. Domain functions do their own role check.
+do $$ declare t text; begin
+  foreach t in array array['accounting_settings','accounting_accounts','accounting_journals','accounting_lines','accounting_counters','accounting_receipts','accounting_allocation_releases','accounting_credit_notes','accounting_refunds','accounting_suppliers','accounting_bills','accounting_bill_payments','accounting_statement_batches','accounting_statement_lines','accounting_bank_timing','accounting_reconciliation_events','accounting_period_events','accounting_runs','accounting_attachments'] loop
+    execute format('alter table public.%I enable row level security',t);
+    execute format('revoke all on public.%I from public,anon,authenticated',t);
+    execute format('grant all on public.%I to service_role',t);
+  end loop;
+end $$;
+
+create or replace function public.accounting_assert(p_actor uuid,p_owner boolean default false) returns void
+language plpgsql security definer set search_path='' as $$
+begin
+  perform public.admin_assert(p_actor);
+  if not exists(select 1 from public.admin_users where user_id=p_actor and finance_role in ('owner','bookkeeper') and (not p_owner or finance_role='owner')) then
+    raise exception 'Your finance role does not permit this action.';
+  end if;
+end $$;
+create or replace function public.accounting_audit(p_actor uuid,p_action text,p_data jsonb,p_application uuid default null) returns void
+language sql security definer set search_path='' as $$
+  insert into public.admin_audit(actor_id,action,application_id,details) values(p_actor,p_action,p_application,p_data);
+$$;
+create or replace function public.accounting_next_number(p_kind text,p_date date) returns text
+language plpgsql security definer set search_path='' as $$
+declare n bigint; begin
+  insert into public.accounting_counters(kind,month,last_number) values(p_kind,date_trunc('month',p_date)::date,1)
+    on conflict(kind,month) do update set last_number=public.accounting_counters.last_number+1 returning last_number into n;
+  return 'VT-'||p_kind||'-'||to_char(p_date,'YYYYMM')||case when n<10 then '0' else '' end||n;
+end $$;
+create or replace function public.accounting_immutable() returns trigger
+language plpgsql set search_path='' as $$ begin raise exception 'Posted accounting history is immutable. Record a reversal instead.'; end $$;
+do $$ declare t text; begin
+  foreach t in array array['accounting_journals','accounting_lines','accounting_allocation_releases','accounting_allocation_snapshots','accounting_credit_notes','accounting_reconciliation_events','accounting_period_events'] loop
+    execute format('drop trigger if exists accounting_immutable on public.%I',t);
+    execute format('create trigger accounting_immutable before update or delete on public.%I for each row execute function public.accounting_immutable()',t);
+  end loop;
+end $$;
+create or replace function public.accounting_balanced() returns trigger
+language plpgsql security definer set search_path='' as $$
+declare v_id uuid; v_count integer; v_sum numeric;
+begin
+  if tg_table_name='accounting_journals' then v_id=new.id; else v_id=new.journal_id; end if;
+  select count(*),coalesce(sum(amount_cents),0) into v_count,v_sum from public.accounting_lines where journal_id=v_id;
+  if v_count<2 or v_sum<>0 then raise exception 'Every journal must have at least two balanced lines.'; end if;
+  return null;
+end $$;
+drop trigger if exists accounting_balance on public.accounting_journals;
+create constraint trigger accounting_balance after insert on public.accounting_journals deferrable initially deferred for each row execute function public.accounting_balanced();
+drop trigger if exists accounting_balance on public.accounting_lines;
+create constraint trigger accounting_balance after insert on public.accounting_lines deferrable initially deferred for each row execute function public.accounting_balanced();
+
+create or replace function public.accounting_post(p_actor uuid,p_key text,p_date date,p_description text,p_kind text,p_source uuid,p_lines jsonb,p_reversal uuid default null) returns uuid
+language plpgsql security definer set search_path='' as $$
+declare s public.accounting_settings; v_id uuid; v_line jsonb; v_sum numeric=0; v_cash bigint;
+begin
+  perform public.accounting_assert(p_actor);
+  select * into s from public.accounting_settings where singleton for update;
+  if p_date is null or p_date<s.books_start or p_date>public.tuition_today() then raise exception 'Choose a posting date within the open books and not in the future.'; end if;
+  if s.closed_through is not null and p_date<=s.closed_through then raise exception 'This accounting period is closed.'; end if;
+  select id into v_id from public.accounting_journals where event_key=p_key;
+  if v_id is not null then return v_id; end if;
+  if jsonb_typeof(p_lines) is distinct from 'array' then raise exception 'Supply journal lines as an array.'; end if;
+  if length(trim(coalesce(p_description,'')))<5 or jsonb_array_length(p_lines)<2 or jsonb_array_length(p_lines)>100 then raise exception 'A journal needs a description and two to 100 lines.'; end if;
+  for v_line in select value from jsonb_array_elements(p_lines) loop
+    if not exists(select 1 from public.accounting_accounts where code=v_line->>'account' and active) or
+       coalesce(v_line->>'cents','') !~ '^-?[0-9]+$' or (v_line->>'cents')::bigint=0 or abs((v_line->>'cents')::bigint)>2000000000 then raise exception 'Supply valid active accounts and integer cents for every journal line.'; end if;
+    v_sum=v_sum+(v_line->>'cents')::bigint;
+  end loop;
+  if v_sum<>0 then raise exception 'Journal debits and credits must balance.'; end if;
+  insert into public.accounting_journals(event_key,posted_on,description,source_kind,source_id,actor_id,reversal_of)
+    values(p_key,p_date,p_description,p_kind,p_source,p_actor,p_reversal) returning id into v_id;
+  insert into public.accounting_lines(journal_id,account_code,amount_cents,application_id,invoice_id)
+    select v_id,x->>'account',(x->>'cents')::bigint,nullif(x->>'applicationId','')::uuid,nullif(x->>'invoiceId','')::uuid from jsonb_array_elements(p_lines) x;
+  -- Only cash outflows need the historical cash-count check.
+  if coalesce((select sum((x->>'cents')::bigint) from jsonb_array_elements(p_lines)x where x->>'account'='1010'),0)<0 then
+    select min(running) into v_cash from (
+      select sum(sum(l.amount_cents)) over(order by j.posted_on) as running from public.accounting_lines l join public.accounting_journals j on j.id=l.journal_id where l.account_code='1010' group by j.posted_on
+    ) q;
+    if v_cash<0 then raise exception 'Cash on hand would become negative. Record funds received or correct the date first.'; end if;
+  end if;
+  return v_id;
+end $$;
+create or replace function public.accounting_reverse(p_actor uuid,p_journal uuid,p_id uuid,p_date date,p_reason text) returns uuid
+language plpgsql security definer set search_path='' as $$
+declare j public.accounting_journals; v_lines jsonb;
+begin
+  perform public.accounting_assert(p_actor);
+  if length(trim(coalesce(p_reason,'')))<5 then raise exception 'A reversal reason of at least five characters is required.'; end if;
+  select * into j from public.accounting_journals where id=p_journal;
+  if j.id is null then raise exception 'Journal not found.'; end if;
+  if exists(select 1 from public.accounting_statement_lines where matched_journal_id=j.id) then raise exception 'Unmatch the reconciled bank transaction before reversing this entry.'; end if;
+  if exists(select 1 from public.accounting_journals where reversal_of=j.id) then raise exception 'This journal has already been reversed.'; end if;
+  select jsonb_agg(jsonb_build_object('account',account_code,'cents',-amount_cents,'applicationId',application_id,'invoiceId',invoice_id)) into v_lines from public.accounting_lines where journal_id=j.id;
+  update public.accounting_bank_timing set withdrawn_at=now(),withdrawal_reason='Ledger entry reversed: '||p_reason where journal_id=j.id and withdrawn_at is null;
+  return public.accounting_post(p_actor,'reverse:'||p_id,p_date,'Reversal: '||p_reason,'reversal',p_id,v_lines,j.id);
+end $$;
+create or replace function public.accounting_allocation_net(p_payment uuid) returns bigint
+language sql stable security definer set search_path='' as $$
+  select p.amount_cents-coalesce((select sum(amount_cents) from public.accounting_allocation_releases where payment_id=p.id),0) from public.tuition_payments p where p.id=p_payment;
+$$;
+create or replace function public.accounting_invoice_paid(p_invoice uuid) returns bigint
+language sql stable security definer set search_path='' as $$ select coalesce(sum(public.accounting_allocation_net(id)),0)::bigint from public.tuition_payments where invoice_id=p_invoice; $$;
+create or replace function public.accounting_invoice_balance(p_invoice uuid) returns bigint
+language sql stable security definer set search_path='' as $$ select amount_cents-credited_cents-public.accounting_invoice_paid(id) from public.tuition_invoices where id=p_invoice; $$;
+create or replace function public.accounting_receipt_available(p_receipt uuid) returns bigint
+language sql stable security definer set search_path='' as $$
+  select case when r.reversed_at is not null then 0 else r.amount_cents-
+    coalesce((select sum(public.accounting_allocation_net(id)) from public.tuition_payments where receipt_id=r.id),0)-
+    coalesce((select sum(amount_cents) from public.accounting_refunds where receipt_id=r.id and reversed_at is null),0) end from public.accounting_receipts r where r.id=p_receipt;
+$$;
+
+-- Private helper functions are not RPCs for browser roles.
+do $$ declare f record; begin
+  for f in select p.oid::regprocedure as signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'accounting_%' loop
+    execute format('revoke all on function %s from public,anon,authenticated',f.signature);
+  end loop;
+end $$;
+notify pgrst,'reload schema';
+
+
+-- Domain operations post balanced journals and business records in one transaction.
+alter table public.applications add column if not exists activation_invoice_id uuid references public.tuition_invoices(id);
+
+create or replace function public.accounting_prepare_invoice() returns trigger
+language plpgsql security definer set search_path='' as $$
+begin
+  if extract(month from new.billing_month) not between 2 and 11 then raise exception 'Routine tuition billing runs February to November only.'; end if;
+  select coalesce(array_agg(d::date order by d),'{}') into new.earning_dates
+    from generate_series(new.period_start::timestamp,new.period_end::timestamp,interval '1 day') d
+    where extract(isodow from d)::integer=any(new.programme_weekdays) and not exists(select 1 from public.tuition_closures c where c.day=d::date);
+  if cardinality(new.earning_dates)<>new.remaining_days then raise exception 'The issued programme calendar must match the billed days.'; end if;
+  return new;
+end $$;
+drop trigger if exists accounting_prepare_invoice on public.tuition_invoices;
+create trigger accounting_prepare_invoice before insert on public.tuition_invoices for each row execute function public.accounting_prepare_invoice();
+create or replace function public.accounting_post_invoice() returns trigger
+language plpgsql security definer set search_path='' as $$
+declare v_journal uuid;
+begin
+  v_journal=public.accounting_post(new.created_by,'invoice:'||new.id,public.tuition_today(),'Tuition invoice '||new.number,'invoice',new.id,
+    jsonb_build_array(jsonb_build_object('account','1100','cents',new.amount_cents,'applicationId',new.application_id,'invoiceId',new.id),jsonb_build_object('account','2000','cents',-new.amount_cents,'applicationId',new.application_id,'invoiceId',new.id)));
+  update public.tuition_invoices set journal_id=v_journal where id=new.id;
+  return new;
+end $$;
+drop trigger if exists accounting_post_invoice on public.tuition_invoices;
+create trigger accounting_post_invoice after insert on public.tuition_invoices for each row execute function public.accounting_post_invoice();
+create or replace function public.accounting_protect_invoice() returns trigger
+language plpgsql set search_path='' as $$
+begin
+  if (to_jsonb(new)-array['credited_cents','recognised_cents','journal_id'])<>(to_jsonb(old)-array['credited_cents','recognised_cents','journal_id']) then
+    raise exception 'Issued invoice details cannot be edited. Record a credit note instead.';
+  end if;
+  if new.credited_cents<0 or new.recognised_cents<0 or new.credited_cents+new.recognised_cents>new.amount_cents then raise exception 'Invalid invoice credit or earned amount.'; end if;
+  return new;
+end $$;
+drop trigger if exists accounting_protect_invoice on public.tuition_invoices;
+create trigger accounting_protect_invoice before update on public.tuition_invoices for each row execute function public.accounting_protect_invoice();
+create or replace function public.admin_create_invoice(p_actor uuid,p_application uuid,p_month date,p_start date) returns uuid
+language plpgsql security definer set search_path='' as $$
+declare a public.applications; programme public.tuition_programmes; v_end date; v_total integer; v_remaining integer; v_id uuid;
+begin
+  perform public.accounting_assert(p_actor);
+  select * into a from public.applications where id=p_application for update;
+  if a.id is null or a.monthly_fee<=0 then raise exception 'A valid application fee is required.'; end if;
+  if p_month is null or p_start is null or extract(day from p_month)<>1 or date_trunc('month',p_start)::date<>p_month then raise exception 'The start date must be in the billing month.'; end if;
+  if extract(month from p_month) not between 2 and 11 then raise exception 'Routine tuition billing runs February to November only.'; end if;
+  select * into programme from public.tuition_programmes where grade=a.grade_level;
+  if programme.grade is null then raise exception 'A billing programme must be configured for this grade.'; end if;
+  v_end=least((p_month+interval '1 month - 1 day')::date,coalesce(a.billing_end_date,'infinity'::date));
+  if v_end<p_start then raise exception 'The learner billing end date is before this invoice period.'; end if;
+  select count(*),count(*) filter(where d::date between p_start and v_end) into v_total,v_remaining
+    from generate_series(p_month::timestamp,(p_month+interval '1 month - 1 day')::timestamp,interval '1 day') d
+    where extract(isodow from d)::integer=any(programme.weekdays) and not exists(select 1 from public.tuition_closures c where c.day=d::date);
+  if v_remaining=0 then raise exception 'No teaching days remain in this period.'; end if;
+  insert into public.tuition_invoices(application_id,billing_month,period_start,period_end,due_date,monthly_fee,teaching_days,remaining_days,programme_label,programme_weekdays,amount_cents,created_by)
+  values(a.id,p_month,p_start,v_end,p_start,a.monthly_fee,v_total,v_remaining,programme.label,programme.weekdays,round(a.monthly_fee*100*v_remaining/v_total),p_actor)
+  on conflict(application_id,billing_month) do nothing returning id into v_id;
+  if v_id is null then select id into v_id from public.tuition_invoices where application_id=a.id and billing_month=p_month; end if;
+  perform public.admin_queue(v_id,'invoice','invoice:'||v_id);
+  return v_id;
+end $$;
+create or replace function public.admin_queue(p_invoice uuid,p_kind text,p_key text,p_extra jsonb default '{}') returns void
+language plpgsql security definer set search_path='' as $$
+begin
+  insert into public.tuition_messages(invoice_id,kind,event_key,payload)
+  select i.id,p_kind,p_key,jsonb_build_object(
+    'invoiceNumber',i.number,'studentNumber',l.student_number,'learner',a.learner_name,
+    'recipients',jsonb_build_array(a.guardian_email,a.learner_email),'month',i.billing_month,
+    'dueDate',i.due_date,'amountCents',i.amount_cents,'monthlyFee',i.monthly_fee,
+    'remainingDays',i.remaining_days,'teachingDays',i.teaching_days,'creditedCents',i.credited_cents,
+    'balanceCents',public.accounting_invoice_balance(i.id)
+  ) || p_extra
+  from public.tuition_invoices i join public.applications a on a.id=i.application_id
+  join public.learners l on l.application_id=a.id where i.id=p_invoice on conflict(event_key) do nothing;
+end $$;
+create or replace function public.accounting_queue(p_kind text,p_id uuid,p_invoice uuid,p_payload jsonb) returns void
+language sql security definer set search_path='' as $$
+  insert into public.tuition_messages(invoice_id,kind,event_key,payload) values(p_invoice,p_kind,p_kind||':'||p_id,p_payload||jsonb_build_object('applicationId',coalesce((select application_id from public.tuition_invoices where id=p_invoice),(select application_id from public.accounting_receipts where id=p_id),(select r.application_id from public.accounting_refunds f join public.accounting_receipts r on r.id=f.receipt_id where f.id=p_id)))) on conflict(event_key) do nothing;
+$$;
+
+create or replace function public.accounting_allocate(p_actor uuid,p_receipt uuid,p_invoice uuid,p_amount bigint,p_id uuid,p_legacy boolean default false) returns uuid
+language plpgsql security definer set search_path='' as $$
+declare r public.accounting_receipts; i public.tuition_invoices; a public.applications; v_journal uuid; old public.tuition_payments;
+begin
+  perform public.accounting_assert(p_actor);
+  select * into r from public.accounting_receipts where id=p_receipt for update;
+  select * into i from public.tuition_invoices where id=p_invoice for update;
+  select * into a from public.applications where id=i.application_id;
+  if r.id is null or i.id is null or r.reversed_at is not null then raise exception 'Choose a valid receipt and invoice.'; end if;
+  select * into old from public.tuition_payments where id=p_id;
+  if old.id is not null then
+    if old.receipt_id<>p_receipt or old.invoice_id<>p_invoice or old.amount_cents<>p_amount then raise exception 'This allocation request already has different details.'; end if;
+    return old.id;
+  end if;
+  if lower(trim(a.guardian_email))<>r.billing_email then raise exception 'Allocate only to invoices belonging to the same parent or guardian account.'; end if;
+  if p_amount is null or p_amount<=0 or p_amount>public.accounting_receipt_available(r.id) then raise exception 'The allocation exceeds the available family credit.'; end if;
+  if p_amount>public.accounting_invoice_balance(i.id) then raise exception 'The allocation exceeds the outstanding invoice balance.'; end if;
+  v_journal=public.accounting_post(p_actor,'allocation:'||p_id,public.tuition_today(),'Allocate receipt '||r.number||' to '||i.number,'allocation',p_id,
+    jsonb_build_array(jsonb_build_object('account','2100','cents',p_amount,'applicationId',r.application_id),jsonb_build_object('account','1100','cents',-p_amount,'applicationId',i.application_id,'invoiceId',i.id)));
+  insert into public.tuition_payments(id,invoice_id,receipt_id,amount_cents,paid_on,method,transaction_reference,note,verified_by)
+    values(p_id,i.id,r.id,p_amount,r.paid_on,r.method,r.reference,r.note,p_actor);
+  insert into public.accounting_allocation_snapshots(payment_id,balance_cents) values(p_id,public.accounting_invoice_balance(i.id));
+  if p_legacy then
+    perform public.admin_queue(i.id,'receipt','receipt:'||p_id,jsonb_build_object('paymentId',p_id,'receiptId',r.id,'paidCents',p_amount,'paidOn',r.paid_on,'method',r.method));
+  end if;
+  return p_id;
+end $$;
+
+create or replace function public.accounting_receive(p_actor uuid,p_data jsonb,p_legacy boolean default false) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare
+  a public.applications; r public.accounting_receipts; v_id uuid=(p_data->>'id')::uuid;
+  v_amount bigint=(p_data->>'amountCents')::bigint; v_date date=(p_data->>'paidOn')::date;
+  v_method text=p_data->>'method'; v_ref text=upper(trim(coalesce(p_data->>'reference','')));
+  v_note text=trim(coalesce(p_data->>'note','')); v_journal uuid; v_number text; x jsonb; v_allocation uuid;
+  v_items jsonb='[]'; v_total bigint=0; v_invoice uuid; v_payload jsonb;
+begin
+  perform public.accounting_assert(p_actor);
+  perform 1 from public.accounting_settings where singleton for update;
+  if v_id is null or v_amount is null or v_amount<=0 or v_amount>2000000000 or v_date is null or v_date>public.tuition_today() or v_method is null or v_method not in ('EFT','Cash') or length(v_ref) not between 3 and 120 or length(v_note) not between 5 and 2000 then raise exception 'Supply a valid amount, EFT/Cash method, date, unique transaction reference and verification note.'; end if;
+  select * into a from public.applications where id=(p_data->>'applicationId')::uuid;
+  if a.id is null then raise exception 'Choose a learner or family account.'; end if;
+  select * into r from public.accounting_receipts where id=v_id;
+  if r.id is not null then
+    if r.amount_cents<>v_amount or r.paid_on<>v_date or r.method<>v_method or r.reference<>v_ref or r.application_id<>a.id then raise exception 'This payment request was already used with different details.'; end if;
+    return jsonb_build_object('receiptId',r.id,'number',r.number,'alreadyRecorded',true);
+  end if;
+  if exists(select 1 from public.accounting_receipts where method=v_method and reference=v_ref and reversed_at is null) then raise exception 'This transaction reference has already been recorded for this method.'; end if;
+  v_number=public.accounting_next_number('RC',v_date);
+  v_journal=public.accounting_post(p_actor,'receipt:'||v_id,v_date,'Money received '||v_number,'receipt',v_id,
+    jsonb_build_array(jsonb_build_object('account',case when v_method='Cash' then '1010' else '1000' end,'cents',v_amount,'applicationId',a.id),jsonb_build_object('account','2100','cents',-v_amount,'applicationId',a.id)));
+  insert into public.accounting_receipts(id,number,application_id,billing_email,payer_name,amount_cents,paid_on,method,reference,note,actor_id,journal_id,replaces_receipt_id)
+    values(v_id,v_number,a.id,lower(trim(a.guardian_email)),a.guardian_name,v_amount,v_date,v_method,v_ref,v_note,p_actor,v_journal,(select id from public.accounting_receipts where method=v_method and reference=v_ref and reversed_at is not null order by created_at desc limit 1));
+  if jsonb_typeof(coalesce(p_data->'allocations','[]'))<>'array' or jsonb_array_length(coalesce(p_data->'allocations','[]'))>50 then raise exception 'Supply up to 50 invoice allocations.'; end if;
+  for x in select value from jsonb_array_elements(coalesce(p_data->'allocations','[]')) loop
+    v_invoice=(x->>'invoiceId')::uuid;
+    v_allocation=case when p_legacy then v_id else gen_random_uuid() end;
+    perform public.accounting_allocate(p_actor,v_id,v_invoice,(x->>'amountCents')::bigint,v_allocation,p_legacy);
+    v_total=v_total+(x->>'amountCents')::bigint;
+    v_items=v_items||jsonb_build_array(jsonb_build_object('description','Allocated to '||(select number from public.tuition_invoices where id=v_invoice),'cents',(x->>'amountCents')::bigint));
+  end loop;
+  if v_amount>v_total then v_items=v_items||jsonb_build_array(jsonb_build_object('description','Available family credit','cents',v_amount-v_total)); end if;
+  if not p_legacy then
+    v_payload=jsonb_build_object('documentKind','account_receipt','documentId',v_id,'documentNumber',v_number,'title','Payment receipt','learner',a.learner_name,'payer',a.guardian_name,'recipients',jsonb_build_array(a.guardian_email),'issuedOn',v_date,'method',v_method,'reference',v_ref,'items',v_items,'totalCents',v_amount,'creditCents',v_amount-v_total,'note','This receipt records the payment and allocations shown. Other invoices may remain outstanding.');
+    perform public.accounting_queue('account_receipt',v_id,v_invoice,v_payload);
+  end if;
+  return jsonb_build_object('receiptId',v_id,'number',v_number,'journalId',v_journal);
+end $$;
+
+create or replace function public.accounting_release(p_actor uuid,p_payment uuid,p_amount bigint,p_date date,p_reason text,p_key text) returns void
+language plpgsql security definer set search_path='' as $$
+declare p public.tuition_payments; r public.accounting_receipts; i public.tuition_invoices; v_journal uuid;
+begin
+  select * into p from public.tuition_payments where id=p_payment for update;
+  select * into r from public.accounting_receipts where id=p.receipt_id;
+  select * into i from public.tuition_invoices where id=p.invoice_id;
+  if p_amount<=0 or p_amount>public.accounting_allocation_net(p.id) then raise exception 'Invalid allocation release.'; end if;
+  v_journal=public.accounting_post(p_actor,p_key,p_date,p_reason,'release',p.id,
+    jsonb_build_array(jsonb_build_object('account','1100','cents',p_amount,'applicationId',i.application_id,'invoiceId',i.id),jsonb_build_object('account','2100','cents',-p_amount,'applicationId',r.application_id)));
+  insert into public.accounting_allocation_releases(payment_id,amount_cents,reason,journal_id) values(p.id,p_amount,p_reason,v_journal);
+end $$;
+
+create or replace function public.accounting_credit(p_actor uuid,p_data jsonb) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare i public.tuition_invoices; a public.applications; c public.accounting_credit_notes; v_id uuid=(p_data->>'id')::uuid;
+  v_amount bigint=(p_data->>'amountCents')::bigint; v_reason text=trim(coalesce(p_data->>'reason',''));
+  v_date date=public.tuition_today(); v_deferred bigint; v_revenue bigint; v_over bigint; v_part bigint; v_journal uuid; v_number text; v_lines jsonb='[]'; p record;
+begin
+  perform public.accounting_assert(p_actor);
+  perform 1 from public.accounting_settings where singleton for update;
+  select * into c from public.accounting_credit_notes where id=v_id;
+  if c.id is not null then
+    if c.invoice_id<>(p_data->>'invoiceId')::uuid or c.amount_cents<>v_amount or c.reason<>v_reason then raise exception 'This credit request has different details.'; end if;
+    return jsonb_build_object('creditNoteId',c.id,'number',c.number,'alreadyRecorded',true);
+  end if;
+  select * into i from public.tuition_invoices where id=(p_data->>'invoiceId')::uuid for update;
+  if i.id is null or v_id is null or v_amount is null or v_amount<=0 or v_amount>i.amount_cents-i.credited_cents or length(v_reason) not between 5 and 2000 then raise exception 'Choose an invoice, valid credit amount and a reason of at least five characters.'; end if;
+  select * into a from public.applications where id=i.application_id;
+  v_number=public.accounting_next_number('CN',v_date);
+  v_deferred=least(v_amount,i.amount_cents-i.credited_cents-i.recognised_cents); v_revenue=v_amount-v_deferred;
+  if v_deferred>0 then v_lines=v_lines||jsonb_build_array(jsonb_build_object('account','2000','cents',v_deferred,'applicationId',a.id,'invoiceId',i.id)); end if;
+  if v_revenue>0 then v_lines=v_lines||jsonb_build_array(jsonb_build_object('account','4000','cents',v_revenue,'applicationId',a.id,'invoiceId',i.id)); end if;
+  v_lines=v_lines||jsonb_build_array(jsonb_build_object('account','1100','cents',-v_amount,'applicationId',a.id,'invoiceId',i.id));
+  v_journal=public.accounting_post(p_actor,'credit:'||v_id,v_date,'Credit note '||v_number,'credit_note',v_id,v_lines);
+  insert into public.accounting_credit_notes(id,number,invoice_id,amount_cents,reason,issued_on,actor_id,journal_id) values(v_id,v_number,i.id,v_amount,v_reason,v_date,p_actor,v_journal);
+  update public.tuition_invoices set credited_cents=credited_cents+v_amount,recognised_cents=recognised_cents-v_revenue where id=i.id;
+  v_over=greatest(0,-public.accounting_invoice_balance(i.id));
+  for p in select id from public.tuition_payments where invoice_id=i.id order by created_at desc,id loop
+    exit when v_over=0;
+    v_part=least(v_over,public.accounting_allocation_net(p.id));
+    if v_part>0 then perform public.accounting_release(p_actor,p.id,v_part,v_date,'Release credit note overpayment '||v_number,'credit-release:'||v_id||':'||p.id); v_over=v_over-v_part; end if;
+  end loop;
+  perform public.accounting_queue('credit_note',v_id,i.id,jsonb_build_object('documentKind','credit_note','documentId',v_id,'documentNumber',v_number,'title','Credit note','learner',a.learner_name,'payer',a.guardian_name,'recipients',jsonb_build_array(a.guardian_email,a.learner_email),'issuedOn',v_date,'items',jsonb_build_array(jsonb_build_object('description','Credit against '||i.number,'cents',v_amount)),'totalCents',v_amount,'note',v_reason));
+  return jsonb_build_object('creditNoteId',v_id,'number',v_number);
+end $$;
+
+create or replace function public.accounting_recognise(p_actor uuid,p_through date) returns bigint
+language plpgsql security definer set search_path='' as $$
+declare i public.tuition_invoices; v_target bigint; v_amount bigint; v_count bigint=0;
+begin
+  perform public.accounting_assert(p_actor);
+  perform 1 from public.accounting_settings where singleton for update;
+  if p_through is null or p_through>public.tuition_today() then raise exception 'Recognise tuition only through today or an earlier date.'; end if;
+  for i in select * from public.tuition_invoices where period_start<=p_through and amount_cents>credited_cents+recognised_cents order by id for update loop
+    v_target=round((i.amount_cents-i.credited_cents)::numeric*(select count(*) from unnest(i.earning_dates) d where d<=p_through)/greatest(1,cardinality(i.earning_dates)));
+    v_amount=greatest(0,v_target-i.recognised_cents);
+    if v_amount>0 then
+      perform public.accounting_post(p_actor,'earned:'||i.id||':'||v_target,case when i.period_end<=coalesce((select closed_through from public.accounting_settings where singleton),'-infinity'::date) then p_through else least(p_through,i.period_end) end,'Earned tuition '||i.number,'recognition',i.id,
+        jsonb_build_array(jsonb_build_object('account','2000','cents',v_amount,'applicationId',i.application_id,'invoiceId',i.id),jsonb_build_object('account','4000','cents',-v_amount,'applicationId',i.application_id,'invoiceId',i.id)));
+      update public.tuition_invoices set recognised_cents=recognised_cents+v_amount where id=i.id; v_count=v_count+1;
+    end if;
+  end loop;
+  update public.accounting_settings set recognised_through=greatest(coalesce(recognised_through,p_through),p_through) where singleton;
+  return v_count;
+end $$;
+
+-- Explicit immutable fields on allocations: releases are separate history rows.
+drop trigger if exists accounting_immutable on public.tuition_payments;
+create trigger accounting_immutable before update or delete on public.tuition_payments for each row execute function public.accounting_immutable();
+do $$ declare f record; begin
+  for f in select p.oid::regprocedure as signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like 'accounting_%' or p.proname in ('admin_queue','admin_create_invoice')) loop
+    execute format('revoke all on function %s from public,anon,authenticated',f.signature);
+  end loop;
+end $$;
+
+
+create table if not exists public.accounting_requests (
+  id uuid primary key, action text not null, payload jsonb not null, result jsonb not null,
+  actor_id uuid not null references auth.users(id), created_at timestamptz not null default now()
+);
+alter table public.accounting_requests enable row level security;
+revoke all on public.accounting_requests from public,anon,authenticated;
+grant all on public.accounting_requests to service_role;
+drop trigger if exists accounting_immutable on public.accounting_requests;
+create trigger accounting_immutable before update or delete on public.accounting_requests for each row execute function public.accounting_immutable();
+alter table public.accounting_bills add column if not exists supplier_name text not null default '';
+
+create or replace function public.accounting_pay_bill(p_actor uuid,p_data jsonb) returns uuid
+language plpgsql security definer set search_path='' as $$
+declare b public.accounting_bills; v_id uuid=(p_data->>'id')::uuid; v_amount bigint=(p_data->>'amountCents')::bigint;
+  v_date date=(p_data->>'paidOn')::date; v_method text=p_data->>'method'; v_ref text=upper(trim(coalesce(p_data->>'reference','')));
+  v_note text=trim(coalesce(p_data->>'note','')); v_paid bigint; v_journal uuid;
+begin
+  select * into b from public.accounting_bills where id=(p_data->>'billId')::uuid for update;
+  if b.id is null or b.reversed_at is not null then raise exception 'Choose an outstanding supplier bill.'; end if;
+  select coalesce(sum(amount_cents),0) into v_paid from public.accounting_bill_payments where bill_id=b.id and reversed_at is null;
+  if v_id is null or v_amount is null or v_amount<=0 or v_amount>b.amount_cents-v_paid or v_date is null or v_date<b.issued_on or v_method is null or v_method not in ('EFT','Cash') or length(v_ref) not between 3 and 120 or length(v_note)<5 then raise exception 'Supply a valid bill payment, date, EFT/Cash method, unique reference and verification note.'; end if;
+  if exists(select 1 from public.accounting_bill_payments where method=v_method and reference=v_ref and reversed_at is null) or exists(select 1 from public.accounting_refunds where method=v_method and reference=v_ref and reversed_at is null) then raise exception 'This outgoing transaction reference has already been recorded.'; end if;
+  v_journal=public.accounting_post(p_actor,'bill-payment:'||v_id,v_date,'Pay supplier bill '||b.number,'bill_payment',v_id,
+    jsonb_build_array(jsonb_build_object('account','2200','cents',v_amount),jsonb_build_object('account',case when v_method='Cash' then '1010' else '1000' end,'cents',-v_amount)));
+  insert into public.accounting_bill_payments(id,bill_id,amount_cents,paid_on,method,reference,note,actor_id,journal_id)
+    values(v_id,b.id,v_amount,v_date,v_method,v_ref,v_note,p_actor,v_journal);
+  return v_id;
+end $$;
+
+create or replace function public.accounting_match(p_actor uuid,p_line uuid,p_journal uuid,p_reason text,p_unmatch boolean default false) returns void
+language plpgsql security definer set search_path='' as $$
+declare l public.accounting_statement_lines; j public.accounting_journals; s public.accounting_settings; v_amount bigint;
+begin
+  perform public.accounting_assert(p_actor);
+  select * into s from public.accounting_settings where singleton for update;
+  select * into l from public.accounting_statement_lines where id=p_line for update;
+  if l.id is null or l.voided or length(trim(coalesce(p_reason,'')))<5 then raise exception 'Choose a bank transaction and record why it matches or needs unmatching.'; end if;
+  if s.closed_through is not null and l.posted_on<=s.closed_through then raise exception 'Reopen the closed accounting period before changing its reconciliation.'; end if;
+  if p_unmatch then
+    if l.matched_journal_id is null then raise exception 'This bank transaction is not matched.'; end if;
+    p_journal=l.matched_journal_id;
+    update public.accounting_statement_lines set matched_journal_id=null,matched_at=null,matched_by=null where id=l.id;
+  else
+    select * into j from public.accounting_journals where id=p_journal;
+    if j.id is null or l.matched_journal_id is not null then raise exception 'Choose an unmatched bank transaction and existing ledger entry.'; end if;
+    if exists(select 1 from public.accounting_journals where reversal_of=j.id) or j.reversal_of is not null then raise exception 'Choose an unreversed bank entry.'; end if;
+    select coalesce(sum(amount_cents),0) into v_amount from public.accounting_lines where journal_id=j.id and account_code='1000';
+    if v_amount<>l.amount_cents then raise exception 'The bank transaction and ledger entry must have the same signed amount.'; end if;
+    if exists(select 1 from public.accounting_statement_lines where matched_journal_id=j.id) then raise exception 'This ledger entry is already matched to a bank transaction.'; end if;
+    update public.accounting_statement_lines set matched_journal_id=j.id,matched_at=now(),matched_by=p_actor where id=l.id;
+  end if;
+  insert into public.accounting_reconciliation_events(statement_line_id,journal_id,action,reason,actor_id)
+    values(l.id,p_journal,case when p_unmatch then 'unmatch' else 'match' end,trim(p_reason),p_actor);
+end $$;
+
+create or replace function public.accounting_mutate(p_actor uuid,p_action text,p_data jsonb) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare
+  s public.accounting_settings; req public.accounting_requests; a public.applications; i public.tuition_invoices;
+  c public.accounting_credit_notes; r public.accounting_receipts; f public.accounting_refunds; b public.accounting_bills; bp public.accounting_bill_payments;
+  v_request uuid=(p_data->>'requestId')::uuid; v_id uuid=coalesce(nullif(p_data->>'id','')::uuid,v_request);
+  v_amount bigint; v_date date; v_method text; v_ref text; v_reason text=trim(coalesce(p_data->>'reason',p_data->>'note',''));
+  v_journal uuid; v_number text; v_result jsonb='{}'; v_app uuid; x jsonb; p record; v_paid bigint; v_count integer=0;
+  v_supplier uuid; v_category text; v_from date; v_to date; v_cash bigint; v_bank bigint; v_timing bigint; v_target uuid;
+begin
+  perform public.accounting_assert(p_actor);
+  select * into s from public.accounting_settings where singleton for update;
+  if v_request is null then raise exception 'A stable request ID is required.'; end if;
+  select * into req from public.accounting_requests where id=v_request;
+  if req.id is not null then
+    if req.action<>p_action or req.payload<>p_data or req.actor_id<>p_actor then raise exception 'This request ID was already used with different details.'; end if;
+    return req.result||jsonb_build_object('alreadyRecorded',true);
+  end if;
+  if length(v_reason)>2000 then raise exception 'Reasons and notes must be at most 2000 characters.'; end if;
+  if p_action='receipt' then
+    v_result=public.accounting_receive(p_actor,p_data||jsonb_build_object('id',v_id));
+    v_app=(p_data->>'applicationId')::uuid;
+  elsif p_action='allocate' then
+    perform public.accounting_allocate(p_actor,(p_data->>'receiptId')::uuid,(p_data->>'invoiceId')::uuid,(p_data->>'amountCents')::bigint,v_id);
+    select * into r from public.accounting_receipts where id=(p_data->>'receiptId')::uuid;
+    select * into i from public.tuition_invoices where id=(p_data->>'invoiceId')::uuid;
+    select * into a from public.applications where id=i.application_id;
+    perform public.accounting_queue('allocation',v_id,i.id,jsonb_build_object('documentKind','allocation','documentId',v_id,'documentNumber',r.number||'-ALLOC-'||left(v_id::text,8),'title','Family credit allocated','learner',a.learner_name,'payer',r.payer_name,'recipients',jsonb_build_array(a.guardian_email,a.learner_email),'issuedOn',public.tuition_today(),'items',jsonb_build_array(jsonb_build_object('description','Existing credit allocated to '||i.number,'cents',(p_data->>'amountCents')::bigint)),'totalCents',(p_data->>'amountCents')::bigint,'note','This allocates an earlier payment. No additional money was received.'));
+    v_app=a.id; v_result=jsonb_build_object('allocationId',v_id);
+  elsif p_action='credit_note' then
+    v_result=public.accounting_credit(p_actor,p_data||jsonb_build_object('id',v_id));
+    select application_id into v_app from public.tuition_invoices where id=(p_data->>'invoiceId')::uuid;
+  elsif p_action='reverse_credit_note' then
+    select * into c from public.accounting_credit_notes where id=(p_data->>'creditNoteId')::uuid for update;
+    if c.id is null or c.reversed_at is not null then raise exception 'Choose an unreversed credit note.'; end if;
+    v_journal=public.accounting_reverse(p_actor,c.journal_id,v_id,public.tuition_today(),v_reason);
+    select coalesce(sum(amount_cents),0) into v_amount from public.accounting_lines where journal_id=c.journal_id and account_code='4000';
+    update public.accounting_credit_notes set reversed_at=now(),reversal_journal_id=v_journal where id=c.id;
+    update public.tuition_invoices set credited_cents=credited_cents-c.amount_cents,recognised_cents=recognised_cents+v_amount where id=c.invoice_id;
+    update public.tuition_messages set state='cancelled',cancelled_at=now(),cancelled_by=p_actor,cancellation_reason='Credit note reversed: '||v_reason where kind='credit_note' and payload->>'documentId'=c.id::text and state in ('pending','failed');
+    select application_id into v_app from public.tuition_invoices where id=c.invoice_id;
+    v_result=jsonb_build_object('journalId',v_journal,'invoiceId',c.invoice_id);
+  elsif p_action='refund' then
+    select * into r from public.accounting_receipts where id=(p_data->>'receiptId')::uuid for update;
+    v_amount=(p_data->>'amountCents')::bigint; v_date=(p_data->>'paidOn')::date; v_method=p_data->>'method'; v_ref=upper(trim(coalesce(p_data->>'reference','')));
+    if r.id is null or r.reversed_at is not null or v_amount is null or v_amount<=0 or v_amount>public.accounting_receipt_available(r.id) or v_method is null or v_method not in ('EFT','Cash') or v_date is null or length(v_ref) not between 3 and 120 or length(v_reason)<5 then raise exception 'Refund only available family credit and supply a valid date, EFT/Cash method, unique reference and reason.'; end if;
+    if exists(select 1 from public.accounting_refunds where method=v_method and reference=v_ref and reversed_at is null) or exists(select 1 from public.accounting_bill_payments where method=v_method and reference=v_ref and reversed_at is null) then raise exception 'This outgoing transaction reference has already been recorded.'; end if;
+    v_number=public.accounting_next_number('RF',v_date);
+    v_journal=public.accounting_post(p_actor,'refund:'||v_id,v_date,'Family refund '||v_number,'refund',v_id,jsonb_build_array(jsonb_build_object('account','2100','cents',v_amount,'applicationId',r.application_id),jsonb_build_object('account',case when v_method='Cash' then '1010' else '1000' end,'cents',-v_amount,'applicationId',r.application_id)));
+    insert into public.accounting_refunds(id,number,receipt_id,amount_cents,paid_on,method,reference,reason,actor_id,journal_id) values(v_id,v_number,r.id,v_amount,v_date,v_method,v_ref,v_reason,p_actor,v_journal);
+    perform public.accounting_queue('refund',v_id,null,jsonb_build_object('documentKind','refund','documentId',v_id,'documentNumber',v_number,'title','Refund recorded','learner',r.payer_name,'payer',r.payer_name,'recipients',jsonb_build_array(r.billing_email),'issuedOn',v_date,'method',v_method,'reference',v_ref,'items',jsonb_build_array(jsonb_build_object('description','Refund from receipt '||r.number,'cents',v_amount)),'totalCents',v_amount,'note',v_reason));
+    v_app=r.application_id; v_result=jsonb_build_object('refundId',v_id,'number',v_number);
+  elsif p_action='reverse_receipt' then
+    select * into r from public.accounting_receipts where id=(p_data->>'receiptId')::uuid for update;
+    if r.id is null or r.reversed_at is not null or length(v_reason)<5 then raise exception 'Choose an unreversed receipt and give a correction reason.'; end if;
+    if exists(select 1 from public.accounting_refunds where receipt_id=r.id and reversed_at is null) then raise exception 'Reverse existing refunds before reversing their original receipt.'; end if;
+    for p in select id from public.tuition_payments where receipt_id=r.id order by id loop
+      v_amount=public.accounting_allocation_net(p.id);
+      if v_amount>0 then perform public.accounting_release(p_actor,p.id,v_amount,public.tuition_today(),'Release reversed receipt '||r.number,'receipt-release:'||v_id||':'||p.id); end if;
+    end loop;
+    v_journal=public.accounting_reverse(p_actor,r.journal_id,v_id,public.tuition_today(),v_reason);
+    update public.accounting_receipts set reversed_at=now(),reversal_journal_id=v_journal where id=r.id;
+    update public.tuition_messages set state='cancelled',cancelled_at=now(),cancelled_by=p_actor,cancellation_reason='Receipt reversed: '||v_reason
+      where state in ('pending','failed') and (payload->>'receiptId'=r.id::text or (kind='account_receipt' and payload->>'documentId'=r.id::text));
+    v_app=r.application_id; v_result=jsonb_build_object('journalId',v_journal);
+  elsif p_action='reverse_refund' then
+    select * into f from public.accounting_refunds where id=(p_data->>'refundId')::uuid for update;
+    if f.id is null or f.reversed_at is not null then raise exception 'Choose an unreversed refund.'; end if;
+    v_journal=public.accounting_reverse(p_actor,f.journal_id,v_id,public.tuition_today(),v_reason);
+    update public.accounting_refunds set reversed_at=now(),reversal_journal_id=v_journal where id=f.id;
+    update public.tuition_messages set state='cancelled',cancelled_at=now(),cancelled_by=p_actor,cancellation_reason='Refund record reversed: '||v_reason where kind='refund' and payload->>'documentId'=f.id::text and state in ('pending','failed');
+    select application_id into v_app from public.accounting_receipts where id=f.receipt_id;
+    v_result=jsonb_build_object('journalId',v_journal);
+  elsif p_action='bill' then
+    v_amount=(p_data->>'amountCents')::bigint; v_date=(p_data->>'issuedOn')::date; v_to=(p_data->>'dueOn')::date; v_category=p_data->>'category';
+    if v_amount is null or v_amount<=0 or v_amount>2000000000 or v_date is null or v_to is null or v_to<v_date or length(trim(coalesce(p_data->>'description','')))<5 or not exists(select 1 from public.accounting_accounts where code=v_category and kind='expense' and active and not control_account) then raise exception 'Supply an expense category, positive amount, description, bill date and due date.'; end if;
+    v_supplier=nullif(p_data->>'supplierId','')::uuid;
+    if v_supplier is null then
+      if length(trim(coalesce(p_data->>'supplierName',''))) not between 1 and 200 then raise exception 'Supply the supplier or payee name.'; end if;
+      insert into public.accounting_suppliers(name) values(trim(p_data->>'supplierName')) returning id into v_supplier;
+    end if;
+    if not exists(select 1 from public.accounting_suppliers where id=v_supplier) then raise exception 'Supplier not found.'; end if;
+    v_number=public.accounting_next_number('EXP',v_date);
+    v_journal=public.accounting_post(p_actor,'bill:'||v_id,v_date,'Supplier bill '||v_number,'bill',v_id,jsonb_build_array(jsonb_build_object('account',v_category,'cents',v_amount),jsonb_build_object('account','2200','cents',-v_amount)));
+    insert into public.accounting_bills(id,number,supplier_id,supplier_name,category,description,issued_on,due_on,amount_cents,actor_id,journal_id)
+      values(v_id,v_number,v_supplier,(select name from public.accounting_suppliers where id=v_supplier),v_category,trim(p_data->>'description'),v_date,v_to,v_amount,p_actor,v_journal);
+    v_result=jsonb_build_object('billId',v_id,'number',v_number);
+    if coalesce((p_data->>'payNow')::boolean,false) then
+      v_target=public.accounting_pay_bill(p_actor,p_data||jsonb_build_object('id',gen_random_uuid(),'billId',v_id,'note',coalesce(nullif(v_reason,''),'Verified supplier payment')));
+      v_result=v_result||jsonb_build_object('billPaymentId',v_target);
+    end if;
+  elsif p_action='pay_bill' then
+    v_target=public.accounting_pay_bill(p_actor,p_data||jsonb_build_object('id',v_id));
+    v_result=jsonb_build_object('billPaymentId',v_target);
+  elsif p_action='reverse_bill_payment' then
+    select * into bp from public.accounting_bill_payments where id=(p_data->>'paymentId')::uuid for update;
+    if bp.id is null or bp.reversed_at is not null then raise exception 'Choose an unreversed supplier payment.'; end if;
+    v_journal=public.accounting_reverse(p_actor,bp.journal_id,v_id,public.tuition_today(),v_reason);
+    update public.accounting_bill_payments set reversed_at=now(),reversal_journal_id=v_journal where id=bp.id;
+    v_result=jsonb_build_object('journalId',v_journal);
+  elsif p_action='reverse_bill' then
+    select * into b from public.accounting_bills where id=(p_data->>'billId')::uuid for update;
+    if b.id is null or b.reversed_at is not null then raise exception 'Choose an unreversed supplier bill.'; end if;
+    if exists(select 1 from public.accounting_bill_payments where bill_id=b.id and reversed_at is null) then raise exception 'Reverse supplier payments before reversing the bill.'; end if;
+    v_journal=public.accounting_reverse(p_actor,b.journal_id,v_id,public.tuition_today(),v_reason);
+    update public.accounting_bills set reversed_at=now(),reversal_journal_id=v_journal where id=b.id;
+    v_result=jsonb_build_object('journalId',v_journal);
+  elsif p_action in ('cash_deposit','cash_withdrawal','journal') then
+    v_date=(p_data->>'postedOn')::date;
+    if p_action in ('cash_deposit','cash_withdrawal') then
+      v_amount=(p_data->>'amountCents')::bigint;
+      if v_amount is null or v_amount<=0 or length(v_reason)<5 then raise exception 'Supply the cash deposit amount, date and bank reference in the reason.'; end if;
+      x=jsonb_build_array(jsonb_build_object('account',case when p_action='cash_deposit' then '1000' else '1010' end,'cents',v_amount),jsonb_build_object('account',case when p_action='cash_deposit' then '1010' else '1000' end,'cents',-v_amount));
+    else
+      perform public.accounting_assert(p_actor,true);
+      x=p_data->'lines';
+      if jsonb_typeof(x)<>'array' then raise exception 'Supply journal lines.'; end if;
+      if exists(select 1 from jsonb_array_elements(x) q join public.accounting_accounts a on a.code=q->>'account' where a.control_account) then raise exception 'Use tuition, credit, receipt or bill operations for control accounts.'; end if;
+    end if;
+    v_journal=public.accounting_post(p_actor,p_action||':'||v_id,v_date,v_reason,case when p_action='journal' then 'manual' else 'transfer' end,v_id,x);
+    v_result=jsonb_build_object('journalId',v_journal);
+  elsif p_action='reverse_journal' then
+    perform public.accounting_assert(p_actor,true);
+    if not exists(select 1 from public.accounting_journals where id=(p_data->>'journalId')::uuid and source_kind in ('manual','transfer')) then raise exception 'Use the original receipt, refund or expense to correct this entry.'; end if;
+    v_journal=public.accounting_reverse(p_actor,(p_data->>'journalId')::uuid,v_id,public.tuition_today(),v_reason);
+    v_result=jsonb_build_object('journalId',v_journal);
+  elsif p_action='bank_import' then
+    v_from=(p_data->>'fromDate')::date; v_to=(p_data->>'toDate')::date;
+    if v_from is null or v_to is null or v_from>v_to or v_to>public.tuition_today() or (s.closed_through is not null and v_from<=s.closed_through) then raise exception 'Choose an open statement date range ending today or earlier.'; end if;
+    if jsonb_typeof(p_data->'rows')<>'array' or jsonb_array_length(p_data->'rows') not between 0 and 500 then raise exception 'Import up to 500 statement rows.'; end if;
+    if exists(select 1 from public.accounting_statement_batches where fingerprint=p_data->>'fingerprint' and voided_at is null) then raise exception 'This statement file has already been imported.'; end if;
+    select coalesce(sum((q->>'amountCents')::bigint),0) into v_amount from jsonb_array_elements(p_data->'rows') q;
+    if (p_data->>'openingCents')::bigint+v_amount<>(p_data->>'closingCents')::bigint then raise exception 'Statement opening balance plus transactions must equal its closing balance.'; end if;
+    insert into public.accounting_statement_batches(id,fingerprint,name,account_code,from_date,to_date,opening_cents,closing_cents,actor_id)
+      values(v_id,p_data->>'fingerprint',left(coalesce(p_data->>'name','Bank statement'),200),'1000',v_from,v_to,(p_data->>'openingCents')::bigint,(p_data->>'closingCents')::bigint,p_actor);
+    for x in select value from jsonb_array_elements(p_data->'rows') loop
+      if (x->>'postedOn')::date not between v_from and v_to or (x->>'amountCents')::bigint=0 or length(trim(coalesce(x->>'externalId',''))) not between 1 and 150 then raise exception 'Every statement row needs a unique transaction ID, in-range date and nonzero signed amount.'; end if;
+      if exists(select 1 from public.accounting_statement_lines where external_id=x->>'externalId' and not voided) then raise exception 'A bank transaction ID in this file was already imported. Remove overlapping rows or use the original import.'; end if;
+      insert into public.accounting_statement_lines(batch_id,external_id,posted_on,description,amount_cents) values(v_id,x->>'externalId',(x->>'postedOn')::date,left(coalesce(x->>'description',''),500),(x->>'amountCents')::bigint);
+    end loop;
+    v_result=jsonb_build_object('batchId',v_id,'rows',jsonb_array_length(p_data->'rows'));
+  elsif p_action='bank_void_import' then
+    v_target=(p_data->>'batchId')::uuid;
+    if length(v_reason)<5 or not exists(select 1 from public.accounting_statement_batches where id=v_target and voided_at is null and (s.closed_through is null or from_date>s.closed_through)) then raise exception 'Choose an open-period statement import and give a reason. Reopen closed periods first.'; end if;
+    if exists(select 1 from public.accounting_statement_lines where batch_id=v_target and matched_journal_id is not null) then raise exception 'Unmatch its transactions before voiding this statement import.'; end if;
+    update public.accounting_statement_lines set voided=true where batch_id=v_target;
+    update public.accounting_statement_batches set voided_at=now(),void_reason=v_reason where id=v_target;
+  elsif p_action in ('bank_match','bank_unmatch') then
+    perform public.accounting_match(p_actor,(p_data->>'lineId')::uuid,nullif(p_data->>'journalId','')::uuid,v_reason,p_action='bank_unmatch');
+  elsif p_action in ('bank_timing','bank_timing_remove') then
+    v_target=(p_data->>'journalId')::uuid;
+    select posted_on into v_date from public.accounting_journals where id=v_target and reversal_of is null;
+    if v_date is null or (s.closed_through is not null and v_date<=s.closed_through) or length(v_reason)<5 then raise exception 'Choose an open-period bank entry and record the timing reason. Reopen a closed period first.'; end if;
+    if p_action='bank_timing' then
+      v_to=(p_data->>'expectedOn')::date;
+      if v_to is null or v_to<=v_date or not exists(select 1 from public.accounting_lines where journal_id=v_target and account_code='1000') or exists(select 1 from public.accounting_journals where reversal_of=v_target) or exists(select 1 from public.accounting_statement_lines where matched_journal_id=v_target) then raise exception 'Choose an unmatched bank entry and an expected bank-clearing date after its posting date.'; end if;
+      insert into public.accounting_bank_timing(journal_id,expected_on,reason,actor_id) values(v_target,v_to,v_reason,p_actor)
+        on conflict(journal_id) do update set expected_on=excluded.expected_on,reason=excluded.reason,actor_id=p_actor,withdrawn_at=null,withdrawal_reason=null;
+    else
+      update public.accounting_bank_timing set withdrawn_at=now(),withdrawal_reason=v_reason where journal_id=v_target;
+    end if;
+  elsif p_action='recognise' then
+    v_count=public.accounting_recognise(p_actor,(p_data->>'throughDate')::date);
+    v_result=jsonb_build_object('invoicesUpdated',v_count);
+  elsif p_action in ('withdraw','suspend','reactivate','arrangement') then
+    select * into a from public.applications where id=(p_data->>'applicationId')::uuid for update;
+    v_app=a.id;
+    if a.id is null or length(v_reason)<5 then raise exception 'Choose a learner and record a reason of at least five characters.'; end if;
+    if p_action='arrangement' then
+      v_date=nullif(p_data->>'untilDate','')::date;
+      if v_date is not null and v_date<public.tuition_today() then raise exception 'An arrangement must end today or in the future.'; end if;
+      update public.applications set arrangement_until=v_date,arrangement_note=v_reason where id=a.id;
+    elsif p_action='withdraw' then
+      if a.status not in ('active','pending_payment') or a.enrollment_state='withdrawn' then raise exception 'Withdraw an enrolled learner or an approved application awaiting payment.'; end if;
+      v_date=(p_data->>'noticeDate')::date;
+      if v_date is null or v_date>public.tuition_today() then raise exception 'Record the actual withdrawal notice date.'; end if;
+      v_to=nullif(p_data->>'endDate','')::date;
+      if extract(day from v_date)<=20 and v_to is null then v_to=(date_trunc('month',v_date)+interval '1 month - 1 day')::date; end if;
+      if v_to is null or v_to<v_date then raise exception 'For late notice, record the agreed final billing date on or after notice.'; end if;
+      if coalesce((p_data->>'noticeConfirmed')::boolean,false) is not true then raise exception 'Confirm the final date and charges were discussed with the family.'; end if;
+      update public.applications set enrollment_state='withdrawn',withdrawn_on=v_date,billing_end_date=v_to,lifecycle_reason=v_reason,status=case when status='pending_payment' then 'archived'::public.application_status else status end where id=a.id;
+    elsif p_action='suspend' then
+      if a.status<>'active' or a.enrollment_state<>'active' then raise exception 'Suspend only an activated learner.'; end if;
+      if coalesce((p_data->>'noticeConfirmed')::boolean,false) is not true then raise exception 'Confirm the family has received notice before suspension.'; end if;
+      if p_data->>'cause'='unpaid' and (extract(day from public.tuition_today())<10 or coalesce(a.arrangement_until,'-infinity'::date)>=public.tuition_today() or not exists(select 1 from public.tuition_invoices where application_id=a.id and due_date<public.tuition_today() and public.accounting_invoice_balance(id)>0)) then raise exception 'Unpaid-tuition suspension starts from the 10th, requires an overdue balance and respects current arrangements.'; end if;
+      update public.applications set enrollment_state='suspended',lifecycle_reason=v_reason where id=a.id;
+    else
+      if a.enrollment_state not in ('suspended','withdrawn') then raise exception 'Reactivate only a suspended or withdrawn learner.'; end if;
+      v_date=(p_data->>'startDate')::date;
+      if v_date is null or v_date<public.tuition_today() or extract(month from v_date) not between 2 and 11 or not exists(select 1 from public.tuition_programmes where grade=a.grade_level and extract(isodow from v_date)::integer=any(weekdays)) or exists(select 1 from public.tuition_closures where day=v_date) then raise exception 'Choose today or a future scheduled teaching day in February to November.'; end if;
+      if coalesce(a.arrangement_until,'-infinity'::date)<public.tuition_today() and exists(select 1 from public.tuition_invoices where application_id=a.id and due_date<public.tuition_today() and public.accounting_invoice_balance(id)>0) then raise exception 'Settle overdue tuition or record a current payment arrangement before reactivation.'; end if;
+      update public.applications set billing_end_date=null where id=a.id;
+      v_target=public.admin_create_invoice(p_actor,a.id,date_trunc('month',v_date)::date,v_date);
+      select * into i from public.tuition_invoices where id=v_target;
+      if i.amount_cents<=i.credited_cents then raise exception 'The return-month invoice was fully credited. Choose a later billing month or review the agreed charges before reactivation.'; end if;
+      if public.accounting_invoice_paid(i.id)<i.amount_cents-i.credited_cents then
+        v_result=jsonb_build_object('pendingPayment',true,'invoiceId',i.id);
+      else
+        update public.applications set status='active',enrollment_state='active',withdrawn_on=null,tuition_start_date=v_date,lifecycle_reason=v_reason,activation_invoice_id=i.id where id=a.id;
+        v_result=jsonb_build_object('reactivated',true,'invoiceId',i.id);
+      end if;
+    end if;
+  elsif p_action='account' then
+    perform public.accounting_assert(p_actor,true);
+    if p_data->>'code' !~ '^[0-9]{4}$' or length(trim(coalesce(p_data->>'name','')))<2 or p_data->>'kind' not in ('asset','liability','equity','income','expense') then raise exception 'Supply a four-digit account code, name and account type.'; end if;
+    insert into public.accounting_accounts(code,name,kind) values(p_data->>'code',trim(p_data->>'name'),p_data->>'kind');
+  elsif p_action='role' then
+    perform public.accounting_assert(p_actor,true);
+    v_target=(p_data->>'userId')::uuid;
+    if not exists(select 1 from public.admin_users where user_id=v_target and enabled) or p_data->>'role' not in ('owner','bookkeeper','viewer') then raise exception 'Choose an enabled administrator and valid finance role.'; end if;
+    if exists(select 1 from public.admin_users where user_id=v_target and finance_role='owner') and p_data->>'role'<>'owner' and (select count(*) from public.admin_users where enabled and finance_role='owner')<=1 then raise exception 'Keep at least one enabled finance owner.'; end if;
+    update public.admin_users set finance_role=p_data->>'role' where user_id=v_target;
+  elsif p_action='settings' then
+    perform public.accounting_assert(p_actor,true);
+    v_date=(p_data->>'booksStart')::date;
+    if v_date is null or v_date>public.tuition_today() then raise exception 'The books start date must be today or earlier.'; end if;
+    if v_date<>s.books_start and exists(select 1 from public.accounting_journals) then raise exception 'The books start date is fixed after posting begins.'; end if;
+    update public.accounting_settings set books_start=v_date,automation_enabled=coalesce((p_data->>'automationEnabled')::boolean,false),auto_send=coalesce((p_data->>'autoSend')::boolean,false),scheduler_actor=p_actor where singleton;
+  elsif p_action='close_period' then
+    perform public.accounting_assert(p_actor,true);
+    v_date=(p_data->>'throughDate')::date;
+    if v_date is null or v_date>=public.tuition_today() or v_date<>(date_trunc('month',v_date)+interval '1 month - 1 day')::date or v_date<s.books_start or v_date<=coalesce(s.closed_through,s.books_start-1) then raise exception 'Close a completed month after the current closed-through date.'; end if;
+    if coalesce((p_data->>'reviewed')::boolean,false) is not true or length(v_reason)<5 then raise exception 'Confirm the reports and reconciliation were reviewed, and record a closing note.'; end if;
+    perform public.accounting_recognise(p_actor,v_date);
+    if exists(select 1 from jsonb_each_text(public.accounting_integrity()) q where q.value::numeric<>0) then raise exception 'The ledger and its tuition/expense records must reconcile before closing.'; end if;
+    if exists(select 1 from public.accounting_statement_lines where posted_on<=v_date and matched_journal_id is null and not voided) then raise exception 'Match imported bank transactions before closing the period.'; end if;
+    select coalesce(sum(l.amount_cents),0) into v_cash from public.accounting_lines l join public.accounting_journals j on j.id=l.journal_id where l.account_code='1010' and j.posted_on<=v_date;
+    if nullif(p_data->>'countedCashCents','')::bigint is distinct from v_cash then raise exception 'The counted cash must agree with cash on hand before closing.'; end if;
+    select coalesce(sum(l.amount_cents),0) into v_bank from public.accounting_lines l join public.accounting_journals j on j.id=l.journal_id where l.account_code='1000' and j.posted_on<=v_date;
+    if exists(select 1 from public.accounting_journals j where j.posted_on<=v_date and j.reversal_of is null and not exists(select 1 from public.accounting_journals where reversal_of=j.id) and (select coalesce(sum(amount_cents),0) from public.accounting_lines where journal_id=j.id and account_code='1000')<>0 and not exists(select 1 from public.accounting_statement_lines where matched_journal_id=j.id and posted_on<=v_date) and not exists(select 1 from public.accounting_bank_timing where journal_id=j.id and withdrawn_at is null and expected_on>v_date)) then raise exception 'Reconcile bank ledger entries or record verified clearing-date differences before closing.'; end if;
+    select coalesce(sum(l.amount_cents),0) into v_timing from public.accounting_bank_timing t join public.accounting_journals j on j.id=t.journal_id join public.accounting_lines l on l.journal_id=j.id and l.account_code='1000' where t.withdrawn_at is null and t.expected_on>v_date and j.posted_on<=v_date and not exists(select 1 from public.accounting_journals where reversal_of=j.id) and not exists(select 1 from public.accounting_statement_lines where matched_journal_id=j.id and posted_on<=v_date);
+    if exists(select 1 from public.accounting_lines l join public.accounting_journals j on j.id=l.journal_id where l.account_code='1000' and j.posted_on<=v_date) and not exists(select 1 from public.accounting_statement_batches where to_date=v_date and voided_at is null and closing_cents+v_timing=v_bank) then raise exception 'Import a bank statement ending on the closing date whose balance plus verified timing differences agrees with the ledger.'; end if;
+    update public.accounting_settings set closed_through=v_date where singleton;
+    insert into public.accounting_period_events(action,through_date,reason,actor_id) values('close',v_date,v_reason,p_actor);
+  elsif p_action='reopen_period' then
+    perform public.accounting_assert(p_actor,true);
+    v_date=(p_data->>'fromDate')::date;
+    if v_date is null or extract(day from v_date)<>1 or v_date<s.books_start or s.closed_through is null or v_date>s.closed_through or length(v_reason)<5 then raise exception 'Choose a closed month to reopen and give a reason.'; end if;
+    update public.accounting_settings set closed_through=v_date-1 where singleton;
+    insert into public.accounting_period_events(action,through_date,reason,actor_id) values('reopen',v_date-1,v_reason,p_actor);
+  else raise exception 'Unknown accounting action.';
+  end if;
+  perform public.accounting_audit(p_actor,p_action,(p_data-'rows'-'lines')||v_result,v_app);
+  insert into public.accounting_requests(id,action,payload,result,actor_id) values(v_request,p_action,p_data,v_result,p_actor);
+  return v_result;
+end $$;
+
+do $$ declare f record; begin
+  for f in select p.oid::regprocedure as signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'accounting_%' loop
+    execute format('revoke all on function %s from public,anon,authenticated',f.signature);
+  end loop;
+end $$;
+grant execute on function public.accounting_mutate(uuid,text,jsonb) to service_role;
+
+
+-- Connect the existing admin workflow to the accounting domain.
+create or replace function public.admin_mutate(p_actor uuid,p_action text,p_data jsonb) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare
+  a public.applications; i public.tuition_invoices; pay public.tuition_payments;
+  v_app uuid; v_invoice uuid; v_id uuid; v_start date; v_month date;
+  v_today date=public.tuition_today();
+  v_paid bigint; v_amount integer; v_note text=trim(coalesce(p_data->>'note',''));
+  v_method text; v_ref text; v_count integer=0; v_existing public.tuition_payments; v_days smallint[];
+begin
+  perform public.accounting_assert(p_actor);
+  perform 1 from public.accounting_settings where singleton for update;
+  if length(v_note)>2000 then raise exception 'Notes must be at most 2000 characters.'; end if;
+  if p_action='generate_month' then
+    v_month=(p_data->>'month')::date;
+    if v_month is null or extract(day from v_month)<>1 or v_month<>date_trunc('month',v_today+interval '1 month')::date or extract(day from v_today)<25 then
+      raise exception 'Generate next month invoices on or after the 25th.';
+    end if;
+    if extract(month from v_month) not between 2 and 11 then
+      perform public.accounting_audit(p_actor,'generate_month',jsonb_build_object('month',v_month,'seasonalSkip',true,'count',0));
+      return jsonb_build_object('count',0,'seasonalSkip',true);
+    end if;
+    for a in select * from public.applications where status='active' and (enrollment_state='active' or (enrollment_state='withdrawn' and billing_end_date>=v_month)) and tuition_start_date<=v_month and (billing_end_date is null or billing_end_date>=v_month) order by id for update loop
+      if not exists(select 1 from public.tuition_invoices where application_id=a.id and billing_month=v_month) then
+        perform public.admin_create_invoice(p_actor,a.id,v_month,v_month); v_count=v_count+1;
+      end if;
+    end loop;
+  elsif p_action='queue_reminders' then
+    if extract(day from v_today)<3 then raise exception 'Unpaid-balance reminders start on the 3rd.'; end if;
+    for i in select t.* from public.tuition_invoices t join public.applications app on app.id=t.application_id where t.due_date<=v_today and coalesce(app.arrangement_until,'-infinity'::date)<v_today order by t.id for update of t loop
+      v_paid=public.accounting_invoice_paid(i.id)+i.credited_cents;
+      if v_paid<i.amount_cents then
+        perform public.admin_queue(i.id,'reminder','reminder:'||i.id||':'||date_trunc('month',v_today)::date); v_count=v_count+1;
+      end if;
+    end loop;
+  elsif p_action='payment' then
+    select * into i from public.tuition_invoices where id=(p_data->>'invoiceId')::uuid for update;
+    if i.id is null then raise exception 'Invoice not found.'; end if;
+    v_app=i.application_id;
+    perform public.accounting_receive(p_actor,jsonb_build_object('id',p_data->>'paymentId','applicationId',i.application_id,'amountCents',p_data->'amountCents','paidOn',p_data->>'paidOn','method',p_data->>'method','reference',p_data->>'reference','note',p_data->>'note','allocations',jsonb_build_array(jsonb_build_object('invoiceId',i.id,'amountCents',p_data->'amountCents'))),true);
+  else
+    v_app=(p_data->>'applicationId')::uuid;
+    select * into a from public.applications where id=v_app for update;
+    if a.id is null then raise exception 'Application not found.'; end if;
+    if p_action='approve' then
+      if a.status<>'pending_review' then raise exception 'Only applications pending review can be approved.'; end if;
+      v_start=(p_data->>'startDate')::date;
+      if v_start is null or v_start<v_today then raise exception 'Choose today or a future start date.'; end if;
+      select weekdays into v_days from public.tuition_programmes where grade=a.grade_level;
+      if v_days is null then raise exception 'A billing programme must be configured for this grade.'; end if;
+      if not (extract(isodow from v_start)::integer=any(v_days)) or exists(select 1 from public.tuition_closures where day=v_start) then raise exception 'Choose a scheduled programme day that is not a closure.'; end if;
+      if not exists(select 1 from public.learner_documents where application_id=a.id) then raise exception 'A finalized report card is required before approval.'; end if;
+      update public.applications set status='pending_payment',tuition_start_date=v_start,reviewed_at=now(),reviewed_by=p_actor where id=a.id;
+      v_invoice=public.admin_create_invoice(p_actor,a.id,date_trunc('month',v_start)::date,v_start);
+      update public.applications set activation_invoice_id=v_invoice where id=a.id;
+    elsif p_action='reject' then
+      if a.status<>'pending_review' or length(v_note)<5 then raise exception 'Reject only a pending review application and give a reason of at least five characters.'; end if;
+      update public.applications set status='rejected',reviewed_at=now(),reviewed_by=p_actor where id=a.id;
+    elsif p_action='note' then
+      if length(v_note)=0 then raise exception 'A note is required.'; end if;
+    elsif p_action='activate' then
+      if a.status<>'pending_payment' or a.reviewed_by is null then raise exception 'Approval and first payment are required before activation.'; end if;
+      select * into i from public.tuition_invoices where id=a.activation_invoice_id for update;
+      v_paid=public.accounting_invoice_paid(i.id)+i.credited_cents;
+      if i.id is null or i.amount_cents<=i.credited_cents or v_paid<i.amount_cents then raise exception 'The first invoice must be fully paid before activation.'; end if;
+      update public.applications set status='active',enrollment_state='active',activated_at=now(),payment_status='first_invoice_paid' where id=a.id;
+      perform public.admin_queue(i.id,'activation','activation:'||a.id);
+    else raise exception 'Unknown action.'; end if;
+  end if;
+  insert into public.admin_audit(actor_id,action,application_id,details)
+    values(p_actor,p_action,v_app,p_data-'action');
+  return jsonb_build_object('invoiceId',v_invoice,'count',v_count);
+end $$;
+
+
+create or replace function public.admin_snapshot(p_actor uuid) returns jsonb
+language plpgsql security definer set search_path='' as $$
+begin
+  perform public.admin_assert(p_actor);
+  return jsonb_build_object(
+    'finance_role',(select finance_role from public.admin_users where user_id=p_actor),
+    'applications',coalesce((select jsonb_agg(x order by x.created_at desc) from (
+      select a.*,l.student_number,to_jsonb(l) as learner,
+        (select to_jsonb(g) from public.guardians g where g.application_id=a.id limit 1) as guardian,
+        coalesce((select jsonb_agg(s) from public.application_subjects s where s.application_id=a.id),'[]') as subject_marks
+        from public.applications a left join public.learners l on l.application_id=a.id order by a.created_at desc limit 500) x),'[]'),
+    'invoices',coalesce((select jsonb_agg(x order by x.created_at desc) from (
+      select i.*,public.accounting_invoice_paid(i.id) paid_cents
+      from public.tuition_invoices i order by i.created_at desc limit 1000) x),'[]'),
+    'payments',coalesce((select jsonb_agg(x) from (select p.*,public.accounting_allocation_net(p.id) as net_cents,r.reversed_at as receipt_reversed_at from public.tuition_payments p left join public.accounting_receipts r on r.id=p.receipt_id order by p.created_at desc limit 1000)x),'[]'),
+    'audit',coalesce((select jsonb_agg(x) from(select a.*,u.email as actor_email from public.admin_audit a left join auth.users u on u.id=a.actor_id order by a.created_at desc,a.id desc limit 200)x),'[]'),
+    'messages',coalesce((select jsonb_agg(x) from(select id,invoice_id,kind,state,attempts,last_error,created_at,sent_at,first_attempt_at,claimed_at,payload,cancelled_at,cancelled_by,cancellation_reason from public.tuition_messages order by case when state in ('pending','sending','failed') then 0 else 1 end,created_at desc,id desc limit 200)x),'[]'),
+    'messages_truncated',(select count(*)>200 from public.tuition_messages),
+    'programmes',coalesce((select jsonb_agg(p order by grade) from public.tuition_programmes p),'[]'),
+    'closures',coalesce((select jsonb_agg(c order by day) from public.tuition_closures c),'[]'),
+    'truncated', (select count(*)>=500 from public.applications) or (select count(*)>=1000 from public.tuition_invoices) or (select count(*)>=1000 from public.tuition_payments),
+    'today',public.tuition_today()
+  );
+end $$;
+
+
+create or replace function public.admin_claim_message(p_actor uuid,p_id uuid) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare m public.tuition_messages; v_balance bigint;
+begin
+  perform public.accounting_assert(p_actor);
+  select * into m from public.tuition_messages where id=p_id for update;
+  if m.id is null or m.state in ('sent','cancelled') then return null; end if;
+  if m.state='sending' and m.claimed_at>now()-interval '2 minutes' then raise exception 'This message is already being sent.'; end if;
+  -- Provider idempotency keys are not permanent. Require investigation of ambiguous old sends.
+  if m.first_attempt_at is not null and m.first_attempt_at<now()-interval '23 hours' then raise exception 'Old delivery attempt requires provider-history review before retry.'; end if;
+  select public.accounting_invoice_balance(i.id) into v_balance from public.tuition_invoices i where i.id=m.invoice_id;
+  if m.kind='reminder' and exists(select 1 from public.tuition_invoices i join public.applications a on a.id=i.application_id where i.id=m.invoice_id and a.arrangement_until>=public.tuition_today()) then
+    update public.tuition_messages set state='sent',sent_at=now(),last_error='Skipped: current payment arrangement' where id=m.id;
+    return null;
+  end if;
+  if m.kind in ('invoice','reminder') and v_balance<=0 then
+    update public.tuition_messages set state='sent',sent_at=now(),last_error='Skipped: invoice settled' where id=m.id;
+    return null;
+  end if;
+  update public.tuition_messages set state='sending',first_attempt_at=coalesce(first_attempt_at,now()),claimed_at=now(),claim_token=gen_random_uuid(),attempts=attempts+1 where id=m.id returning * into m;
+  insert into public.admin_audit(actor_id,action,application_id,details) values(p_actor,'send_message',coalesce((select application_id from public.tuition_invoices where id=m.invoice_id),nullif(m.payload->>'applicationId','')::uuid),jsonb_build_object('messageId',m.id,'kind',m.kind));
+  return to_jsonb(m);
+end $$;
+
+
+create or replace function public.admin_cancel_message(
+  p_actor uuid,p_id uuid,p_reason text,p_provider_reviewed boolean default false
+) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare m public.tuition_messages; v_application uuid; v_reason text=trim(coalesce(p_reason,''));
+begin
+  perform public.accounting_assert(p_actor);
+  select * into m from public.tuition_messages where id=p_id for update;
+  if m.id is null then raise exception 'Notification not found.'; end if;
+  if m.state='cancelled' then return jsonb_build_object('id',m.id,'alreadyCancelled',true); end if;
+  if m.state='sent' then raise exception 'A completed notification cannot be cancelled or recalled.'; end if;
+  if m.state='sending' and (m.claimed_at is null or m.claimed_at>now()-interval '2 minutes') then
+    raise exception 'This notification is being sent. Refresh after the current attempt finishes.';
+  end if;
+  if length(v_reason)<5 or length(v_reason)>500 then raise exception 'Give a cancellation reason of 5 to 500 characters.'; end if;
+  if m.attempts>0 and p_provider_reviewed is distinct from true then
+    raise exception 'Check the email provider history before cancelling a previously attempted notification. Cancellation cannot recall an email.';
+  end if;
+  update public.tuition_messages set state='cancelled',cancelled_at=now(),cancelled_by=p_actor,cancellation_reason=v_reason where id=m.id;
+  select application_id into v_application from public.tuition_invoices where id=m.invoice_id;
+  insert into public.admin_audit(actor_id,action,application_id,details)
+    values(p_actor,'cancel_message',v_application,jsonb_build_object('messageId',m.id,'invoiceId',m.invoice_id,'kind',m.kind,'reason',v_reason,'previousState',m.state,'attempts',m.attempts,'providerHistoryReviewed',coalesce(p_provider_reviewed,false)));
+  return jsonb_build_object('id',m.id,'cancelled',true);
+end $$;
+revoke all on function public.admin_cancel_message(uuid,uuid,text,boolean) from public,anon,authenticated;
+grant execute on function public.admin_cancel_message(uuid,uuid,text,boolean) to service_role;
+
+
+create or replace function public.accounting_balance(p_account text,p_through date) returns bigint
+language sql stable security definer set search_path='' as $$
+  select coalesce(sum(l.amount_cents),0)::bigint from public.accounting_lines l join public.accounting_journals j on j.id=l.journal_id where l.account_code=p_account and j.posted_on<=p_through;
+$$;
+create or replace function public.accounting_integrity() returns jsonb
+language sql stable security definer set search_path='' as $$
+  select jsonb_build_object(
+    'receivableDifference',public.accounting_balance('1100',public.tuition_today())-coalesce((select sum(public.accounting_invoice_balance(id)) from public.tuition_invoices),0),
+    'creditDifference',-public.accounting_balance('2100',public.tuition_today())-coalesce((select sum(public.accounting_receipt_available(id)) from public.accounting_receipts),0),
+    'deferredDifference',-public.accounting_balance('2000',public.tuition_today())-coalesce((select sum(amount_cents-credited_cents-recognised_cents) from public.tuition_invoices),0),
+    'payableDifference',-public.accounting_balance('2200',public.tuition_today())-coalesce((select sum(b.amount_cents-coalesce((select sum(amount_cents) from public.accounting_bill_payments where bill_id=b.id and reversed_at is null),0)) from public.accounting_bills b where b.reversed_at is null),0),
+    'trialBalance',coalesce((select sum(amount_cents) from public.accounting_lines),0)
+  );
+$$;
+create or replace function public.accounting_snapshot(p_actor uuid,p_from date,p_to date) returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+declare v_asof date=least(p_to,public.tuition_today()); v_accounts jsonb; v_income bigint; v_expenses bigint; v_assets bigint; v_liabilities bigint; v_equity bigint; v_accumulated bigint; v_cash_in bigint; v_cash_out bigint;
+begin
+  perform public.admin_assert(p_actor);
+  if p_from is null or p_to is null or p_from>p_to or p_to-p_from>3660 then raise exception 'Choose a report range of up to ten years.'; end if;
+  select jsonb_agg(q order by code) into v_accounts from (
+    select a.*,public.accounting_balance(a.code,v_asof) as balance_cents,
+      coalesce(sum(l.amount_cents) filter(where j.posted_on between p_from and v_asof),0)::bigint as period_net_cents,
+      coalesce(sum(l.amount_cents) filter(where l.amount_cents>0 and j.posted_on<=v_asof),0)::bigint as debit_cents,
+      -coalesce(sum(l.amount_cents) filter(where l.amount_cents<0 and j.posted_on<=v_asof),0)::bigint as credit_cents
+    from public.accounting_accounts a left join public.accounting_lines l on l.account_code=a.code left join public.accounting_journals j on j.id=l.journal_id group by a.code
+  ) q;
+  select -coalesce(sum((x->>'period_net_cents')::bigint) filter(where x->>'kind'='income'),0),coalesce(sum((x->>'period_net_cents')::bigint) filter(where x->>'kind'='expense'),0),
+    coalesce(sum((x->>'balance_cents')::bigint) filter(where x->>'kind'='asset'),0),-coalesce(sum((x->>'balance_cents')::bigint) filter(where x->>'kind'='liability'),0),
+    -coalesce(sum((x->>'balance_cents')::bigint) filter(where x->>'kind'='equity'),0),-coalesce(sum((x->>'balance_cents')::bigint) filter(where x->>'kind' in ('income','expense')),0)
+    into v_income,v_expenses,v_assets,v_liabilities,v_equity,v_accumulated from jsonb_array_elements(v_accounts) x;
+  select coalesce(sum(greatest(movement,0)),0),-coalesce(sum(least(movement,0)),0) into v_cash_in,v_cash_out from (
+    select sum(l.amount_cents) as movement from public.accounting_lines l join public.accounting_journals j on j.id=l.journal_id where l.account_code in ('1000','1010') and j.posted_on between p_from and v_asof group by j.id
+  ) q;
+  return jsonb_build_object(
+    'today',public.tuition_today(),'fromDate',p_from,'toDate',p_to,'asOf',v_asof,
+    'settings',(select to_jsonb(s) from public.accounting_settings s where singleton),
+    'role',(select finance_role from public.admin_users where user_id=p_actor),
+    'accounts',v_accounts,
+    'reports',jsonb_build_object('incomeCents',v_income,'expenseCents',v_expenses,'profitCents',v_income-v_expenses,'assetsCents',v_assets,'liabilitiesCents',v_liabilities,'equityCents',v_equity,'accumulatedResultCents',v_accumulated,'balanceSheetDifference',v_assets-v_liabilities-v_equity-v_accumulated,
+      'bankCents',public.accounting_balance('1000',v_asof),'cashCents',public.accounting_balance('1010',v_asof),
+      'cashOpeningCents',public.accounting_balance('1000',p_from-1)+public.accounting_balance('1010',p_from-1),'cashInCents',v_cash_in,'cashOutCents',v_cash_out),
+    'integrity',public.accounting_integrity(),
+    'families',coalesce((select jsonb_agg(q) from (
+      select family.*,
+        coalesce((select sum(public.accounting_invoice_balance(i.id)) from public.tuition_invoices i join public.applications a2 on a2.id=i.application_id where lower(trim(a2.guardian_email))=family.email),0) as owed_cents,
+        coalesce((select sum(public.accounting_receipt_available(r.id)) from public.accounting_receipts r where r.billing_email=family.email),0) as credit_cents
+      from (select lower(trim(a.guardian_email)) as email,min(a.guardian_name) as name,string_agg(a.learner_name,', ' order by a.learner_name) as learners,(array_agg(a.id order by a.created_at))[1] as application_id from public.applications a group by lower(trim(a.guardian_email))) family order by family.name limit 500
+    ) q),'[]'),
+    'receipts',coalesce((select jsonb_agg(q) from (select r.*,public.accounting_receipt_available(r.id) as available_cents,
+      coalesce((select jsonb_agg(jsonb_build_object('id',p.id,'invoiceId',p.invoice_id,'invoiceNumber',i.number,'amountCents',p.amount_cents,'netCents',public.accounting_allocation_net(p.id))) from public.tuition_payments p join public.tuition_invoices i on i.id=p.invoice_id where p.receipt_id=r.id),'[]') as allocations
+      from public.accounting_receipts r order by r.created_at desc limit 500) q),'[]'),
+    'credit_notes',coalesce((select jsonb_agg(q) from(select c.*,i.number as invoice_number,a.learner_name from public.accounting_credit_notes c join public.tuition_invoices i on i.id=c.invoice_id join public.applications a on a.id=i.application_id order by c.created_at desc limit 500)q),'[]'),
+    'refunds',coalesce((select jsonb_agg(q) from(select f.*,r.number as receipt_number,r.payer_name from public.accounting_refunds f join public.accounting_receipts r on r.id=f.receipt_id order by f.created_at desc limit 500)q),'[]'),
+    'suppliers',coalesce((select jsonb_agg(q) from(select * from public.accounting_suppliers order by name limit 500)q),'[]'),
+    'bills',coalesce((select jsonb_agg(q) from(select b.*,coalesce((select sum(amount_cents) from public.accounting_bill_payments where bill_id=b.id and reversed_at is null),0) as paid_cents,
+      coalesce((select jsonb_agg(p order by p.created_at) from public.accounting_bill_payments p where p.bill_id=b.id),'[]') as payments,
+      coalesce((select jsonb_agg(a order by a.created_at) from public.accounting_attachments a where a.bill_id=b.id),'[]') as attachments
+      from public.accounting_bills b order by b.created_at desc limit 500)q),'[]'),
+    'journals',coalesce((select jsonb_agg(q) from(select j.*,u.email as actor_email,(select id from public.accounting_journals where reversal_of=j.id) as reversed_by,
+      (select id from public.accounting_statement_lines where matched_journal_id=j.id) as bank_match_id,
+      coalesce((select jsonb_agg(jsonb_build_object('account',l.account_code,'name',a.name,'cents',l.amount_cents,'invoiceId',l.invoice_id,'applicationId',l.application_id) order by l.amount_cents desc,l.account_code) from public.accounting_lines l join public.accounting_accounts a on a.code=l.account_code where l.journal_id=j.id),'[]') as lines
+      from public.accounting_journals j left join auth.users u on u.id=j.actor_id where j.posted_on between p_from and v_asof order by j.posted_on desc,j.created_at desc limit 200)q),'[]'),
+    'bank_candidates',coalesce((select jsonb_agg(q) from(select j.id,j.posted_on,j.description,sum(l.amount_cents) as amount_cents from public.accounting_journals j join public.accounting_lines l on l.journal_id=j.id and l.account_code='1000' where j.reversal_of is null and not exists(select 1 from public.accounting_journals where reversal_of=j.id) and not exists(select 1 from public.accounting_statement_lines where matched_journal_id=j.id) group by j.id having sum(l.amount_cents)<>0 order by j.posted_on desc limit 1000)q),'[]'),
+    'bank_timing',coalesce((select jsonb_agg(q) from(select t.*,j.posted_on,j.description,(select coalesce(sum(amount_cents),0) from public.accounting_lines where journal_id=j.id and account_code='1000') as amount_cents,(select posted_on from public.accounting_statement_lines where matched_journal_id=j.id) as cleared_on from public.accounting_bank_timing t join public.accounting_journals j on j.id=t.journal_id order by t.created_at desc limit 1000)q),'[]'),
+    'bank_batches',coalesce((select jsonb_agg(q) from(select b.*,(select count(*) from public.accounting_statement_lines where batch_id=b.id) as row_count,(select count(*) from public.accounting_statement_lines where batch_id=b.id and matched_journal_id is null and not voided) as unmatched_count from public.accounting_statement_batches b order by b.created_at desc limit 100)q),'[]'),
+    'bank_lines',coalesce((select jsonb_agg(q) from(select * from public.accounting_statement_lines where not voided order by posted_on desc,id limit 1000)q),'[]'),
+    'ageing',coalesce((select jsonb_agg(q) from (
+      select i.id,i.number,a.learner_name,a.guardian_email,i.due_date,sum(l.amount_cents) as balance_cents,
+        case when i.due_date>=v_asof then 'Current' when v_asof-i.due_date<=30 then '1–30 days' when v_asof-i.due_date<=60 then '31–60 days' when v_asof-i.due_date<=90 then '61–90 days' else 'Over 90 days' end as bucket
+      from public.tuition_invoices i join public.applications a on a.id=i.application_id join public.accounting_lines l on l.invoice_id=i.id and l.account_code='1100' join public.accounting_journals j on j.id=l.journal_id and j.posted_on<=v_asof group by i.id,a.id having sum(l.amount_cents)>0 order by i.due_date limit 1000
+    )q),'[]'),
+    'runs',coalesce((select jsonb_agg(q) from(select * from public.accounting_runs order by run_on desc limit 60)q),'[]'),
+    'period_events',coalesce((select jsonb_agg(q) from(select * from public.accounting_period_events order by created_at desc limit 100)q),'[]'),
+    'admins',case when exists(select 1 from public.admin_users where user_id=p_actor and finance_role='owner') then coalesce((select jsonb_agg(jsonb_build_object('id',a.user_id,'email',u.email,'role',a.finance_role)) from public.admin_users a join auth.users u on u.id=a.user_id where a.enabled),'[]') else '[]'::jsonb end,
+    'limits',jsonb_build_object('receipts',(select count(*)>500 from public.accounting_receipts),'families',(select count(distinct lower(trim(guardian_email)))>500 from public.applications),'bills',(select count(*)>500 from public.accounting_bills),'journals',(select count(*)>200 from public.accounting_journals where posted_on between p_from and v_asof),'bankLines',(select count(*)>1000 from public.accounting_statement_lines),'ageing',(select count(*)>1000 from public.tuition_invoices where public.accounting_invoice_balance(id)>0))
+  );
+end $$;
+
+create or replace function public.accounting_document_data(p_actor uuid,p_kind text,p_id uuid,p_from date default null,p_to date default null) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare v_payload jsonb; a public.applications; r public.accounting_receipts; v_app uuid; v_void boolean=false; v_from date=coalesce(p_from,(select books_start from public.accounting_settings where singleton)); v_to date=least(coalesce(p_to,public.tuition_today()),public.tuition_today()); v_open bigint; v_items jsonb; v_report jsonb;
+begin
+  perform public.admin_assert(p_actor);
+  if v_from>v_to then raise exception 'Choose a valid document date range.'; end if;
+  if p_kind in ('account_receipt','credit_note','refund','allocation') then
+    select payload into v_payload from public.tuition_messages where event_key=p_kind||':'||p_id;
+    if v_payload is null then raise exception 'The financial document snapshot is unavailable.'; end if;
+    if p_kind='account_receipt' then select * into r from public.accounting_receipts where id=p_id; v_app=r.application_id; v_void=r.reversed_at is not null;
+    elsif p_kind='refund' then select r0.application_id,f.reversed_at is not null into v_app,v_void from public.accounting_refunds f join public.accounting_receipts r0 on r0.id=f.receipt_id where f.id=p_id;
+    elsif p_kind='credit_note' then select i.application_id,c.reversed_at is not null into v_app,v_void from public.accounting_credit_notes c join public.tuition_invoices i on i.id=c.invoice_id where c.id=p_id;
+    else select i.application_id into v_app from public.tuition_messages m join public.tuition_invoices i on i.id=m.invoice_id where m.event_key=p_kind||':'||p_id;
+    end if;
+    v_payload=v_payload||jsonb_build_object('voided',v_void);
+  elsif p_kind='statement' then
+    select * into a from public.applications where id=p_id;
+    if a.id is null then raise exception 'Learner account not found.'; end if;
+    v_app=a.id;
+    select coalesce(sum(l.amount_cents),0) into v_open from public.accounting_lines l join public.accounting_journals j on j.id=l.journal_id join public.applications aa on aa.id=l.application_id where lower(trim(aa.guardian_email))=lower(trim(a.guardian_email)) and l.account_code in ('1100','2100') and j.posted_on<v_from;
+    select coalesce(jsonb_agg(q order by q.date,q.created),'[]') into v_items from (
+      select j.posted_on as date,j.created_at as created,j.description as description,sum(l.amount_cents) as cents from public.accounting_lines l join public.accounting_journals j on j.id=l.journal_id join public.applications aa on aa.id=l.application_id where lower(trim(aa.guardian_email))=lower(trim(a.guardian_email)) and l.account_code in ('1100','2100') and j.posted_on between v_from and v_to group by j.id having sum(l.amount_cents)<>0
+    )q;
+    v_payload=jsonb_build_object('documentKind','statement','documentId',p_id,'documentNumber','Statement-'||a.application_number,'title','Family account statement','payer',a.guardian_name,'learner',a.learner_name,'recipients',jsonb_build_array(a.guardian_email),'issuedOn',public.tuition_today(),'fromDate',v_from,'toDate',v_to,'openingCents',v_open,'items',v_items,'totalCents',v_open+coalesce((select sum((x->>'cents')::bigint) from jsonb_array_elements(v_items)x),0),'note','Positive net balance is owed to Viva; a negative balance is available family credit. This statement covers learners sharing this guardian account.');
+  elsif p_kind='financial_report' then
+    v_report=public.accounting_snapshot(p_actor,v_from,v_to);
+    select jsonb_agg(jsonb_build_object('description',x->>'code'||' · '||(x->>'name'),'cents',(x->>'balance_cents')::bigint)) into v_items from jsonb_array_elements(v_report->'accounts')x;
+    v_payload=jsonb_build_object('documentKind','financial_report','documentId',p_id,'documentNumber','Finance-'||v_from||'-'||v_to,'title','Financial report','payer','Viva Tutorials','recipients','[]'::jsonb,'issuedOn',public.tuition_today(),'fromDate',v_from,'toDate',v_to,'items',v_items,'totalCents',0,'report',v_report->'reports','note','Trial balance amounts are debit-positive and credit-negative. Report totals are calculated from the complete posted ledger. ZAR; no VAT.');
+  else raise exception 'Unknown accounting document type.';
+  end if;
+  perform public.accounting_audit(p_actor,'accounting_document',jsonb_build_object('kind',p_kind,'documentId',p_id),v_app);
+  return v_payload;
+end $$;
+
+create or replace function public.accounting_run_schedule(p_actor uuid) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare v_run public.accounting_runs; v_today date=public.tuition_today(); v_result jsonb='{}'; v_month date; v_recognised bigint; v_error text;
+begin
+  perform public.accounting_assert(p_actor,true);
+  perform 1 from public.accounting_settings where singleton for update;
+  select * into v_run from public.accounting_runs where run_on=v_today;
+  if v_run.state='completed' then return v_run.result||jsonb_build_object('alreadyCompleted',true); end if;
+  begin
+    v_recognised=public.accounting_recognise(p_actor,v_today-1);
+    v_result=jsonb_build_object('recognisedInvoices',v_recognised,'date',v_today);
+    if extract(day from v_today)>=25 then
+      v_month=date_trunc('month',v_today+interval '1 month')::date;
+      v_result=v_result||jsonb_build_object('billing',public.admin_mutate(p_actor,'generate_month',jsonb_build_object('month',v_month)));
+    end if;
+    if extract(day from v_today)>=3 then v_result=v_result||jsonb_build_object('reminders',public.admin_mutate(p_actor,'queue_reminders','{}')); end if;
+  exception when others then
+    v_result=jsonb_build_object('date',v_today,'rolledBack',true);
+    v_error=case when sqlstate='P0001' then left(sqlerrm,300) else 'The accounting run failed. Review server/database configuration before retrying.' end;
+  end;
+  insert into public.accounting_runs(run_on,state,result,last_error,actor_id) values(v_today,case when v_error is null then 'completed' else 'failed' end,v_result,v_error,p_actor)
+    on conflict(run_on) do update set state=excluded.state,result=excluded.result,last_error=excluded.last_error,attempts=public.accounting_runs.attempts+1,finished_at=now();
+  perform public.accounting_audit(p_actor,'accounting_run',v_result||jsonb_build_object('error',v_error));
+  return v_result||jsonb_build_object('success',v_error is null,'error',v_error);
+end $$;
+
+create or replace function public.accounting_export_rows(p_actor uuid,p_kind text,p_from date,p_to date) returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+declare result jsonb; v_asof date=least(p_to,public.tuition_today());
+begin
+  perform public.admin_assert(p_actor);
+  if p_from is null or p_to is null or p_from>p_to then raise exception 'Choose a valid export date range.'; end if;
+  if p_kind='ledger' then
+    select coalesce(jsonb_agg(q),'[]') into result from(select j.posted_on,j.description,j.id as journal_id,l.account_code,a.name,l.amount_cents from public.accounting_journals j join public.accounting_lines l on l.journal_id=j.id join public.accounting_accounts a on a.code=l.account_code where j.posted_on between p_from and v_asof order by j.posted_on,j.created_at,l.id limit 10001)q;
+  elsif p_kind='ageing' then
+    select coalesce(jsonb_agg(q),'[]') into result from(select i.number,a.learner_name,a.guardian_email,i.due_date,sum(l.amount_cents) as balance_cents,
+      case when i.due_date>=v_asof then 'Current' when v_asof-i.due_date<=30 then '1–30 days' when v_asof-i.due_date<=60 then '31–60 days' when v_asof-i.due_date<=90 then '61–90 days' else 'Over 90 days' end as bucket
+      from public.tuition_invoices i join public.applications a on a.id=i.application_id join public.accounting_lines l on l.invoice_id=i.id and l.account_code='1100' join public.accounting_journals j on j.id=l.journal_id and j.posted_on<=v_asof group by i.id,a.id having sum(l.amount_cents)>0 order by i.due_date limit 10001)q;
+  else raise exception 'Choose ledger or ageing export.';
+  end if;
+  if jsonb_array_length(result)>10000 then raise exception 'This export exceeds 10,000 rows. Choose a smaller reporting range or earlier ageing date.'; end if;
+  return result;
+end $$;
+
+-- Financial source documents retain their original fields when corrected.
+create or replace function public.accounting_protect_source() returns trigger
+language plpgsql set search_path='' as $$ begin
+  if tg_op='DELETE' then raise exception 'Financial source records cannot be deleted.'; end if;
+  if (to_jsonb(new)-array['reversed_at','reversal_journal_id'])<>(to_jsonb(old)-array['reversed_at','reversal_journal_id']) then raise exception 'Financial source details are immutable. Record a reversal instead.'; end if;
+  return new;
+end $$;
+do $$ declare t text; begin
+  foreach t in array array['accounting_receipts','accounting_refunds','accounting_credit_notes','accounting_bills','accounting_bill_payments'] loop
+    execute format('drop trigger if exists accounting_immutable on public.%I',t);
+    execute format('drop trigger if exists accounting_protect_source on public.%I',t);
+    execute format('create trigger accounting_protect_source before update or delete on public.%I for each row execute function public.accounting_protect_source()',t);
+  end loop;
+end $$;
+do $$ declare f record; begin
+  for f in select p.oid::regprocedure as signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like 'accounting_%' loop execute format('revoke all on function %s from public,anon,authenticated',f.signature); end loop;
+end $$;
+grant execute on function public.accounting_mutate(uuid,text,jsonb),public.accounting_snapshot(uuid,date,date),public.accounting_document_data(uuid,text,uuid,date,date),public.accounting_run_schedule(uuid),public.accounting_export_rows(uuid,text,date,date) to service_role;
+notify pgrst,'reload schema';
+
+
+create or replace function public.accounting_attachment(p_actor uuid,p_action text,p_data jsonb) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare a public.accounting_attachments; v_id uuid=(p_data->>'id')::uuid; v_size integer; v_mime text; v_meta jsonb; v_extension text;
+begin
+  perform public.admin_assert(p_actor);
+  if p_action='prepare' then
+    perform public.accounting_assert(p_actor);
+    v_size=(p_data->>'size')::integer; v_mime=p_data->>'mime';
+    if not exists(select 1 from public.accounting_bills where id=(p_data->>'billId')::uuid) or v_id is null or v_size is null or v_size not between 1 and 10485760 or v_mime is null or v_mime not in ('application/pdf','image/jpeg','image/png') or length(trim(coalesce(p_data->>'name',''))) not between 1 and 200 then raise exception 'Choose a supplier bill and a PDF, JPEG or PNG document up to 10 MB.'; end if;
+    select * into a from public.accounting_attachments where id=v_id;
+    if a.id is null then
+      v_extension=case v_mime when 'application/pdf' then 'pdf' when 'image/jpeg' then 'jpg' else 'png' end;
+      insert into public.accounting_attachments(id,bill_id,name,mime,size_bytes,storage_path,actor_id)
+        values(v_id,(p_data->>'billId')::uuid,p_data->>'name',v_mime,v_size,(p_data->>'billId')||'/'||v_id||'.'||v_extension,p_actor) returning * into a;
+    elsif a.bill_id<>(p_data->>'billId')::uuid or a.name<>p_data->>'name' or a.mime<>v_mime or a.size_bytes<>v_size then raise exception 'This upload request was already used for a different document.';
+    end if;
+  elsif p_action in ('finalize','view') then
+    select * into a from public.accounting_attachments where id=v_id for update;
+    if a.id is null then raise exception 'Expense document not found.'; end if;
+    if p_action='finalize' then
+      perform public.accounting_assert(p_actor);
+      if not exists(select 1 from storage.buckets where id='accounting-documents' and not public) then raise exception 'The accounting document bucket must be private.'; end if;
+      select metadata into v_meta from storage.objects where bucket_id='accounting-documents' and name=a.storage_path;
+      if v_meta is null or coalesce(v_meta->>'size','') !~ '^[0-9]+$' then raise exception 'The uploaded document and its size could not be verified.'; end if;
+      if (v_meta->>'size')::bigint<>a.size_bytes or lower(split_part(coalesce(v_meta->>'mimetype',''),';',1))<>a.mime then raise exception 'The uploaded document does not match the expected size and type.'; end if;
+      update public.accounting_attachments set finalized_at=coalesce(finalized_at,now()) where id=a.id returning * into a;
+    elsif a.finalized_at is null then raise exception 'Verify the uploaded expense document before viewing it.';
+    end if;
+  else raise exception 'Unknown expense document action.';
+  end if;
+  perform public.accounting_audit(p_actor,'expense_document',jsonb_build_object('attachmentId',a.id,'billId',a.bill_id,'operation',p_action,'fileName',a.name));
+  return to_jsonb(a);
+end $$;
+create or replace function public.accounting_scheduler_context() returns jsonb
+language sql stable security definer set search_path='' as $$
+  select jsonb_build_object('enabled',s.automation_enabled,'autoSend',s.auto_send,'actor',s.scheduler_actor,'validActor',exists(select 1 from public.admin_users where user_id=s.scheduler_actor and enabled and finance_role='owner')) from public.accounting_settings s where singleton;
+$$;
+create or replace function public.accounting_write_ready(p_actor uuid) returns void
+language plpgsql security definer set search_path='' as $$ begin
+  perform public.accounting_assert(p_actor);
+  if not exists(select 1 from public.accounting_settings where singleton) then raise exception 'Accounting setup is incomplete.'; end if;
+end $$;
+create or replace function public.accounting_invoice_balance_for_admin(p_actor uuid,p_invoice uuid) returns bigint
+language plpgsql stable security definer set search_path='' as $$ begin
+  perform public.admin_assert(p_actor);
+  return public.accounting_invoice_balance(p_invoice);
+end $$;
+revoke all on function public.accounting_attachment(uuid,text,jsonb),public.accounting_scheduler_context() from public,anon,authenticated;
+grant execute on function public.accounting_attachment(uuid,text,jsonb),public.accounting_scheduler_context() to service_role;
+revoke all on function public.accounting_invoice_balance_for_admin(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.accounting_invoice_balance_for_admin(uuid,uuid) to service_role;
+revoke all on function public.accounting_write_ready(uuid) from public,anon,authenticated;
+grant execute on function public.accounting_write_ready(uuid) to service_role;
+notify pgrst,'reload schema';
+
+-- END ACCOUNTING MIGRATIONS
+
+commit;
