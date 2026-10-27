@@ -1,6 +1,6 @@
 # Teaching foundation: setup and complete test guide
 
-Release 2 is now included in the SQL bundle. Follow [connected-portals.md](connected-portals.md) for the current upgrade, student access, day-specific scheduling and tutor permissions. The steps below retain the foundation acceptance checks.
+The academic release (3) is now included in the full SQL bundle; see [academic-workflow.md](academic-workflow.md). Release 2 is also included. Follow [connected-portals.md](connected-portals.md) for the current upgrade, student access, day-specific scheduling and tutor permissions. The steps below retain the foundation acceptance checks.
 
 Updated 27 October 2026 (Africa/Johannesburg). The owner reports the parent and
 accounting portals working. This release adds teaching setup, private materials,
@@ -56,6 +56,7 @@ selected text and run the full script. It combines these canonical migrations:
 2. `20261027161000_teaching_operations.sql`
 3. `20261027162000_teaching_reads.sql`
 4. `20261027163000_connected_portals.sql`
+5. `20261027164000_academic_workflow.sql`
 
 The script preserves existing financial and parent records, creates a private
 `teaching-materials` bucket, adds role/teaching tables and service-only functions,
@@ -190,7 +191,7 @@ Tutor class removal affects subsequent requests. Financial suspension/withdrawal
 keeps historical teaching records; staff manage effective class membership dates
 and cancel/remove future teaching as appropriate. Teaching operations never post
 invoices, receipts, income or academic averages. Assessment purposes, submitted
-work, publication approval and target/average reports remain the next release.
+work, publication approval and target/average reports are now covered by the separate academic release; see academic-workflow.md.
 
 ## Verification boundaries
 

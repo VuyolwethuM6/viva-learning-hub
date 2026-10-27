@@ -103,3 +103,8 @@ Teaching release verification: 162 tests/19 files; both TypeScript targets passe
 ## Connected teaching release 2
 
 See [connected-portals.md](connected-portals.md). Canonical migration `20261027163000_connected_portals.sql` is additive; regenerate the schema/complete SQL with `node scripts/sync-teaching-setup.mjs`. `/api/student` shares the existing session function through a rewrite and uses its own cookies, role checks and verified identity. Parent-assisted reads use the existing parent API plus a server-verified child ID. New table/RPC privileges remain service-only. Private files are never made public by uploading or assigning them; learner release is explicit per version/attachment.
+
+
+## Academic workflow release
+
+Canonical migration: `20261027164000_academic_workflow.sql`. Run `node scripts/sync-teaching-setup.mjs` after SQL edits to regenerate the fresh schema, combined setup and `docs/academic-setup.sql`. See [academic-workflow.md](academic-workflow.md) for capabilities and live acceptance. Academic handlers share the existing admin/session functions, use their established authentication and same-origin write checks, and pass trusted actor/audience to service-only RPCs. API body limits permit bounded written answers; files use private signed uploads and verified metadata with final deadline checks. Report PDFs use the existing bundled local fonts/logo; Vercel records/session function packaging includes these assets. All test identities/uploads are synthetic. Any isolated browser harness/test-clock endpoint is outside the checkout, never a deployed authentication bypass.

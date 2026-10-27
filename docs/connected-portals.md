@@ -1,5 +1,7 @@
 # Connected portals: release 2 setup and testing
 
+The academic follow-on release is now implemented separately. After this setup, follow [academic-workflow.md](academic-workflow.md) to enable assigned work, submissions, marking/publication, timed assessments and progress/report PDFs.
+
 Recorded 27 October 2026, South African time. This guide describes implemented
 code. Deployment acceptance in your Supabase/Vercel project is still required.
 No database reset is needed. Tuition amounts, activation, accounting and payment
@@ -227,12 +229,9 @@ WhatsApp links should open the Viva number with the appropriate editable
 message. Sending remains the user's action. Dashboard footer branding should be
 absent, while Privacy is still accessible.
 
-## Deliberately next, not represented as working now
+## Academic follow-on and remaining features
 
-Activities/homework/submissions; server-enforced timed exams; diagnostic,
-formative and summative marking; review/publication; formal subject averages,
-trends and reports; curriculum authoring/practice; study plans; XP/badges;
-privacy-aware leaderboards; Ask Vito; public paid/free materials CMS.
+Activities/homework/submissions, server-enforced timed assessments, diagnostic/formative/summative human marking, review/publication, period averages and report PDFs are implemented by the separate academic migration. Curriculum practice, study plans, XP/badges, leaderboards, Ask Vito and public materials CMS remain future work.
 
 The supplied prototypes include Firebase contexts, sample leaderboard users,
 client-side scoring/timers and reset-progress buttons. These are design

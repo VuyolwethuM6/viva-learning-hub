@@ -10,7 +10,7 @@ import {
 } from "./http.js";
 import { validAccountingDate } from "../../src/lib/accounting-input.js";
 type Audience = "admin" | "tutor" | "student" | "parent";
-type StoredFile = {
+export type StoredFile = {
   id: string;
   storage_path: string;
   mime: string;
@@ -87,9 +87,16 @@ export async function teachingRead(
       p_id: uuid(url.searchParams.get("file")),
     },
   );
+  return await serveTeachingFile(response, file, "teaching-materials");
+}
+export async function serveTeachingFile(
+  response: ServerResponse,
+  file: StoredFile,
+  bucket: "teaching-materials" | "academic-submissions",
+) {
   const config = getSupabaseConfig()!;
   const upstream = await fetch(
-    `${config.url}/storage/v1/object/authenticated/teaching-materials/${encodeStoragePath(file.storage_path)}`,
+    `${config.url}/storage/v1/object/authenticated/${bucket}/${encodeStoragePath(file.storage_path)}`,
     { headers: serviceHeaders(config.key), signal: AbortSignal.timeout(20000) },
   );
   if (!upstream.ok || !upstream.body)

@@ -18,6 +18,10 @@
     "api/admin/session.ts": {
       "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
       "maxDuration": 60
+    },
+    "api/admin/records.ts": {
+      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
+      "maxDuration": 60
     }
   },
   "headers": [

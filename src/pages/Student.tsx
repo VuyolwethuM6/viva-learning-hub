@@ -1,3 +1,4 @@
+import { AcademicLearner } from "@/components/AcademicLearner";
 import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Helmet } from "react-helmet-async";
@@ -213,17 +214,23 @@ export default function Student() {
       </header>
       <main className="tutor-main" id="main-content">
         <nav className="portal-desktop-tabs" aria-label="Student sections">
-          {["Home", "Classes", "Learn", "Progress", "More"].map((name) => (
-            <button
-              key={name}
-              aria-current={section === name ? "page" : undefined}
-              onClick={() => setSection(name)}
-            >
-              {name}
-            </button>
-          ))}
+          {["Home", "Classes", "Work", "Learn", "Progress", "More"].map(
+            (name) => (
+              <button
+                key={name}
+                aria-current={section === name ? "page" : undefined}
+                onClick={() => setSection(name)}
+              >
+                {name}
+              </button>
+            ),
+          )}
         </nav>
-        <StudentWorkspace section={section} onExpired={expired} />
+        {section === "Work" ? (
+          <AcademicLearner />
+        ) : (
+          <StudentWorkspace section={section} onExpired={expired} />
+        )}
       </main>
       <PortalDock>
         <nav
@@ -233,6 +240,7 @@ export default function Student() {
           {[
             ["Home", Home],
             ["Classes", CalendarDays],
+            ["Work", FileText],
             ["Learn", BookOpen],
             ["Progress", FileText],
             ["More", MoreHorizontal],

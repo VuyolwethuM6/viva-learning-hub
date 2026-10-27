@@ -1,6 +1,6 @@
 # Implementation status and next work
 
-Updated: 27 October 2026. This describes the connected portal release on `work` and its accounting prerequisites. “Implemented” means code exists; “verified locally” means the stated checks ran. Neither establishes production readiness or a deployed database migration.
+Updated: 27 October 2026. This describes the academic workflow release on `work` and its accounting prerequisites. “Implemented” means code exists; “verified locally” means the stated checks ran. Neither establishes production readiness or a deployed database migration.
 
 ## Working scope
 
@@ -10,7 +10,7 @@ Updated: 27 October 2026. This describes the connected portal release on `work` 
 | Application received        | Stage-aware blur/loader, duplicate-click guard, matching-reference receipt, summary/print/contact, safe unknown-outcome handling                             | Existing tests and browser check                                                                    |
 | Receipt/admin email         | Triggered after document completion; failure does not undo enrollment; claim/release functions now included in Git and fresh schema                          | Owner previously applied email SQL in Supabase; this task did not inspect or migrate the live DB    |
 | Admin access                | `/admin`, Supabase Auth session, explicit enabled admin membership, HttpOnly cookie, server-side authorization and same-origin writes                        | Local API authorization tests; live account setup still required                                    |
-| Admin design                | Viva-branded login, sidebar/mobile bottom navigation, real-data overview, learner cards/profile drawers and confirmation dialogs                             | Desktop/mobile Chromium checks with synthetic records; Classes, Materials and Tutors are implemented; later academic sections remain planned |
+| Admin design                | Viva-branded login, sidebar/mobile bottom navigation, real-data overview, learner cards/profile drawers and confirmation dialogs                             | Desktop/mobile Chromium checks with synthetic records; Classes, Materials, Tutors, Assessments and Academics are implemented; advanced curriculum/engagement remain planned |
 | Review                      | Private report-card link requests, learner/guardian details, marks, notes, approve/reject                                                                    | Real database function tests; UI/browser checks described in development guide                      |
 | First invoice               | Approval transaction issues prorated first invoice and queues email                                                                                          | Database-enforced date, programme-day, document, fee and duplicate rules                            |
 | Invoice numbers             | New invoices use `VT-YYYYMMNN` for the tuition month, with an atomic shared monthly counter                                                                  | Reset, rerun and 100th-invoice database tests; existing issued numbers preserved                    |
@@ -22,7 +22,7 @@ Updated: 27 October 2026. This describes the connected portal release on `work` 
 | Public pricing              | Grade/subject fees aligned with enrollment                                                                                                                   | Replaces conflicting legacy session-package cards                                                   |
 | PDF commerce                | Existing server-signed live PayFast checkout and notification validation; paid PDF emails                                                                    | Separate from tuition; no new live payment test                                                     |
 | Enquiries/analytics         | Existing Resend enquiry routes and optional GA; admin route skips app analytics                                                                              | Existing implementation; no full enquiry integration test                                           |
-| Teaching/portals/monitoring | Classes, tutor/student access, private materials, explicit learner release and confirmed attendance implemented; assessments and monitoring remain planned                                                                                                                                  | No fake academic data or “healthy” claims                                                           |
+| Teaching/portals/monitoring | Classes, tutor/student access, private materials, explicit learner release and confirmed attendance implemented; assigned work, submissions, marking/publication, timed assessments, calculated progress and frozen report PDFs implemented; advanced monitoring remains planned                                                                                                                                  | No fake academic data or “healthy” claims                                                           |
 
 ## Policies and operational guidance
 
@@ -56,15 +56,15 @@ Implemented: admin tutor authorization, saved teaching rooms, reusable topics/go
 
 Run the complete [teaching-setup.sql](teaching-setup.sql) after parent setup. [Teaching setup and tests](teaching-test-guide.md) includes the extra tutor callback, shared portal-neutral Auth email template, deployment checks and full acceptance flow. No production SQL or external email was executed by the implementation tests.
 
-Enrollment marks/targets are shown and saved with session rosters. Assessment averages, diagnostic/formative/summative recording, learner submissions, timed exams and public materials/catalog management remain future releases. Existing study-material sales are unchanged.
+Enrollment marks/targets are shown and saved with session rosters. Assessment averages, diagnostic/formative/summative recording, learner submissions, timed assessments and reports are now implemented in the academic release; public materials/catalog management remains future work. Existing study-material sales are unchanged.
 
 ## Next milestones
 
-The owner now reports the parent portal working as expected. [Teaching workflow plan](teaching-workflow-plan.md) records the next requirements, including materials, session work/homework, timed submissions, future public catalog management and a preference for choosing options over typing. Teaching/session/material/attendance foundations and student read access are implemented. Assessment/submission/average workflows remain planned.
+The owner now reports the parent portal working as expected. [Teaching workflow plan](teaching-workflow-plan.md) records the next requirements, including materials, session work/homework, timed submissions, future public catalog management and a preference for choosing options over typing. Teaching/session/material/attendance foundations and student read access are implemented. Assessment/submission/average workflows are now implemented; see academic-workflow.md for live setup and acceptance.
 
 1. Apply the connected portal upgrade, configure tutor/student callbacks and complete the live admin → tutor → student → parent tests in connected-portals.md.
 2. Verify the scheduler, private evidence and controlled-inbox delivery before enabling automatic dispatch.
-3. Add assigned work/submission, marking/review/publication, timed exams and calculated averages.
+3. Apply the academic migration and test assign → submit → mark → review → publish, timed expiry, averages and report PDFs on the deployment.
 4. Connect admin Materials to the public catalog and preserve paid-resource purchase/delivery behavior; online tuition checkout remains separate future work.
 5. Expand MFA/account recovery, pagination, advanced statutory reporting and operational monitoring/backup verification.
 
@@ -81,4 +81,9 @@ The owner now reports the parent portal working as expected. [Teaching workflow 
 
 ## Connected teaching portals — release 2
 
-Implemented: `/student` with explicit learner email grants and separate sessions; parent-assisted read-only learning; per-day timetable slots, availability/series preview and atomic rescheduling; tutor-scoped planning/topic creation/material uploads and deliberate learner release; fixed mobile docks and WhatsApp support. Existing data is preserved. Follow [connected-portals.md](connected-portals.md) for migration/auth setup and end-to-end acceptance. Assessments/submissions/formal averages, richer curriculum/engagement/AI and public catalog editing remain planned. Cloud tests use synthetic external Auth/Storage/email; live deployment acceptance is required.
+Implemented: `/student` with explicit learner email grants and separate sessions; parent-assisted read-only learning; per-day timetable slots, availability/series preview and atomic rescheduling; tutor-scoped planning/topic creation/material uploads and deliberate learner release; fixed mobile docks and WhatsApp support. Existing data is preserved. Follow [connected-portals.md](connected-portals.md) for migration/auth setup and end-to-end acceptance. The separate academic release now implements assessments/submissions/formal averages. Richer curriculum/engagement/AI and public catalog editing remain planned. Cloud tests use synthetic external Auth/Storage/email; live deployment acceptance is required.
+
+
+## Academic workflow — release 3
+
+Implemented: class-scoped reporting periods with explicit immutable calculation methods; draft work and selected recipients; diagnostic/formative/summative purpose independent of format; session activities/homework/timed assessments; independent learner drafts, bounded private uploads/recovery and confirmed submission receipts; tutor marking and reasoned corrections; admin review/publication; learner/family results; calculated averages, missing counts, target gaps and immutable published report snapshots with branded PDFs. Existing financial records/automation are unchanged. Setup and exact limitations are in [academic-workflow.md](academic-workflow.md). Live migration, Auth/Storage and physical-device acceptance remain the owner's deployment checks. No new external emails or production transactions were executed.

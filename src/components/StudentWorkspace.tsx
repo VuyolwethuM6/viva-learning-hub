@@ -1,3 +1,4 @@
+import { AcademicLearner } from "./AcademicLearner";
 import { useCallback, useEffect, useState } from "react";
 import {
   BookOpen,
@@ -344,8 +345,8 @@ export function StudentWorkspace({
                   {s.targetMark === null ? "Not recorded" : `${s.targetMark}%`}
                 </p>
                 <p>
-                  No published assessments yet. An enrollment mark is a starting
-                  point, not a current average.
+                  Enrollment marks are starting points. Your published
+                  assessment progress appears below.
                 </p>
               </article>
             ))}
@@ -370,13 +371,17 @@ export function StudentWorkspace({
           <article className="learning-card">
             <h3>What is coming next?</h3>
             <p>
-              Homework, submissions, timed assessments and published progress
-              will connect to these same classrooms. Practice, study plans,
-              badges and Ask Vito follow in later releases.
+              Open Work for activities, submissions, timed assessments and
+              feedback. Progress shows published averages and reports. Practice,
+              study plans, badges and Ask Vito remain later releases.
             </p>
           </article>
         </>
       )}
+      {!application && section === "Progress" && (
+        <AcademicLearner progressOnly />
+      )}
+      {!application && section === "Home" && <AcademicLearner summary />}
       {!application && (
         <div className="portal-support">
           <WhatsAppButton

@@ -1,3 +1,4 @@
+import { AcademicStaff } from "@/components/AcademicStaff";
 import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
 import {
   useCallback,
@@ -1470,11 +1471,18 @@ export default function Admin() {
                   </section>
                 </>
               )}
+              {["Assessments", "Academics"].includes(tab) && <AcademicStaff />}
               {["Classes", "Materials", "Tutors"].includes(tab) && (
                 <TeachingWorkspace section={tab} />
               )}
               {!tabs.slice(0, 6).includes(tab) &&
-                !["Classes", "Materials", "Tutors"].includes(tab) && (
+                ![
+                  "Classes",
+                  "Materials",
+                  "Tutors",
+                  "Assessments",
+                  "Academics",
+                ].includes(tab) && (
                   <section className="admin-card future-card">
                     <span className="future-icon">
                       <BookOpen size={32} />

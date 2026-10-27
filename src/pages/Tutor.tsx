@@ -1,3 +1,4 @@
+import { AcademicStaff } from "@/components/AcademicStaff";
 import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Helmet } from "react-helmet-async";
@@ -224,15 +225,17 @@ export default function Tutor() {
           </p>
         </section>
         <nav className="portal-desktop-tabs" aria-label="Tutor sections">
-          {["Home", "Schedule", "Classes", "Materials", "More"].map((name) => (
-            <button
-              key={name}
-              aria-current={section === name ? "page" : undefined}
-              onClick={() => setSection(name)}
-            >
-              {name}
-            </button>
-          ))}
+          {["Home", "Schedule", "Classes", "Materials", "Work", "More"].map(
+            (name) => (
+              <button
+                key={name}
+                aria-current={section === name ? "page" : undefined}
+                onClick={() => setSection(name)}
+              >
+                {name}
+              </button>
+            ),
+          )}
         </nav>
         {section === "More" ? (
           <section className="admin-card">
@@ -240,8 +243,9 @@ export default function Tutor() {
             <p>{user.email}</p>
             <p>
               You can plan sessions, manage attendance and share materials
-              within your assigned classes. Academic assessments and marking
-              arrive in the next teaching phase.
+              within your assigned classes. Open Work to assign activities,
+              diagnostics and assessments, review confirmed submissions and
+              submit marks for admin publication.
             </p>
             <WhatsAppButton message="Hello Viva, I need assistance with my tutor account or teaching schedule." />
             <p>
@@ -249,6 +253,8 @@ export default function Tutor() {
             </p>
             <button onClick={() => setLogout(true)}>Sign out</button>
           </section>
+        ) : section === "Work" ? (
+          <AcademicStaff audience="tutor" />
         ) : (
           <TeachingWorkspace
             audience="tutor"
@@ -276,6 +282,7 @@ export default function Tutor() {
             ["Schedule", CalendarDays],
             ["Classes", BookOpen],
             ["Materials", FileText],
+            ["Work", FileText],
             ["More", MoreHorizontal],
           ].map(([name, Icon]) => {
             const Label = Icon as typeof Home;
