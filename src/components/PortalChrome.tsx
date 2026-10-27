@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import { FaWhatsapp } from "react-icons/fa";
 import "./portal-chrome.css";
+import "./portal-design.css";
 import { whatsappHref } from "@/lib/whatsapp";
 export function WhatsAppButton({
   message,

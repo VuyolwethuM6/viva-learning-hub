@@ -710,7 +710,7 @@ export default function Parent() {
             <>
               <section className="parent-hero">
                 <div>
-                  <p className="parent-eyebrow">Every step matters</p>
+                  <p className="parent-eyebrow">Your child’s dashboard</p>
                   <div className="parent-learner-heading">
                     <span className="parent-avatar">
                       {initials(child.name)}
@@ -728,14 +728,6 @@ export default function Parent() {
                     {childStatus(child)}
                   </span>
                 </div>
-                <div className="parent-hero-note">
-                  <GraduationCap size={38} />
-                  <p>
-                    Small steps today.
-                    <br />
-                    <strong>Brighter possibilities tomorrow.</strong>
-                  </p>
-                </div>
                 <div className="parent-hero-stats">
                   <div>
                     <span>Subjects</span>
@@ -744,14 +736,6 @@ export default function Parent() {
                   <div>
                     <span>Monthly tuition</span>
                     <strong>{rand(child.monthlyFeeCents)}</strong>
-                  </div>
-                  <div>
-                    <span>Programme starts</span>
-                    <strong>
-                      {child.startDate
-                        ? date(child.startDate)
-                        : "To be confirmed"}
-                    </strong>
                   </div>
                 </div>
               </section>
@@ -767,7 +751,7 @@ export default function Parent() {
                       </p>
                       <h2>
                         {outstanding > 0
-                          ? "A quick account check-in"
+                          ? "Tuition outstanding"
                           : "You’re up to date"}
                       </h2>
                     </div>
@@ -781,7 +765,7 @@ export default function Parent() {
                       ? child.readyForActivation
                         ? "Your first invoice is settled. Viva will confirm activation."
                         : "The first invoice must be settled before Viva activates the learner."
-                      : "Your family’s payments, credit and documents are always available in Finances."}
+                      : "View invoices, receipts and payments in Finances."}
                   </p>
                   {child.arrangementUntil && (
                     <p className="parent-notice">
@@ -797,89 +781,98 @@ export default function Parent() {
                     View family finances <ArrowRight size={17} />
                   </button>
                 </section>
-                <section className="parent-card">
-                  <div className="parent-card-heading">
-                    <span className="parent-tile orange">
-                      <CalendarDays size={21} />
-                    </span>
-                    <div>
-                      <p className="parent-eyebrow">Make room for learning</p>
-                      <h2>Weekly programme</h2>
+                <details className="parent-card parent-enrollment-details">
+                  <summary>Programme & enrollment details</summary>
+                  <section>
+                    <div className="parent-card-heading">
+                      <span className="parent-tile orange">
+                        <CalendarDays size={21} />
+                      </span>
+                      <div>
+                        <p className="parent-eyebrow">Make room for learning</p>
+                        <h2>Weekly programme</h2>
+                      </div>
                     </div>
-                  </div>
-                  <p>{child.programme || "Your agreed learning programme"}</p>
-                  <div className="parent-week">
-                    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
-                      (day, index) => (
-                        <div
-                          key={day}
-                          className={
-                            child.schedule?.includes(index + 1)
-                              ? "scheduled"
-                              : ""
-                          }
-                        >
-                          <span>{day}</span>
-                          <span>
-                            {child.schedule?.includes(index + 1) ? (
-                              <CheckCircle2 size={18} />
-                            ) : (
-                              "—"
-                            )}
-                          </span>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                  <p className="parent-muted">
-                    Programme days from your enrollment, February–November. Viva
-                    confirms class times and any closures separately. This is
-                    not an attendance record.
-                  </p>
-                  {child.billingEndDate && (
-                    <p className="parent-notice">
-                      Final billing date: {date(child.billingEndDate)}.
-                    </p>
-                  )}
-                </section>
-                <section className="parent-card parent-subjects">
-                  <div className="parent-card-heading">
-                    <span className="parent-tile">
-                      <BookOpen size={21} />
-                    </span>
-                    <div>
-                      <p className="parent-eyebrow">Their learning journey</p>
-                      <h2>Enrolled subjects</h2>
-                    </div>
-                  </div>
-                  {child.subjects.length ? (
-                    <div className="parent-subject-chips">
-                      {child.subjects.map((subject) => (
-                        <span key={subject}>{subject}</span>
-                      ))}
-                    </div>
-                  ) : (
+                    <p>{child.programme || "Your agreed learning programme"}</p>
                     <p>
-                      No subjects are listed. Contact Viva to confirm the
-                      programme.
+                      Programme starts:{" "}
+                      {child.startDate
+                        ? date(child.startDate)
+                        : "To be confirmed"}
                     </p>
-                  )}
-                  {child.school && (
-                    <p className="parent-muted">School: {child.school}</p>
-                  )}
-                </section>
-                <ParentTeaching applicationId={child.id} />
+                    <div className="parent-week">
+                      {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
+                        (day, index) => (
+                          <div
+                            key={day}
+                            className={
+                              child.schedule?.includes(index + 1)
+                                ? "scheduled"
+                                : ""
+                            }
+                          >
+                            <span>{day}</span>
+                            <span>
+                              {child.schedule?.includes(index + 1) ? (
+                                <CheckCircle2 size={18} />
+                              ) : (
+                                "—"
+                              )}
+                            </span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                    <p className="parent-muted">
+                      Programme days from your enrollment, February–November.
+                      Viva confirms class times and any closures separately.
+                      This is not an attendance record.
+                    </p>
+                    {child.billingEndDate && (
+                      <p className="parent-notice">
+                        Final billing date: {date(child.billingEndDate)}.
+                      </p>
+                    )}
+                  </section>
+                  <section className="parent-subjects">
+                    <div className="parent-card-heading">
+                      <span className="parent-tile">
+                        <BookOpen size={21} />
+                      </span>
+                      <div>
+                        <p className="parent-eyebrow">Their learning journey</p>
+                        <h2>Enrolled subjects</h2>
+                      </div>
+                    </div>
+                    {child.subjects.length ? (
+                      <div className="parent-subject-chips">
+                        {child.subjects.map((subject) => (
+                          <span key={subject}>{subject}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p>
+                        No subjects are listed. Contact Viva to confirm the
+                        programme.
+                      </p>
+                    )}
+                    {child.school && (
+                      <p className="parent-muted">School: {child.school}</p>
+                    )}
+                  </section>
+                </details>
+                <ParentTeaching
+                  key={`teaching-${child.id}`}
+                  applicationId={child.id}
+                />
                 <ParentAcademics
                   key={`academic-${child.id}`}
                   application={child.id}
                 />
                 <section className="parent-card parent-contact-card">
                   <Mail size={25} />
-                  <h2>A conversation can make a difference.</h2>
-                  <p>
-                    Questions about tuition or your child’s learning? We’re here
-                    to help.
-                  </p>
+                  <h2>Need help?</h2>
+                  <p>Ask us about learning, attendance or tuition.</p>
                   <WhatsAppButton
                     message={`Hello Viva, I have a learning or tuition question. Learner reference: ${child.studentNumber}.`}
                   >
@@ -892,7 +885,7 @@ export default function Parent() {
           {panel === "finance" && (
             <>
               <section className="parent-finance-hero">
-                <p className="parent-eyebrow">Clarity for your family</p>
+                <p className="parent-eyebrow">Invoices, payments & receipts</p>
                 <h1>Your family finances.</h1>
                 <p>
                   One account for the reviewed learners linked to your guardian

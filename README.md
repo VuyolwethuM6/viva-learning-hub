@@ -1,5 +1,7 @@
 # Viva Tutorials
 
+Current portal layout and testing: [portal interface guide](docs/portal-interface.md) (no new SQL for the interface update).
+
 React/TypeScript website for Viva Tutorials, with Vercel API routes for enrollment, enquiries and paid PDF delivery. Documentation reviewed on 27 October 2026.
 
 ## Development documentation

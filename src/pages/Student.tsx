@@ -1,4 +1,3 @@
-import { AcademicLearner } from "@/components/AcademicLearner";
 import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Helmet } from "react-helmet-async";
@@ -7,10 +6,9 @@ import {
   LogOut,
   Mail,
   Home,
-  CalendarDays,
   BookOpen,
   FileText,
-  MoreHorizontal,
+  UserRound,
 } from "lucide-react";
 import { studentRequest, StudentError } from "@/lib/student-client";
 import { StudentWorkspace } from "@/components/StudentWorkspace";
@@ -194,7 +192,6 @@ export default function Student() {
           <small>
             Need access?{" "}
             <WhatsAppButton message="Hello Viva, I need help accessing the student portal." />
-            . Sign-in does not grant administrator access.
           </small>
         </main>
       </div>
@@ -213,24 +210,22 @@ export default function Student() {
         </button>
       </header>
       <main className="tutor-main" id="main-content">
-        <nav className="portal-desktop-tabs" aria-label="Student sections">
-          {["Home", "Classes", "Work", "Learn", "Progress", "More"].map(
-            (name) => (
-              <button
-                key={name}
-                aria-current={section === name ? "page" : undefined}
-                onClick={() => setSection(name)}
-              >
-                {name}
-              </button>
-            ),
-          )}
+        <nav className="viva-role-nav" aria-label="Student sections">
+          {["Home", "Learning", "Progress", "More"].map((name) => (
+            <button
+              key={name}
+              aria-current={section === name ? "page" : undefined}
+              onClick={() => setSection(name)}
+            >
+              {name === "More" ? "Account" : name}
+            </button>
+          ))}
         </nav>
-        {section === "Work" ? (
-          <AcademicLearner />
-        ) : (
-          <StudentWorkspace section={section} onExpired={expired} />
-        )}
+        <StudentWorkspace
+          section={section}
+          onExpired={expired}
+          onNavigate={setSection}
+        />
       </main>
       <PortalDock>
         <nav
@@ -239,11 +234,9 @@ export default function Student() {
         >
           {[
             ["Home", Home],
-            ["Classes", CalendarDays],
-            ["Work", FileText],
-            ["Learn", BookOpen],
+            ["Learning", BookOpen],
             ["Progress", FileText],
-            ["More", MoreHorizontal],
+            ["More", UserRound],
           ].map(([name, Icon]) => {
             const Label = Icon as typeof Home;
             return (
@@ -258,7 +251,7 @@ export default function Student() {
                 <span>
                   <Label size={21} />
                 </span>
-                {String(name)}
+                {name === "More" ? "Account" : String(name)}
               </button>
             );
           })}
@@ -271,7 +264,7 @@ export default function Student() {
           close={() => setLogout(false)}
           busy={busy}
         >
-          <p>Your other Viva role sessions are separate.</p>
+          <p>You can return using a new email sign-in link.</p>
           {error && (
             <p className="admin-error" role="alert">
               {error}

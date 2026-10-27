@@ -1,10 +1,10 @@
+import { SubjectProgressCard } from "./SubjectProgressCard";
 import { WhatsAppButton } from "./PortalChrome";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw, ClipboardList, Clock, Target } from "lucide-react";
 import {
   academicFetch,
   academicWrite,
-  methodLabel,
   type AcademicAudience,
 } from "@/lib/academic-client";
 import type { AcademicSnapshot } from "@/lib/academic-types";
@@ -20,14 +20,21 @@ export function AcademicLearner({
   application,
   progressOnly = false,
   summary = false,
+  classId,
+  onNavigate,
+  onProgress,
 }: {
   application?: string;
   progressOnly?: boolean;
   summary?: boolean;
+  classId?: string;
+  onNavigate?: () => void;
+  onProgress?: () => void;
 }) {
   const audience: AcademicAudience = application ? "parent" : "student";
   const [data, setData] = useState<AcademicSnapshot | null>(null),
     [tid, setTid] = useState(""),
+    [filter, setFilter] = useState("To do"),
     [answer, setAnswer] = useState(""),
     [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(false),
@@ -57,7 +64,9 @@ export function AcademicLearner({
         )
       ).json()) as AcademicSnapshot;
       if (gen !== generation.current) return;
-      offset.current = Date.parse(d.now) - Date.now();
+      const receivedAt = Date.now();
+      offset.current = Date.parse(d.now) - receivedAt;
+      setTick(receivedAt);
       setData(d);
       setError("");
     } catch (e) {
@@ -73,9 +82,10 @@ export function AcademicLearner({
     void load();
   }, [load]);
   useEffect(() => {
+    if (!tid || progressOnly || summary) return;
     const t = setInterval(() => setTick(Date.now()), 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [tid, progressOnly, summary]);
   useEffect(
     () => () => {
       if (viewer) URL.revokeObjectURL(viewer.url);
@@ -239,7 +249,24 @@ export function AcademicLearner({
   const remaining = deadline
     ? Math.max(0, Math.ceil((Date.parse(deadline) - now) / 1000))
     : 0;
-  const pending = ds.tasks.filter(
+  const visibleTasks = ds.tasks.filter(
+    (t) => !classId || t.class_id === classId,
+  );
+  const filteredTasks = visibleTasks.filter((t) => {
+    const submitted = ds.attempts.some(
+      (a) => a.task_id === t.id && a.state === "submitted",
+    );
+    const result = ds.grades.some((g) => g.task_id === t.id);
+    return (
+      filter === "All" ||
+      (filter === "Results"
+        ? result
+        : filter === "Submitted"
+          ? submitted
+          : t.state === "assigned" && !submitted)
+    );
+  });
+  const pending = visibleTasks.filter(
     (t) =>
       t.state === "assigned" &&
       !ds.attempts.some((a) => a.task_id === t.id && a.state === "submitted"),
@@ -257,10 +284,12 @@ export function AcademicLearner({
           </span>
           <h2>
             {summary
-              ? "Work to keep in sight"
+              ? application
+                ? "Subject progress"
+                : "My work"
               : progressOnly
-                ? "Assessed progress & reports"
-                : "Assignments & assessments"}
+                ? "Progress & reports"
+                : "Assigned work"}
           </h2>
         </div>
         <button
@@ -282,59 +311,155 @@ export function AcademicLearner({
         </p>
       )}
       {summary ? (
-        <p>
-          {pending
-            ? `${pending} assigned item${pending === 1 ? "" : "s"} awaiting a confirmed submission. Open Work to see deadlines and feedback.`
-            : "No work awaiting submission. Open Work to review your learning record."}
-        </p>
+        <>
+          {application && !ds.progress.length && (
+            <p className="viva-caption">No results published yet.</p>
+          )}
+          {application && (
+            <div className="academic-grid">
+              {ds.progress
+                .filter(
+                  (p) =>
+                    !ds.progress.some(
+                      (other) =>
+                        other.className === p.className &&
+                        other.subject === p.subject &&
+                        other.startsOn > p.startsOn,
+                    ),
+                )
+                .map((p) => (
+                  <SubjectProgressCard key={p.periodId} progress={p} compact />
+                ))}
+            </div>
+          )}
+          <p>
+            {pending
+              ? `${pending} item${pending === 1 ? "" : "s"} awaiting submission`
+              : "No work awaiting submission."}
+          </p>
+          {visibleTasks
+            .filter(
+              (t) =>
+                t.state === "assigned" &&
+                !ds.attempts.some(
+                  (a) => a.task_id === t.id && a.state === "submitted",
+                ),
+            )
+            .sort((a, b) => a.due_at.localeCompare(b.due_at))
+            .slice(0, 2)
+            .map((t) => (
+              <div className="academic-row" key={t.id}>
+                <div>
+                  <strong>{t.title}</strong>
+                  <p>Due {teachingDate(t.due_at)}</p>
+                </div>
+                <span className="viva-pill">{t.kind}</span>
+              </div>
+            ))}
+          {onNavigate && (
+            <button onClick={onNavigate}>Open assigned work →</button>
+          )}
+          {!application && ds.grades.some((g) => g.state === "published") && (
+            <>
+              <h3>Recent results</h3>
+              {[...ds.grades]
+                .filter((g) => g.state === "published")
+                .sort((a, b) =>
+                  (b.published_at || "").localeCompare(a.published_at || ""),
+                )
+                .slice(0, 3)
+                .map((g) => (
+                  <div className="academic-row" key={g.id}>
+                    <strong>
+                      {ds.tasks.find((t) => t.id === g.task_id)?.title ||
+                        "Assessment"}
+                    </strong>
+                    <span className="viva-pill">
+                      {g.score}/
+                      {ds.tasks.find((t) => t.id === g.task_id)?.max_marks}
+                    </span>
+                  </div>
+                ))}
+              {onProgress && (
+                <button onClick={onProgress}>View my progress →</button>
+              )}
+            </>
+          )}
+        </>
       ) : (
         <>
           {!progressOnly && (
             <>
-              <div className="academic-grid">
-                {ds.tasks.map((t) => {
-                  const a = ds.attempts.find((a) => a.task_id === t.id),
-                    g = ds.grades.find((g) => g.task_id === t.id);
-                  return (
-                    <button
-                      className={`academic-task-card learning-card ${t.id === tid ? "selected" : ""}`}
-                      key={t.id}
-                      onClick={() => {
-                        setTid(t.id);
-                        setNotice("");
-                      }}
-                    >
-                      <ClipboardList size={22} />
-                      <strong>{t.title}</strong>
-                      <span>
-                        {t.purpose} · {t.kind}
-                      </span>
-                      <small>
-                        {t.state === "cancelled"
-                          ? "Cancelled"
-                          : g
-                            ? "Result published"
-                            : a?.state === "submitted"
-                              ? "Submitted — awaiting published feedback"
+              {!task && (
+                <>
+                  <div className="viva-chips" aria-label="Assigned work views">
+                    {["To do", "Submitted", "Results", "All"].map((f) => (
+                      <button
+                        key={f}
+                        aria-pressed={filter === f}
+                        onClick={() => setFilter(f)}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="academic-grid">
+                    {filteredTasks.map((t) => {
+                      const a = ds.attempts.find((a) => a.task_id === t.id),
+                        g = ds.grades.find((g) => g.task_id === t.id);
+                      return (
+                        <button
+                          className={`academic-task-card learning-card ${t.id === tid ? "selected" : ""}`}
+                          key={t.id}
+                          onClick={() => {
+                            setTid(t.id);
+                            setNotice("");
+                          }}
+                        >
+                          <ClipboardList size={22} />
+                          <strong>{t.title}</strong>
+                          <span>
+                            {t.purpose} · {t.kind}
+                          </span>
+                          <small>
+                            {t.state === "cancelled"
+                              ? "Cancelled"
                               : a?.state === "returned"
                                 ? "Returned for correction"
                                 : a?.state === "draft"
                                   ? "Draft — not submitted"
-                                  : "Not started"}
-                      </small>
-                      <small>Due {teachingDate(t.due_at)}</small>
-                    </button>
-                  );
-                })}
-              </div>
-              {!ds.tasks.length && (
-                <p className="academic-empty">
-                  No assigned work yet. Your tutor will share activities,
-                  diagnostics and assessments here.
-                </p>
+                                  : g
+                                    ? "Result published"
+                                    : a?.state === "submitted"
+                                      ? "Submitted — awaiting published feedback"
+                                      : "Not started"}
+                          </small>
+                          <small>Due {teachingDate(t.due_at)}</small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {!filteredTasks.length && (
+                    <p className="academic-empty">
+                      {visibleTasks.length
+                        ? "No work in this view."
+                        : "No work shared for this classroom yet."}
+                    </p>
+                  )}
+                </>
               )}
               {task && (
                 <section className="learning-card academic-task-detail">
+                  <button
+                    className="viva-back"
+                    disabled={busy || loading}
+                    onClick={() => {
+                      setTid("");
+                      setNotice("");
+                    }}
+                  >
+                    ← All assigned work
+                  </button>
                   <h2>{task.title}</h2>
                   <p>{task.learning_goal}</p>
                   <p className="academic-instructions">{task.instructions}</p>
@@ -641,57 +766,11 @@ export function AcademicLearner({
               )}
             </>
           )}
-          {(progressOnly || application) && (
+          {progressOnly && (
             <>
               <div className="academic-grid">
                 {ds.progress.map((p) => (
-                  <article className="learning-card" key={p.periodId}>
-                    <Target size={22} />
-                    <h3>{p.subject}</h3>
-                    <p>{p.className}</p>
-                    <p>
-                      {p.startsOn}–{p.endsOn}
-                    </p>
-                    <strong className="academic-average">
-                      {p.average === null
-                        ? "No eligible published results"
-                        : `${p.average}%`}
-                    </strong>
-                    <p>
-                      Starting {p.startingMark ?? "—"}% · Target{" "}
-                      {p.targetMark ?? "—"}%
-                    </p>
-                    {p.gapToTarget !== null && (
-                      <p>
-                        {p.gapToTarget > 0
-                          ? `${p.gapToTarget} percentage points below target`
-                          : p.gapToTarget === 0
-                            ? "At target for this period"
-                            : `${Math.abs(p.gapToTarget)} percentage points above target`}
-                      </p>
-                    )}
-                    <p>
-                      {methodLabel[p.method]} · {p.assessmentCount} included ·{" "}
-                      {p.missingCount} awaiting published result
-                    </p>
-                    <p>Missing/unmarked work is excluded, not scored zero.</p>
-                    {p.diagnostics.map((d, i) => (
-                      <p key={i}>
-                        Diagnostic: {d.title} · {d.percentage}% · Separate
-                        baseline
-                      </p>
-                    ))}
-                    <details>
-                      <summary>Included results and weights</summary>
-                      {p.marks.map((m, i) => (
-                        <p key={i}>
-                          {m.title}: {m.score}/{m.maxMarks} · {m.purpose} ·
-                          Weight {m.weight} ·{" "}
-                          {m.countsAverage ? "Included" : "Separate"}
-                        </p>
-                      ))}
-                    </details>
-                  </article>
+                  <SubjectProgressCard key={p.periodId} progress={p} />
                 ))}
               </div>
               {!ds.progress.length && (
@@ -798,14 +877,44 @@ export function AcademicLearner({
   );
 }
 export function ParentAcademics({ application }: { application: string }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false),
+    [view, setView] = useState("Results");
   return (
-    <details
-      className="parent-card academic-parent"
-      onToggle={(e) => setOpen(e.currentTarget.open)}
-    >
-      <summary>Assigned work, published results & reports</summary>
-      {open && <AcademicLearner application={application} />}
-    </details>
+    <section className="parent-card academic-parent">
+      <div className="viva-section-heading">
+        <div>
+          <span className="viva-kicker">Learning progress</span>
+          <h2>Results & assigned work</h2>
+        </div>
+        <Target size={22} />
+      </div>
+      <div className="viva-chips" aria-label="Child learning views">
+        {["Results", "Assigned work"].map((v) => (
+          <button
+            key={v}
+            aria-pressed={view === v}
+            onClick={() => {
+              setView(v);
+              setOpen(true);
+            }}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
+      {!open && <AcademicLearner application={application} summary />}
+      <details open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+        <summary>
+          {open ? "Close learning details" : "View learning details"}
+        </summary>
+        {open && (
+          <AcademicLearner
+            key={view}
+            application={application}
+            progressOnly={view === "Results"}
+          />
+        )}
+      </details>
+    </section>
   );
 }

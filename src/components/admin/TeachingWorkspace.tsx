@@ -1,3 +1,5 @@
+import { WeeklyAttendance } from "../WeeklyAttendance";
+import { southAfricanDay } from "@/lib/portal-attendance";
 import { ClassProgrammeFields } from "./ClassProgrammeFields";
 import { SessionPlanner } from "./SessionPlanner";
 import {
@@ -407,7 +409,8 @@ export function TeachingWorkspace({
   const [grade, setGrade] = useState("Grade 12"),
     [subject, setSubject] = useState("Mathematics"),
     [mode, setMode] = useState("Online");
-  const [sessionFilter, setSessionFilter] = useState("Upcoming");
+  const [sessionFilter, setSessionFilter] = useState("Today");
+  const [classTab, setClassTab] = useState("Sessions");
   const live = useRef(true);
   const load = useCallback(async () => {
     setLoading(true);
@@ -1076,13 +1079,22 @@ export function TeachingWorkspace({
     <div className="teaching-workspace">
       <div className="page-heading">
         <div>
-          <span className="eyebrow">TEACHING WITH PURPOSE</span>
+          <span className="eyebrow">
+            {admin ? "Teaching" : ds.tutorName || "Tutor portal"}
+          </span>
           <h1>
-            {admin ? section : `${ds.tutorName || "Your"} teaching workspace`}
+            {admin
+              ? section
+              : section === "Home"
+                ? "My teaching day"
+                : section === "Materials"
+                  ? "Teaching materials"
+                  : "My classes"}
           </h1>
           <p>
-            Real sessions. Saved resources. A lasting learning record. All times
-            are South African.
+            {section === "Home"
+              ? `${new Date(ds.today + "T12:00:00Z").toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" })} · South Africa`
+              : "Times in South Africa."}
           </p>
         </div>
         <button
@@ -1122,10 +1134,22 @@ export function TeachingWorkspace({
                 ).length,
               ],
             ].map(([label, count]) => (
-              <article className="admin-card" key={String(label)}>
+              <button
+                className="admin-card viva-summary-action"
+                key={String(label)}
+                onClick={() =>
+                  label === "Assigned classes"
+                    ? onNavigate?.("Classes")
+                    : setSessionFilter(
+                        label === "Needs completion"
+                          ? "Needs completion"
+                          : "Upcoming",
+                      )
+                }
+              >
                 <strong>{count}</strong>
-                <p>{label}</p>
-              </article>
+                <span>{label}</span>
+              </button>
             ))}
           </div>
           <div className="finance-tabs" aria-label="Session views">
@@ -1143,7 +1167,7 @@ export function TeachingWorkspace({
             {ds.sessions
               .filter((s) =>
                 sessionFilter === "Today"
-                  ? s.starts_at.slice(0, 10) === ds.today
+                  ? southAfricanDay(s.starts_at) === ds.today
                   : sessionFilter === "Upcoming"
                     ? s.status === "scheduled" && s.ends_at >= ds.now
                     : sessionFilter === "Needs completion"
@@ -1158,6 +1182,7 @@ export function TeachingWorkspace({
                   onClick={() => {
                     setCid(s.class_id);
                     setSid(s.id);
+                    setClassTab("Sessions");
                     onNavigate?.("Classes");
                   }}
                 >
@@ -1173,16 +1198,30 @@ export function TeachingWorkspace({
                 </button>
               ))}
           </div>
-          {!ds.sessions.length && (
-            <EmptyState title="No sessions scheduled yet">
-              Open Classes to plan a session in one of your assigned classrooms.
+          {!ds.sessions.some((s) =>
+            sessionFilter === "Today"
+              ? southAfricanDay(s.starts_at) === ds.today
+              : sessionFilter === "Upcoming"
+                ? s.status === "scheduled" && s.ends_at >= ds.now
+                : sessionFilter === "Needs completion"
+                  ? s.status === "scheduled" && s.ends_at < ds.now
+                  : s.status !== "scheduled",
+          ) && (
+            <EmptyState
+              title={
+                sessionFilter === "Needs completion"
+                  ? "All sessions are up to date"
+                  : "No sessions in this view"
+              }
+            >
+              Open Classes to view or plan teaching.
             </EmptyState>
           )}
           <button
             className="admin-primary"
             onClick={() => onNavigate?.("Classes")}
           >
-            Open your classes & plan teaching
+            Open my classes
           </button>
         </>
       ) : section === "Tutors" && admin ? (
@@ -1282,6 +1321,14 @@ export function TeachingWorkspace({
         </>
       ) : section === "Materials" ? (
         <>
+          {!admin && (
+            <button
+              className="viva-back"
+              onClick={() => onNavigate?.("Classes")}
+            >
+              ← Back to classes
+            </button>
+          )}
           <div className="teaching-toolbar">
             {!admin && (
               <Select
@@ -1422,6 +1469,7 @@ export function TeachingWorkspace({
               change={(value) => {
                 setCid(value);
                 setSid("");
+                setClassTab("Sessions");
               }}
               options={ds.classes.map((c) => ({
                 value: c.id,
@@ -1439,6 +1487,7 @@ export function TeachingWorkspace({
                   onClick={() => {
                     setCid(cl.id);
                     setSid("");
+                    setClassTab("Sessions");
                   }}
                 >
                   <span className="teaching-class-icon">
@@ -1473,8 +1522,7 @@ export function TeachingWorkspace({
                   </span>
                   <h2>{c.name}</h2>
                   <p>
-                    {c.tutorName} · {c.venueName} · {c.starts_at.slice(0, 5)}–
-                    {c.ends_at.slice(0, 5)}
+                    {c.tutorName} · {c.venueName}
                   </p>
                 </div>
                 {admin && (
@@ -1531,7 +1579,89 @@ export function TeachingWorkspace({
                   </div>
                 )}
               </section>
-              <section className="admin-card teaching-timetable">
+              <div
+                className="viva-detail-tabs"
+                aria-label="Class management views"
+              >
+                {[
+                  "Sessions",
+                  "Attendance",
+                  "Learners",
+                  "Materials",
+                  "Timetable",
+                ].map((t) => (
+                  <button
+                    key={t}
+                    aria-current={classTab === t ? "page" : undefined}
+                    onClick={() => {
+                      setClassTab(t);
+                      setSid("");
+                    }}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              {classTab === "Attendance" && (
+                <section className="admin-card">
+                  <h2>Weekly register</h2>
+                  <p className="viva-caption">
+                    Choose a learner to view their session attendance.
+                  </p>
+                  <div className="viva-register-list">
+                    {classMembers
+                      .filter(
+                        (m, i, all) =>
+                          all.findIndex(
+                            (x) => x.application_id === m.application_id,
+                          ) === i,
+                      )
+                      .map((m) => (
+                        <details key={m.application_id}>
+                          <summary>
+                            {m.name} · {m.studentNumber}
+                          </summary>
+                          <WeeklyAttendance
+                            today={ds.today}
+                            limited={ds.limited}
+                            sessions={ds.roster
+                              .filter(
+                                (r) =>
+                                  r.application_id === m.application_id &&
+                                  r.included,
+                              )
+                              .flatMap((r) => {
+                                const s = ds.sessions.find(
+                                  (s) =>
+                                    s.id === r.session_id && s.class_id === cid,
+                                );
+                                return s
+                                  ? [
+                                      {
+                                        id: s.id,
+                                        subject: c.subject,
+                                        title: s.topic_title,
+                                        startsAt: s.starts_at,
+                                        status: s.status,
+                                        attendance:
+                                          s.status === "completed"
+                                            ? r.attendance
+                                            : null,
+                                      },
+                                    ]
+                                  : [];
+                              })}
+                          />
+                        </details>
+                      ))}
+                  </div>
+                  {!classMembers.length && <p>No learners in this class.</p>}
+                </section>
+              )}
+              <section
+                hidden={classTab !== "Timetable"}
+                className="admin-card teaching-timetable"
+              >
                 <div className="teaching-section-heading">
                   <h2>Weekly timetable · South Africa</h2>
                   {admin && !c.archived && (
@@ -1590,8 +1720,11 @@ export function TeachingWorkspace({
                     </div>
                   ))}
               </section>
-              <div className="teaching-columns">
-                <section className="admin-card">
+              <div className="teaching-columns viva-class-panel">
+                <section
+                  hidden={classTab !== "Learners"}
+                  className="admin-card"
+                >
                   <div className="teaching-section-heading">
                     <h2>
                       <Users size={18} />
@@ -1659,7 +1792,10 @@ export function TeachingWorkspace({
                     </EmptyState>
                   )}
                 </section>
-                <section className="admin-card">
+                <section
+                  hidden={classTab !== "Materials"}
+                  className="admin-card"
+                >
                   <div className="teaching-section-heading">
                     <h2>
                       <FileText size={18} />
@@ -1669,9 +1805,13 @@ export function TeachingWorkspace({
                       <button onClick={() => attach()}>Assign resource</button>
                     )}
                   </div>
+                  {!admin && (
+                    <button onClick={() => onNavigate?.("Materials")}>
+                      Upload & manage teaching materials
+                    </button>
+                  )}
                   <p className="admin-muted">
-                    Specific versions are copied into new sessions. Changing a
-                    class resource does not rewrite past sessions.
+                    Share a resource with learners or keep it for staff.
                   </p>
                   {ds.classMaterials
                     .filter((l) => l.class_id === cid && l.active)
@@ -1733,11 +1873,14 @@ export function TeachingWorkspace({
                     })}
                 </section>
               </div>
-              <section className="admin-card">
+              <section
+                hidden={classTab !== "Sessions" || !!session}
+                className="admin-card"
+              >
                 <div className="teaching-section-heading">
                   <h2>
                     <CalendarDays size={18} />
-                    Sessions & retained history
+                    Sessions
                   </h2>
                   {!c.archived && (
                     <button className="admin-primary" onClick={addSession}>
@@ -1772,7 +1915,13 @@ export function TeachingWorkspace({
                 )}
               </section>
               {session && (
-                <section className="admin-card teaching-session-detail">
+                <section
+                  hidden={classTab !== "Sessions"}
+                  className="admin-card teaching-session-detail"
+                >
+                  <button className="viva-back" onClick={() => setSid("")}>
+                    ← All class sessions
+                  </button>
                   <span className="eyebrow">
                     SESSION RECORD · {session.status}
                   </span>

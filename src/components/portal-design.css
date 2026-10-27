@@ -1,0 +1,738 @@
+/* Shared Viva portal language: Jakarta, purple, orange and quiet surfaces. */
+.viva-kicker {
+  color: #79698f;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.viva-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.viva-section-heading h2 {
+  font-size: 18px;
+  margin: 4px 0 0;
+  line-height: 1.4;
+}
+.viva-caption {
+  font-size: 12px;
+  color: #716580;
+  line-height: 1.6;
+  margin: 12px 0 0;
+}
+.viva-attendance {
+  border: 1px solid #e9e1f4;
+  border-radius: 22px;
+  padding: 20px;
+  background: #fff;
+  margin: 0 0 22px;
+  color: #2d1b44;
+}
+.viva-week-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 12px 0;
+}
+.viva-week-controls button {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e6ddf2;
+  background: #faf8fe;
+  border-radius: 12px;
+  color: #5428cc;
+  padding: 8px;
+  cursor: pointer;
+}
+.viva-week-controls button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.viva-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 14px 0;
+}
+.viva-chips button {
+  border: 1px solid #e6ddf2;
+  padding: 10px 14px;
+  background: #fff;
+  color: #655675;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+}
+.viva-chips button[aria-pressed="true"] {
+  background: #eee6ff;
+  color: #5428cc;
+  border-color: #bca7ed;
+}
+.viva-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+.viva-week .viva-day {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 2px;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: #f8f5fc;
+  color: #6f617e;
+  cursor: pointer;
+  font: inherit;
+}
+.viva-day > span {
+  font-size: 10px;
+  font-weight: 700;
+}
+.viva-day > strong {
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  background: #ebe6f2;
+}
+.viva-day > small {
+  font-size: 9px;
+  line-height: 1.35;
+  min-height: 25px;
+  text-align: center;
+  overflow-wrap: normal;
+}
+.viva-week .viva-day.attended {
+  background: #effaf3;
+  color: #21683a;
+}
+.viva-day.attended > strong {
+  background: #d1efdc;
+}
+.viva-week .viva-day.missed {
+  background: #fff1ed;
+  color: #a83b28;
+}
+.viva-day.missed > strong {
+  background: #ffdbd1;
+}
+.viva-week .viva-day.scheduled {
+  background: #f0eaff;
+  color: #5428cc;
+}
+.viva-week .viva-day.today {
+  border-color: #ad8fe7;
+}
+.viva-week .viva-day[aria-pressed="true"] {
+  outline: 2px solid #7a4af1;
+  outline-offset: 1px;
+}
+.viva-day-details {
+  border-top: 1px solid #eee7f5;
+  margin-top: 16px;
+  padding-top: 12px;
+}
+.viva-day-details article {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0eaf6;
+  font-size: 12px;
+}
+.viva-day-details article div {
+  display: grid;
+  gap: 5px;
+}
+.viva-day-details article span {
+  color: #716580;
+}
+.viva-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  border-radius: 8px;
+  background: #f0eaff;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.viva-pill.warning {
+  background: #fff0e8;
+  color: #a34220;
+}
+.viva-profile {
+  background: linear-gradient(120deg, #7a4af1, #5428cc);
+  color: #fff;
+  padding: 26px;
+  border-radius: 24px;
+  margin-bottom: 22px;
+  position: relative;
+  overflow: hidden;
+}
+.viva-profile:after {
+  content: "";
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: #f2743526;
+  right: -65px;
+  top: -70px;
+  pointer-events: none;
+}
+.viva-profile-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+.viva-avatar {
+  width: 55px;
+  height: 55px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: #ffffff25;
+  border: 1px solid #ffffff40;
+  font-size: 20px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.viva-profile h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(24px, 4vw, 32px);
+  line-height: 1.25;
+}
+.viva-profile p {
+  font-size: 12px;
+  color: #f0e8ff;
+}
+.viva-profile .viva-kicker {
+  color: #e5d6ff;
+}
+.viva-profile-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 22px;
+}
+.viva-profile-metrics > div {
+  background: #ffffff15;
+  border: 1px solid #ffffff20;
+  border-radius: 14px;
+  padding: 14px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+.viva-profile-metrics strong {
+  font-size: 22px;
+}
+.viva-profile-metrics span {
+  font-size: 10px;
+  color: #f0e8ff;
+}
+.viva-role-nav {
+  display: flex;
+  gap: 6px;
+  padding: 7px;
+  background: #fff;
+  border: 1px solid #e9e1f4;
+  border-radius: 17px;
+  margin-bottom: 24px;
+}
+.admin-shell .viva-role-nav button {
+  flex: 1;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  color: #776987;
+  gap: 9px;
+  min-height: 46px;
+}
+.admin-shell .viva-role-nav button[aria-current="page"] {
+  background: #efe7ff;
+  color: #5428cc;
+}
+.viva-detail-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 18px 0;
+}
+.admin-shell .viva-detail-tabs button {
+  border-color: transparent;
+  background: #ede7f5;
+  color: #6b597e;
+}
+.admin-shell .viva-detail-tabs button[aria-current="page"] {
+  background: #7a4af1;
+  color: #fff;
+}
+.admin-shell .viva-back {
+  margin-bottom: 14px;
+}
+.viva-session-list {
+  display: grid;
+  gap: 12px;
+}
+.viva-session-list .learning-card {
+  margin: 0;
+}
+.viva-target-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 8px;
+  font-size: 12px;
+  color: #716580;
+}
+.viva-target-bar {
+  height: 7px;
+  width: 100%;
+  border-radius: 8px;
+  background: #efe8fa;
+  overflow: hidden;
+}
+.viva-target-bar span {
+  display: block;
+  height: 100%;
+  background: #7a4af1;
+  border-radius: 8px;
+}
+.viva-targets {
+  margin-top: 24px;
+}
+.admin-shell .academic-task-card,
+.admin-shell .teaching-class-card {
+  border-radius: 20px;
+}
+.admin-shell .academic-task-detail {
+  border-top: 4px solid #f27435;
+}
+.admin-shell .academic-heading > div > .learning-eyebrow,
+.admin-shell .academic-workspace > .page-heading .eyebrow {
+  display: none;
+}
+.admin-shell .tutor-main {
+  max-width: 1180px;
+  margin: 0 auto;
+  width: 100%;
+}
+.admin-shell.tutor-shell {
+  background: #f7f4fc;
+}
+.admin-shell .tutor-header {
+  background: #fff;
+  border-bottom: 1px solid #e9e1f4;
+}
+.admin-shell .tutor-header > a > span {
+  color: #7a4af1;
+  font-weight: 800;
+}
+.admin-shell .tutor-login-card {
+  border-radius: 28px;
+  box-shadow: 0 24px 90px #5428cc16;
+  border-top: 5px solid #7a4af1;
+}
+.admin-shell .tutor-login-card > .eyebrow {
+  display: none;
+}
+.admin-shell .admin-card {
+  box-shadow: 0 3px 16px #3b166c03;
+}
+.parent-app .parent-hero {
+  background: linear-gradient(120deg, #7a4af1, #5428cc);
+}
+.parent-app .parent-home-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.parent-app .parent-home-grid > * {
+  width: 100%;
+  min-width: 0;
+}
+.parent-app .parent-home-grid > .parent-learning-block {
+  order: -2;
+}
+.parent-app .parent-home-grid > .academic-parent {
+  order: -1;
+}
+.parent-app .parent-hero-note {
+  display: none;
+}
+.parent-app .parent-hero-stats {
+  margin-top: 20px;
+}
+.parent-app .parent-hero-stats > div {
+  border-radius: 12px;
+}
+.parent-app .parent-account-callout .parent-account-amount {
+  font-size: 28px;
+}
+.parent-app .parent-account-callout .parent-card-heading {
+  margin-bottom: 12px;
+}
+.parent-app .parent-teaching-history {
+  margin-top: 18px;
+}
+.parent-app .parent-teaching-history > summary {
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px 0;
+}
+.parent-app .parent-learning-block > .viva-attendance {
+  border: 0;
+  padding: 0;
+  margin: 0 0 20px;
+}
+.parent-app .parent-learning-block .parent-attendance-stats {
+  margin: 14px 0;
+}
+.admin-shell .admin-hero {
+  background: linear-gradient(120deg, #7a4af1, #5428cc);
+}
+.admin-shell .sidebar-note {
+  display: none;
+}
+.viva-queue-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+.viva-queue-summary > span {
+  padding: 10px 14px;
+  border: 1px solid #e9e1f4;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 12px;
+  color: #716580;
+}
+.viva-queue-summary strong {
+  color: #5428cc;
+  margin-right: 5px;
+}
+.viva-register-list {
+  display: grid;
+  gap: 14px;
+}
+.viva-register-list details {
+  border: 1px solid #e9e1f4;
+  border-radius: 16px;
+  padding: 14px;
+}
+.viva-register-list summary {
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.viva-register-list .viva-attendance {
+  border: 0;
+  padding: 16px 0 0;
+  margin: 0;
+}
+@media (max-width: 1023px) {
+  .viva-role-nav {
+    display: none;
+  }
+  .portal-dock-scope .admin-bottom-nav {
+    box-shadow: 0 -8px 24px #5428cc0c;
+  }
+  .portal-dock-scope .admin-bottom-nav > button {
+    flex: 1;
+    min-height: 58px;
+  }
+  .admin-shell .tutor-main {
+    padding: 20px 16px;
+  }
+}
+@media (min-width: 768px) {
+  .viva-attendance {
+    padding: 24px;
+  }
+  .viva-day > span {
+    font-size: 12px;
+  }
+  .viva-day > small {
+    font-size: 11px;
+  }
+  .viva-week {
+    gap: 10px;
+  }
+  .viva-week .viva-day {
+    padding: 14px 6px;
+  }
+  .viva-day > strong {
+    width: 38px;
+    height: 38px;
+  }
+  .viva-profile {
+    padding: 32px;
+  }
+  .viva-profile-metrics {
+    max-width: 600px;
+  }
+  .parent-app .parent-home-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .parent-app .parent-learning-block,
+  .parent-app .academic-parent {
+    grid-column: 1/-1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .viva-day,
+  .viva-role-nav button {
+    transition: none;
+  }
+}
+.admin-shell [hidden],
+.parent-app [hidden] {
+  display: none !important;
+}
+.admin-shell .viva-class-panel {
+  display: block;
+}
+.parent-enrollment-details > summary,
+.academic-parent > details > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 5px 0;
+}
+.parent-enrollment-details > section {
+  margin-top: 20px;
+}
+.admin-shell .viva-form-section {
+  grid-column: 1/-1;
+  border-top: 1px solid #e9e1f4;
+  padding-top: 18px;
+  color: #5428cc;
+  margin-top: 12px;
+}
+.parent-app .parent-hero .parent-learner-heading p,
+.parent-app .parent-hero-stats span {
+  color: #eee5ff;
+}
+.student-workspace > .academic-workspace {
+  background: white;
+  border: 1px solid #e9e1f4;
+  padding: 20px;
+  border-radius: 22px;
+}
+.viva-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin: 18px 0;
+}
+.viva-score > strong {
+  font-size: 36px;
+  color: #5428cc;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.viva-score > span {
+  font-size: 11px;
+  color: #716580;
+}
+.viva-target-bar {
+  position: relative;
+  overflow: visible;
+}
+.viva-target-bar > i {
+  position: absolute;
+  top: -4px;
+  width: 3px;
+  height: 15px;
+  background: #f27435;
+  border-radius: 3px;
+}
+.viva-result-details {
+  margin-top: 18px;
+  border-top: 1px solid #eee7f5;
+  padding-top: 14px;
+  font-size: 12px;
+}
+.viva-result-details > summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #5428cc;
+}
+.academic-parent > details {
+  margin-top: 18px;
+}
+@media (max-width: 360px) {
+  .viva-attendance {
+    padding: 14px;
+  }
+  .viva-day > small {
+    font-size: 8px;
+  }
+  .viva-week {
+    gap: 3px;
+  }
+  .viva-profile {
+    padding: 20px;
+  }
+  .viva-profile-metrics > div {
+    padding: 12px 5px;
+  }
+  .viva-profile-metrics strong {
+    font-size: 20px;
+  }
+}
+.viva-subject-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 14px;
+  font-size: 11px;
+  color: #716580;
+}
+.viva-subject-filter > select {
+  min-height: 44px;
+  flex: 1;
+  min-width: 0;
+  padding: 9px 30px 9px 12px;
+  border: 1px solid #e6ddf2;
+  border-radius: 12px;
+  background: #faf8fe;
+  color: #5428cc;
+  font: inherit;
+  font-weight: 700;
+}
+.viva-student-profile .viva-profile-metrics {
+  margin-top: 18px;
+}
+.viva-student-profile .viva-profile-metrics > div {
+  padding: 12px 7px;
+}
+.viva-student-profile .viva-profile-metrics span {
+  font-size: 9px;
+}
+.admin-shell .viva-profile-refresh {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  min-height: 36px;
+  width: 36px;
+  padding: 6px;
+  background: #ffffff17;
+  border: 1px solid #ffffff30;
+  color: white;
+}
+.viva-student-profile .viva-profile-top {
+  padding-right: 10px;
+}
+.parent-app .parent-hero-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.parent-app .parent-hero-stats > div:last-child {
+  grid-column: auto;
+}
+.admin-shell .viva-summary-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 8px;
+  padding: 20px 16px;
+  background: white;
+  border-radius: 20px;
+}
+.admin-shell .viva-summary-action > strong {
+  font-size: 28px;
+}
+.admin-shell .viva-summary-action > span {
+  font-size: 11px;
+  color: #716580;
+  font-weight: 400;
+}
+.teaching-workspace > .finance-tabs {
+  flex-wrap: wrap;
+}
+.admin-shell .viva-day > small,
+.parent-app .viva-day > small {
+  font-size: 11px;
+  line-height: 1.5;
+  width: 100%;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.admin-shell .viva-day > span,
+.parent-app .viva-day > span {
+  font-size: 10px;
+}
+.viva-up-next > .academic-workspace {
+  background: white;
+  border: 1px solid #e9e1f4;
+  border-radius: 20px;
+  padding: 20px;
+}
+@media (min-width: 1024px) {
+  .viva-student-profile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  .viva-student-profile .viva-profile-metrics {
+    margin: 0;
+  }
+  .viva-student-home-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  .viva-student-home-grid > .viva-targets {
+    grid-column: 1/-1;
+    margin-top: 0;
+  }
+  .viva-up-next {
+    min-width: 0;
+  }
+  .viva-up-next > .viva-section-heading {
+    margin-bottom: 20px;
+    min-height: 44px;
+  }
+  .parent-app .parent-learning-block,
+  .parent-app .academic-parent {
+    grid-column: auto;
+  }
+}
