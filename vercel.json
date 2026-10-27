@@ -14,6 +14,10 @@
     "api/admin/accounting.ts": {
       "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
       "maxDuration": 60
+    },
+    "api/admin/session.ts": {
+      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
+      "maxDuration": 60
     }
   },
   "headers": [
@@ -50,9 +54,38 @@
           "value": "frame-ancestors 'none'"
         }
       ]
+    },
+    {
+      "source": "/parent",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'none'"
+        }
+      ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/parent",
+      "destination": "/api/admin/session?portal=parent"
+    },
     {
       "source": "/download/:path*",
       "destination": "/materials/:path*"
@@ -131,6 +164,10 @@
     },
     {
       "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/parent",
       "destination": "/index.html"
     }
   ],

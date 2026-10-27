@@ -1,4 +1,5 @@
 import type { ServerResponse } from "node:http";
+import parentHandler from "../_lib/parent-handler.js";
 import {
   authorizeToken,
   privateResponse,
@@ -19,6 +20,12 @@ export default async function handler(
   request: ApiRequest,
   response: ServerResponse,
 ) {
+  const target = new URL(request.url || "", "http://localhost");
+  if (
+    target.pathname === "/api/parent" ||
+    target.searchParams.get("portal") === "parent"
+  )
+    return parentHandler(request, response);
   privateResponse(response);
   try {
     if (request.method === "GET")

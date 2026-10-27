@@ -69,7 +69,7 @@ The production build includes `scripts/prerender-route-metadata.mjs`, yielding 1
 
 ## Latest verification
 
-The final accounting release passed 119 tests across 15 files, both TypeScript targets, lint (zero errors; seven existing Fast Refresh warnings) and the production build (exit 0; the prerender warnings described above remain). This includes real PostgreSQL ledger/domain and atomic upgrade/rerun tests, financial input/PDF tests and accounting API authorization tests.
+The accounting release passed 119 tests across 15 files, both TypeScript targets, lint (zero errors; seven existing Fast Refresh warnings) and the production build (exit 0; the prerender warnings described above remain). This includes real PostgreSQL ledger/domain and atomic upgrade/rerun tests, financial input/PDF tests and accounting API authorization tests.
 
 Accounting implementation: `api/admin/accounting.ts` handles authorized reads/writes, exports, private evidence and bearer-authorized scheduled work. `api/_lib/accounting-*` and `dispatch-tuition-message.ts` implement server validation, documents and outbox dispatch. `src/components/admin/FinanceWorkspace.tsx`, `AccountingForms.tsx`, `LearnerAccountControls.tsx` and `src/lib/accounting-*` provide the responsive UI. Six reviewed accounting migrations are consolidated into `docs/accounting-setup.sql`. Optional Supabase Cron setup is separate from the core migration; main financial automation remains disabled until configured in Finance Controls.
 
@@ -82,3 +82,11 @@ An earlier isolated Chromium test used the actual admin HTTP handlers and actual
 Enrollment browser checks exercised all five steps, overlay, desktop/mobile receipt and print output with mocked endpoints. Admin browser checks must similarly distinguish mocked Auth/data from live Supabase integration. No mocked test proves bank receipt, email inbox delivery, provider settlement, backup health or production access rules. Use the live synthetic checklist in the admin guide before release.
 
 Do not log credentials, signed URLs, learner documents or complete request bodies in shared reports. Some older PDF handlers log recipient/provider details; review operational logging before broader production use.
+
+## Parent portal release
+
+See [parent-portal.md](parent-portal.md) for the current setup and test checklist. `/parent` is lazy-loaded, excluded from analytics and noindex/no-store. `api/_lib/parent-handler.ts` and `parent-auth.ts` handle Auth email links, identity binding, session renewal, authorized reads and private PDFs. A `/api/parent` rewrite dispatches through `api/admin/session.ts`, keeping the existing 12-function budget; the function bundles PDF assets. Parent/admin cookies and authorization remain separate. `ParentAccessControls.tsx` uses an authorized RPC through the existing records API. The parent migration is a separate transactional upgrade after accounting; the accounting bundle is intentionally unchanged.
+
+Local verification covers real SQL family isolation, grants/revocation, financial snapshots and document boundaries; API tests cover email-only requests, one-use link exchange, no token exposure, refresh, CSRF and private PDFs. The isolated Chromium/WebKit run used actual HTTP handlers/SQL with synthetic Auth/Storage/email. It covered staff access enablement, email-link sign-in, sibling switching, finance/document downloads, foreign-family denial, expired access-token renewal, separate admin/parent sessions, logout, used-link recovery and mobile sections/dialogs. Live SMTP/redirect/bundled-file checks still require deployment verification.
+
+Final parent release checks: 140 tests across 17 files; both TypeScript targets; lint with zero errors/seven existing warnings; production build exit 0. Browser/email/DB boundaries above still apply.

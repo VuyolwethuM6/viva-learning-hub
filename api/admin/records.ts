@@ -33,6 +33,23 @@ export default async function handler(
       throw new HttpError(405, "Method not allowed.");
     sameOrigin(request);
     const body = await readJsonBody(request, 16_384, "Admin records");
+    if (body.action === "parent_access") {
+      if (body.enabled !== undefined && typeof body.enabled !== "boolean")
+        throw new HttpError(
+          400,
+          "Choose whether parent access should be enabled.",
+        );
+      return sendJson(
+        response,
+        200,
+        await rpc("admin_parent_access", {
+          p_actor: actor.id,
+          p_application: uuid(body.applicationId),
+          p_enabled: body.enabled ?? null,
+          p_reason: typeof body.reason === "string" ? body.reason : "",
+        }),
+      );
+    }
     if (body.action === "document") {
       const id = uuid(body.applicationId);
       const apps = await db<

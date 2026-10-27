@@ -32,13 +32,19 @@ afterEach(async () => {
 describe("reviewable accounting SQL Editor migration", () => {
   it("keeps the fresh schema and single transaction identical to the six canonical migrations", () => {
     const files = readdirSync("supabase/migrations")
-      .filter((name) => name.startsWith("20261027"))
+      .filter(
+        (name) => name.startsWith("20261027") && name.includes("_accounting_"),
+      )
       .sort();
     expect(files).toHaveLength(6);
     const canonical = files
       .map((name) => readFileSync(`supabase/migrations/${name}`, "utf8"))
       .join("\n\n");
-    const block = schema.slice(schema.indexOf(marker));
+    const endMarker = "\n-- END ACCOUNTING MIGRATIONS\n";
+    const block = schema.slice(
+      schema.indexOf(marker),
+      schema.indexOf(endMarker) + endMarker.length,
+    );
     expect(block).toContain(canonical);
     expect(setup).toContain(block);
     expect(setup.trim()).toMatch(/begin;[\s\S]*commit;$/);

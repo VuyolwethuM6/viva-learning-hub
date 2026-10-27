@@ -1,6 +1,6 @@
 # Implementation status and next work
 
-Updated: 27 October 2026. This describes the accounting release on `work`. “Implemented” means code exists; “verified locally” means the stated checks ran. Neither establishes production readiness or a deployed database migration.
+Updated: 27 October 2026. This describes the parent-portal release on `work` and its accounting prerequisites. “Implemented” means code exists; “verified locally” means the stated checks ran. Neither establishes production readiness or a deployed database migration.
 
 ## Working scope
 
@@ -42,12 +42,20 @@ The owner confirmed resetting test records before this implementation. The six m
 
 Implemented: zero-opening ZAR/no-VAT ledger; EFT/cash receipts and multi-invoice family allocations; advance credits, refunds, credit notes and reviewed reversals; expenses/payables/evidence; bank imports, matching and timing differences; statements and financial reports/exports; owner/bookkeeper/viewer finance roles; withdrawal, suspension/return and arrangements; closed periods; and opt-in scheduled billing/outbox dispatch. Routine tuition skips December/January. The [test guide](accounting-test-guide.md) provides the release checklist and verification boundaries.
 
+## Parent portal
+
+The owner reported the accounting release working before requesting the parent portal. The parent upgrade is `20261027150000_parent_portal.sql`, consolidated in [parent-setup.sql](parent-setup.sql). The owner reported successfully applying this setup on 27 October 2026. This coding task did not independently query the live database or configure Auth emails.
+
+Implemented at `/parent`: prototype-inspired responsive orange/purple design; email-only sign-in via a one-use email link; explicit staff enable/disable controls for reviewed guardian accounts; verified Auth identity binding; sibling switching; real learner/programme information; complete family balances and bounded financial history; private invoice/receipt/credit/refund/statement PDFs; EFT/cash guidance and contact links. Sign-in and refresh tokens use separate HttpOnly parent cookies. No attendance or results are invented, and enrollment does not add an email challenge or prohibit siblings sharing a guardian email.
+
+[Parent setup and testing](parent-portal.md) includes the SQL, Supabase SMTP/redirect/template settings and full controlled-inbox checklist. Existing tuition email templates are separate from the Supabase Auth templates. Parent academic publishing, proof uploads, second-guardian invitations and financial account transfers after a guardian change remain future work.
+
 ## Next milestones
 
-1. Apply accounting setup to the intended test project and complete the live synthetic checklist.
+1. Apply the parent upgrade, configure Auth email settings and complete the controlled-inbox checklist.
 2. Verify the scheduler, private evidence and controlled-inbox delivery before enabling automatic dispatch.
 3. Add online tuition checkout if needed, separately from PDF sales.
-4. Implement learner/parent/tutor teaching portals and class access, then academic tools.
+4. Implement attendance, tutor assessment publishing and learner/tutor teaching workspaces.
 5. Expand MFA/account recovery, pagination, advanced statutory reporting and operational monitoring/backup verification.
 
 ## Remaining risks and limits
