@@ -98,3 +98,8 @@ See [teaching-test-guide.md](teaching-test-guide.md). Three canonical 2026102716
 `TeachingWorkspace.tsx` supplies the select-first admin and tutor screens; `/tutor` is lazy-loaded, private/noindex and excluded from analytics. `ParentTeaching.tsx` independently fetches scoped attendance so finance remains available if the teaching upgrade is absent. Staff snapshot limits are explicit and per-session history can be retrieved independently. The shared Supabase Auth template now says Open my Viva portal for both parent/tutor callbacks.
 
 Teaching release verification: 162 tests/19 files; both TypeScript targets passed; lint zero errors/seven existing warnings; production build exit 0. Actual API/SQL Chromium and WebKit flows passed with synthetic provider boundaries.
+
+
+## Connected teaching release 2
+
+See [connected-portals.md](connected-portals.md). Canonical migration `20261027163000_connected_portals.sql` is additive; regenerate the schema/complete SQL with `node scripts/sync-teaching-setup.mjs`. `/api/student` shares the existing session function through a rewrite and uses its own cookies, role checks and verified identity. Parent-assisted reads use the existing parent API plus a server-verified child ID. New table/RPC privileges remain service-only. Private files are never made public by uploading or assigning them; learner release is explicit per version/attachment.

@@ -13,6 +13,7 @@ export default function Analytics() {
     if (
       location.pathname.startsWith("/admin") ||
       location.pathname.startsWith("/parent") ||
+      location.pathname.startsWith("/student") ||
       location.pathname.startsWith("/tutor")
     )
       return;
@@ -25,6 +26,7 @@ export default function Analytics() {
       if (
         window.location.pathname.startsWith("/admin") ||
         window.location.pathname.startsWith("/parent") ||
+        window.location.pathname.startsWith("/student") ||
         window.location.pathname.startsWith("/tutor")
       )
         return;

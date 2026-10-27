@@ -1,3 +1,5 @@
+import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
+import { StudentWorkspace } from "@/components/StudentWorkspace";
 import {
   useCallback,
   useEffect,
@@ -500,9 +502,13 @@ export default function Parent() {
           <p className="parent-login-help">
             Need access or changed your email?
             <br />
-            <a href="mailto:info@vivatutorials.co.za">
-              Contact Viva Tutorials <ArrowUpRight size={14} />
-            </a>
+            <WhatsAppButton
+              message={
+                "Hello Viva, I need help with parent portal access or a missing learner."
+              }
+            >
+              Contact Viva Tutorials
+            </WhatsAppButton>
           </p>
         </main>
       </div>
@@ -552,9 +558,13 @@ export default function Parent() {
           </div>
           <p className="parent-select-help">
             A learner missing? Contact{" "}
-            <a href="mailto:info@vivatutorials.co.za">
-              info@vivatutorials.co.za
-            </a>{" "}
+            <WhatsAppButton
+              message={
+                "Hello Viva, I need help with parent portal access or a missing learner."
+              }
+            >
+              Viva on WhatsApp
+            </WhatsAppButton>{" "}
             so we can check your guardian details.
           </p>
         </main>
@@ -873,12 +883,11 @@ export default function Parent() {
                     Questions about tuition or your child’s learning? We’re here
                     to help.
                   </p>
-                  <a
-                    className="parent-primary"
-                    href={`mailto:info@vivatutorials.co.za?subject=${encodeURIComponent("Parent enquiry · " + child.studentNumber)}`}
+                  <WhatsAppButton
+                    message={`Hello Viva, I have a learning or tuition question. Learner reference: ${child.studentNumber}.`}
                   >
-                    Contact Viva <ArrowUpRight size={18} />
-                  </a>
+                    WhatsApp Viva
+                  </WhatsAppButton>
                 </section>
               </div>
             </>
@@ -1192,12 +1201,11 @@ export default function Parent() {
                         payment automatically.
                       </p>
                     </div>
-                    <a
-                      className="parent-primary"
-                      href={`mailto:info@vivatutorials.co.za?subject=${encodeURIComponent("Tuition payment · " + child.studentNumber)}`}
+                    <WhatsAppButton
+                      message={`Hello Viva, I have a tuition payment question. Learner reference: ${child.studentNumber}.`}
                     >
-                      Ask about a payment <ArrowUpRight size={17} />
-                    </a>
+                      Ask about a payment
+                    </WhatsAppButton>
                   </section>
                   <section className="parent-card parent-finance-note">
                     <CalendarDays size={22} />
@@ -1234,15 +1242,11 @@ export default function Parent() {
                     For learning support, class times, tuition questions and
                     changes to your contact details.
                   </p>
-                  <a
-                    className="parent-primary"
-                    href={`mailto:info@vivatutorials.co.za?subject=${encodeURIComponent("Parent enquiry · " + child.studentNumber)}`}
+                  <WhatsAppButton
+                    message={`Hello Viva, I have a learning or tuition question. Learner reference: ${child.studentNumber}.`}
                   >
-                    Email Viva Tutorials <ArrowUpRight size={17} />
-                  </a>
-                  <a className="parent-contact-link" href="tel:+27733913206">
-                    Call +27 73 391 3206
-                  </a>
+                    WhatsApp Viva Tutorials
+                  </WhatsAppButton>
                 </section>
                 <section className="parent-card">
                   <ShieldCheck size={26} />
@@ -1293,40 +1297,55 @@ export default function Parent() {
               </div>
             </>
           )}
+          {panel === "home" && child.status === "active" && (
+            <details className="parent-card parent-assisted">
+              <summary>Open parent-assisted learning view</summary>
+              <p>
+                View your child’s timetable and released resources. This is not
+                a student assessment session.
+              </p>
+              <StudentWorkspace key={child.id} application={child.id} />
+            </details>
+          )}
+          <div className="portal-support">
+            <WhatsAppButton
+              message={`Hello Viva, I need help from the parent portal. Learner reference: ${child.studentNumber}.`}
+            />
+          </div>
           <footer className="parent-footer">
-            <span>Viva Tutorials</span>
-            <p>Personal support. Purposeful learning.</p>
             <a href="/privacy-policy">Privacy</a>
           </footer>
         </main>
       </div>
-      <nav className="parent-bottom-nav" aria-label="Mobile parent sections">
-        {(
-          [
-            ["home", Home, "Home"],
-            ["finance", Wallet, "Finances"],
-            ["help", CircleHelp, "Help"],
-          ] as const
-        ).map(([key, Icon, title]) => (
-          <button
-            key={key}
-            aria-current={panel === key ? "page" : undefined}
-            className={panel === key ? "active" : ""}
-            onClick={() => go(key)}
-          >
+      <PortalDock scope="parent-app">
+        <nav className="parent-bottom-nav" aria-label="Mobile parent sections">
+          {(
+            [
+              ["home", Home, "Home"],
+              ["finance", Wallet, "Finances"],
+              ["help", CircleHelp, "Help"],
+            ] as const
+          ).map(([key, Icon, title]) => (
+            <button
+              key={key}
+              aria-current={panel === key ? "page" : undefined}
+              className={panel === key ? "active" : ""}
+              onClick={() => go(key)}
+            >
+              <span>
+                <Icon size={22} />
+              </span>
+              {title}
+            </button>
+          ))}
+          <button onClick={() => setLogout(true)}>
             <span>
-              <Icon size={22} />
+              <LogOut size={22} />
             </span>
-            {title}
+            Sign out
           </button>
-        ))}
-        <button onClick={() => setLogout(true)}>
-          <span>
-            <LogOut size={22} />
-          </span>
-          Sign out
-        </button>
-      </nav>
+        </nav>
+      </PortalDock>
       {logout && (
         <ParentModal
           title="Sign out of Viva?"

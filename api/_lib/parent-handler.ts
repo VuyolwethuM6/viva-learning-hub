@@ -64,6 +64,11 @@ export default async function parentHandler(
       const user = await requireParent(request, audience);
       if (url.searchParams.get("action") === "session")
         return sendJson(response, 200, { user });
+      if (
+        audience === "student" ||
+        (audience === "parent" && url.searchParams.get("action") === "student")
+      )
+        return await teachingRead(request, response, user.id, audience);
       if (audience === "tutor")
         return await teachingRead(request, response, user.id, "tutor");
       if (url.searchParams.get("action") === "teaching")
@@ -162,7 +167,11 @@ export default async function parentHandler(
     const email = parentEmail(body.email);
     if (body.action === "request_link") {
       const base =
-        (audience === "tutor" ? process.env.TUTOR_PORTAL_URL : undefined) ||
+        (audience === "student"
+          ? process.env.STUDENT_PORTAL_URL
+          : audience === "tutor"
+            ? process.env.TUTOR_PORTAL_URL
+            : undefined) ||
         process.env.PARENT_PORTAL_URL ||
         process.env.PUBLIC_SITE_URL;
       let callback: URL;
@@ -179,7 +188,7 @@ export default async function parentHandler(
       } catch {
         throw new HttpError(
           503,
-          "Parent sign-in is not configured. Please contact Viva Tutorials.",
+          "Portal sign-in is not configured. Please contact Viva Tutorials.",
         );
       }
       await limitParentAuth(request, email, "send", audience);
@@ -203,7 +212,7 @@ export default async function parentHandler(
         message:
           audience === "parent"
             ? "If parent access is enabled for this email, a sign-in link is on its way. Open the email and tap Open my Viva portal."
-            : "If tutor access is enabled for this email, a sign-in link is on its way. Open the email to sign in.",
+            : `If ${audience} access is enabled for this email, a sign-in link is on its way. Open the email to sign in.`,
       });
     }
     throw new HttpError(400, "Unknown parent sign-in action.");

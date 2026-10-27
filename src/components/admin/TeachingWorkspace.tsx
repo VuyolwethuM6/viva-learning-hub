@@ -1,3 +1,5 @@
+import { ClassProgrammeFields } from "./ClassProgrammeFields";
+import { SessionPlanner } from "./SessionPlanner";
 import {
   useCallback,
   useEffect,
@@ -184,6 +186,7 @@ function TeachingForm({
           );
         await teachingRequest(audience, "material_finalize", {
           versionId: result.result.id,
+          ...(review.classId ? { classId: review.classId } : {}),
           requestId: crypto.randomUUID(),
         });
       }
@@ -386,10 +389,12 @@ export function TeachingWorkspace({
   audience = "admin",
   section = "Classes",
   onSessionExpired,
+  onNavigate,
 }: {
   audience?: "admin" | "tutor";
   section?: string;
   onSessionExpired?: () => void;
+  onNavigate?: (section: string) => void;
 }) {
   const [data, setData] = useState<TeachingSnapshot | null>(null),
     [error, setError] = useState(""),
@@ -402,6 +407,7 @@ export function TeachingWorkspace({
   const [grade, setGrade] = useState("Grade 12"),
     [subject, setSubject] = useState("Mathematics"),
     [mode, setMode] = useState("Online");
+  const [sessionFilter, setSessionFilter] = useState("Upcoming");
   const live = useRef(true);
   const load = useCallback(async () => {
     setLoading(true);
@@ -432,10 +438,8 @@ export function TeachingWorkspace({
     return () => {
       live.current = false;
     };
-  }, [load]);
-  useEffect(() => {
-    setSid("");
-  }, [cid]);
+  }, [load, section]);
+
   useEffect(() => {
     setForm(null);
   }, [section]);
@@ -536,8 +540,7 @@ export function TeachingWorkspace({
       "Create a class",
       "class_create",
       <>
-        {gradeSelect}
-        {subjectSelect}
+        <ClassProgrammeFields grades={grades} />
         <Select
           name="group"
           label="Class group"
@@ -566,36 +569,6 @@ export function TeachingWorkspace({
           options={ds.venues
             .filter((v) => v.active)
             .map((v) => ({ value: v.id, label: `${v.name} · ${v.mode}` }))}
-        />
-        <fieldset>
-          <legend>Programme days</legend>
-          <div className="teaching-checks">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
-              (label, index) => (
-                <label key={label}>
-                  <input
-                    type="checkbox"
-                    name="weekdays"
-                    value={index + 1}
-                    defaultChecked={index < 5}
-                  />
-                  {label}
-                </label>
-              ),
-            )}
-          </div>
-        </fieldset>
-        <Select
-          name="startTime"
-          label="Start time · South Africa"
-          value="16:00"
-          options={choices(TEACHING_TIMES)}
-        />
-        <Select
-          name="endTime"
-          label="End time · South Africa"
-          value="17:00"
-          options={choices(TEACHING_TIMES)}
         />
         <p>
           Class names are generated from these choices. Days must belong to the
@@ -649,6 +622,7 @@ export function TeachingWorkspace({
         <p>Create this once, then select it for future sessions.</p>
       </>,
       (f) => ({
+        ...(!admin ? { classId: cid } : {}),
         grade: text(f, "grade"),
         subject: text(f, "subject"),
         title: text(f, "title"),
@@ -704,30 +678,168 @@ export function TeachingWorkspace({
             )
             .map((t) => ({ value: t.id, label: t.title }))}
         />
-        <Day value={ds.today} season={c.season} label="Session date" />
-        <Select
-          name="startTime"
-          label="Start time · South Africa"
-          value={c.starts_at.slice(0, 5)}
-          options={choices(TEACHING_TIMES)}
-        />
-        <Select
-          name="endTime"
-          label="End time · South Africa"
-          value={c.ends_at.slice(0, 5)}
-          options={choices(TEACHING_TIMES)}
-        />
+        <SessionPlanner audience={audience} classroom={c} today={ds.today} />
         <p>
           The current class roster and resource versions are saved with this
           session. Closures and timing clashes are checked.
         </p>
       </>,
+      (f) => {
+        if (text(f, "scheduleChecked") !== "yes")
+          throw new Error(
+            "Choose available dates and a time, then wait for the availability check.",
+          );
+        return {
+          classId: c.id,
+          topicId: text(f, "topicId"),
+          day: text(f, "day"),
+          slotId: text(f, "slotId"),
+          ...(text(f, "until") ? { until: text(f, "until") } : {}),
+        };
+      },
+    );
+  }
+  function reschedule(s: TeachingSession) {
+    if (!c) return;
+    show(
+      "Reschedule this session",
+      "session_reschedule",
+      <>
+        <p>
+          The original session is retained as cancelled. A replacement saves the
+          current roster and resource versions.
+        </p>
+        <SessionPlanner
+          audience={audience}
+          classroom={c}
+          today={ds.today}
+          exclude={s.id}
+          allowSeries={
+            !!s.series_id &&
+            ds.sessions.some(
+              (other) =>
+                other.id !== s.id &&
+                other.series_id === s.series_id &&
+                other.status === "scheduled" &&
+                other.starts_at > s.starts_at,
+            )
+          }
+        />
+        <Reason />
+      </>,
+      (f) => {
+        if (text(f, "scheduleChecked") !== "yes")
+          throw new Error("Check an available replacement time first.");
+        return {
+          classId: cid,
+          sessionId: s.id,
+          revision: s.revision,
+          scope: text(f, "scope") || "once",
+          day: text(f, "day"),
+          slotId: text(f, "slotId"),
+          reason: text(f, "reason"),
+        };
+      },
+    );
+  }
+  function release(versionId: string, visible: boolean, sessionId?: string) {
+    show(
+      visible
+        ? "Release resource to learners"
+        : "Return resource to staff-only",
+      "material_release",
+      <p>
+        {visible
+          ? "Students in this class and their parent-assisted view will be able to open this exact resource version. Check that it is ready to share; memoranda and assessment papers should stay staff-only until release is intended."
+          : "Learner downloads will be blocked for this attachment. Other explicitly released attachments retain their own access."}
+      </p>,
+      () => ({
+        classId: cid,
+        versionId,
+        visible,
+        ...(sessionId ? { sessionId } : {}),
+      }),
+    );
+  }
+  function slotForm() {
+    if (!c) return;
+    show(
+      "Add a weekly time slot",
+      "slot_save",
+      <>
+        <p>
+          Times apply to this day only. Existing dated sessions stay as
+          scheduled.
+        </p>
+        <Select
+          name="weekday"
+          label="Teaching day"
+          options={c.weekdays.map((d) => ({
+            value: String(d),
+            label: [
+              "",
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday",
+            ][d],
+          }))}
+        />
+        <Select
+          name="startTime"
+          label="Start time · South Africa"
+          options={choices(TEACHING_TIMES)}
+          value={c.grade === "Matric Rewrite" ? "09:00" : "16:00"}
+        />
+        <Select
+          name="endTime"
+          label="End time · South Africa"
+          options={choices(TEACHING_TIMES)}
+          value={c.grade === "Matric Rewrite" ? "10:00" : "17:00"}
+        />
+        <Reason />
+      </>,
       (f) => ({
-        classId: c.id,
-        topicId: text(f, "topicId"),
-        day: text(f, "day"),
+        classId: cid,
+        weekday: Number(text(f, "weekday")),
         startTime: text(f, "startTime"),
         endTime: text(f, "endTime"),
+        reason: text(f, "reason"),
+      }),
+    );
+  }
+  function studentAccess() {
+    show(
+      "Manage student portal access",
+      "student_access",
+      <>
+        <Select
+          name="applicationId"
+          label="Active learner"
+          options={ds.learners.map((l) => ({
+            value: l.id,
+            label: `${l.name} · ${l.studentNumber} · ${l.learnerEmail} · ${l.studentAccess ? "Enabled" : "Not enabled"}`,
+          }))}
+        />
+        <Select
+          name="enabled"
+          label="Student access"
+          options={choices(["Enable", "Disable"])}
+        />
+        <p>
+          Enable only after verifying the learner’s own enrollment email. A
+          shared guardian email uses parent-assisted learning instead. Each
+          independent student email belongs to one learner.
+        </p>
+        <Reason />
+      </>,
+      (f) => ({
+        applicationId: text(f, "applicationId"),
+        enabled: text(f, "enabled") === "Enable",
+        reason: text(f, "reason"),
       }),
     );
   }
@@ -787,7 +899,9 @@ export function TeachingWorkspace({
               label="Resource / new version"
               required={false}
               options={ds.materials
-                .filter((m) => !m.archived)
+                .filter(
+                  (m) => !m.archived && (admin || m.owner_class_id === cid),
+                )
                 .map((m) => ({
                   value: m.id,
                   label: `New version of ${m.title}`,
@@ -830,8 +944,9 @@ export function TeachingWorkspace({
       </>,
       (f) =>
         existing
-          ? { versionId: existing.id }
+          ? { versionId: existing.id, ...(!admin ? { classId: cid } : {}) }
           : {
+              ...(!admin ? { classId: cid } : {}),
               ...(text(f, "materialId")
                 ? { materialId: text(f, "materialId") }
                 : {
@@ -847,10 +962,14 @@ export function TeachingWorkspace({
     if (!c) return;
     const list =
       toSession && !admin
-        ? readyVersions.filter((v) =>
-            ds.classMaterials.some(
-              (l) => l.class_id === cid && l.version_id === v.id && l.active,
-            ),
+        ? readyVersions.filter(
+            (v) =>
+              ds.classMaterials.some(
+                (l) => l.class_id === cid && l.version_id === v.id && l.active,
+              ) ||
+              ds.materials.some(
+                (m) => m.id === v.material_id && m.owner_class_id === cid,
+              ),
           )
         : readyVersions;
     show(
@@ -867,8 +986,9 @@ export function TeachingWorkspace({
           options={versionOptions(list)}
         />
         <p>
-          Existing sessions retain their saved versions. These files are visible
-          only to authorized teaching staff.
+          New attachments are staff-only. Use Release to learners after
+          attaching a resource when it is ready to share. Existing sessions
+          retain their saved versions.
         </p>
       </>,
       (f) => ({
@@ -984,7 +1104,88 @@ export function TeachingWorkspace({
           attendance cover all confirmed sessions.
         </p>
       )}
-      {section === "Tutors" && admin ? (
+      {!admin && (section === "Home" || section === "Schedule") ? (
+        <>
+          <div className="teaching-summary-grid">
+            {[
+              ["Assigned classes", ds.classes.length],
+              [
+                "Upcoming sessions",
+                ds.sessions.filter(
+                  (s) => s.status === "scheduled" && s.ends_at >= ds.now,
+                ).length,
+              ],
+              [
+                "Needs completion",
+                ds.sessions.filter(
+                  (s) => s.status === "scheduled" && s.ends_at < ds.now,
+                ).length,
+              ],
+            ].map(([label, count]) => (
+              <article className="admin-card" key={String(label)}>
+                <strong>{count}</strong>
+                <p>{label}</p>
+              </article>
+            ))}
+          </div>
+          <div className="finance-tabs" aria-label="Session views">
+            {["Today", "Upcoming", "Needs completion", "Past"].map((f) => (
+              <button
+                key={f}
+                aria-current={sessionFilter === f ? "page" : undefined}
+                onClick={() => setSessionFilter(f)}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+          <div className="teaching-grid">
+            {ds.sessions
+              .filter((s) =>
+                sessionFilter === "Today"
+                  ? s.starts_at.slice(0, 10) === ds.today
+                  : sessionFilter === "Upcoming"
+                    ? s.status === "scheduled" && s.ends_at >= ds.now
+                    : sessionFilter === "Needs completion"
+                      ? s.status === "scheduled" && s.ends_at < ds.now
+                      : s.status !== "scheduled",
+              )
+              .sort((a, b) => a.starts_at.localeCompare(b.starts_at))
+              .map((s) => (
+                <button
+                  className="admin-card teaching-class-card"
+                  key={s.id}
+                  onClick={() => {
+                    setCid(s.class_id);
+                    setSid(s.id);
+                    onNavigate?.("Classes");
+                  }}
+                >
+                  <CalendarDays size={23} />
+                  <strong>{s.topic_title}</strong>
+                  <span>
+                    {ds.classes.find((c) => c.id === s.class_id)?.name}
+                  </span>
+                  <small>
+                    {teachingDate(s.starts_at)} · {s.status}
+                  </small>
+                  <span>Open session →</span>
+                </button>
+              ))}
+          </div>
+          {!ds.sessions.length && (
+            <EmptyState title="No sessions scheduled yet">
+              Open Classes to plan a session in one of your assigned classrooms.
+            </EmptyState>
+          )}
+          <button
+            className="admin-primary"
+            onClick={() => onNavigate?.("Classes")}
+          >
+            Open your classes & plan teaching
+          </button>
+        </>
+      ) : section === "Tutors" && admin ? (
         <>
           <div className="teaching-toolbar">
             <button
@@ -1079,10 +1280,29 @@ export function TeachingWorkspace({
             )}
           </div>
         </>
-      ) : section === "Materials" && admin ? (
+      ) : section === "Materials" ? (
         <>
           <div className="teaching-toolbar">
-            <button className="admin-primary" onClick={() => upload()}>
+            {!admin && (
+              <Select
+                name="uploadClass"
+                label="Upload for assigned class"
+                value={cid}
+                change={(v) => {
+                  setCid(v);
+                  setSid("");
+                }}
+                options={ds.classes.map((c) => ({
+                  value: c.id,
+                  label: c.name,
+                }))}
+              />
+            )}
+            <button
+              className="admin-primary"
+              disabled={!admin && !cid}
+              onClick={() => upload()}
+            >
               <Plus size={17} />
               Upload teaching material
             </button>
@@ -1092,57 +1312,82 @@ export function TeachingWorkspace({
             managed separately.
           </p>
           <div className="teaching-grid">
-            {ds.materials.map((m) => (
-              <article key={m.id} className="admin-card teaching-card">
-                <FileText size={24} />
-                <h2>{m.title}</h2>
-                <p>
-                  {m.grade} · {m.subject} · {m.kind}
-                </p>
-                {ds.versions
-                  .filter((v) => v.material_id === m.id)
-                  .map((v) => (
-                    <div className="teaching-version" key={v.id}>
-                      <strong>Version {v.version}</strong>
-                      <small>
-                        {v.file_name} · {(v.size_bytes / 1024).toFixed(0)} KB
-                      </small>
-                      {v.finalized_at ? (
-                        <button
-                          disabled={!!opening}
-                          onClick={() => void file(v)}
-                        >
-                          {opening === v.id ? "Opening…" : "View private file"}
-                        </button>
-                      ) : (
-                        <>
-                          <span className="teaching-status">
-                            Upload pending verification
-                          </span>
+            {ds.materials
+              .filter(
+                (m) =>
+                  admin ||
+                  m.owner_class_id === cid ||
+                  ds.classMaterials.some(
+                    (cm) =>
+                      cm.class_id === cid &&
+                      cm.active &&
+                      ds.versions.some(
+                        (v) => v.id === cm.version_id && v.material_id === m.id,
+                      ),
+                  ),
+              )
+              .map((m) => (
+                <article key={m.id} className="admin-card teaching-card">
+                  <FileText size={24} />
+                  <h2>{m.title}</h2>
+                  <p>
+                    {m.grade} · {m.subject} · {m.kind}
+                  </p>
+                  {ds.versions
+                    .filter((v) => v.material_id === m.id)
+                    .map((v) => (
+                      <div className="teaching-version" key={v.id}>
+                        <strong>Version {v.version}</strong>
+                        <small>
+                          {v.file_name} · {(v.size_bytes / 1024).toFixed(0)} KB
+                        </small>
+                        {v.finalized_at ? (
                           <button
-                            onClick={() =>
-                              show(
-                                "Verify an uploaded file",
-                                "material_finalize",
-                                <p>
-                                  {v.file_name}. The stored size and MIME type
-                                  will be checked.
-                                </p>,
-                                () => ({ versionId: v.id }),
-                              )
-                            }
+                            disabled={!!opening}
+                            onClick={() => void file(v)}
                           >
-                            Verify upload
+                            {opening === v.id
+                              ? "Opening…"
+                              : "View private file"}
                           </button>
-                          <button onClick={() => upload(v)}>
-                            Resume upload
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ))}
-              </article>
-            ))}
+                        ) : (
+                          <>
+                            <span className="teaching-status">
+                              Upload pending verification
+                            </span>
+                            <button
+                              onClick={() =>
+                                show(
+                                  "Verify an uploaded file",
+                                  "material_finalize",
+                                  <p>
+                                    {v.file_name}. The stored size and MIME type
+                                    will be checked.
+                                  </p>,
+                                  () => ({
+                                    versionId: v.id,
+                                    ...(!admin
+                                      ? {
+                                          classId: ds.materials.find(
+                                            (m) => m.id === v.material_id,
+                                          )?.owner_class_id,
+                                        }
+                                      : {}),
+                                  }),
+                                )
+                              }
+                            >
+                              Verify upload
+                            </button>
+                            <button onClick={() => upload(v)}>
+                              Resume upload
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                </article>
+              ))}
             {!ds.materials.length && (
               <EmptyState title="No teaching materials yet">
                 Upload a file, then assign its verified version to a class.
@@ -1163,6 +1408,12 @@ export function TeachingWorkspace({
                 <button onClick={addVenue}>Add teaching room</button>
               </>
             )}
+            {!admin && c && (
+              <button onClick={addTopic}>Add topic & goal</button>
+            )}
+            {admin && (
+              <button onClick={studentAccess}>Student portal access</button>
+            )}
             <Select
               key={cid}
               name="selectedClass"
@@ -1170,6 +1421,7 @@ export function TeachingWorkspace({
               value={cid}
               change={(value) => {
                 setCid(value);
+                setSid("");
               }}
               options={ds.classes.map((c) => ({
                 value: c.id,
@@ -1184,7 +1436,10 @@ export function TeachingWorkspace({
                 <button
                   className="admin-card teaching-class-card"
                   key={cl.id}
-                  onClick={() => setCid(cl.id)}
+                  onClick={() => {
+                    setCid(cl.id);
+                    setSid("");
+                  }}
                 >
                   <span className="teaching-class-icon">
                     <BookOpen size={24} />
@@ -1276,6 +1531,65 @@ export function TeachingWorkspace({
                   </div>
                 )}
               </section>
+              <section className="admin-card teaching-timetable">
+                <div className="teaching-section-heading">
+                  <h2>Weekly timetable · South Africa</h2>
+                  {admin && !c.archived && (
+                    <button onClick={slotForm}>Add day-specific time</button>
+                  )}
+                </div>
+                <p>
+                  Choose these saved times when scheduling. Retiring a slot does
+                  not cancel or move dated sessions.
+                </p>
+                {ds.slots
+                  ?.filter((sl) => sl.class_id === cid && sl.active)
+                  .map((sl) => (
+                    <div className="teaching-resource-row" key={sl.id}>
+                      <strong>
+                        {
+                          [
+                            "",
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday",
+                            "Sunday",
+                          ][sl.weekday]
+                        }
+                      </strong>
+                      <span>
+                        {sl.starts_at.slice(0, 5)}–{sl.ends_at.slice(0, 5)}
+                      </span>
+                      {admin && !c.archived && (
+                        <button
+                          onClick={() =>
+                            show(
+                              "Retire weekly time slot",
+                              "slot_save",
+                              <>
+                                <p>
+                                  Past and already scheduled sessions are
+                                  preserved.
+                                </p>
+                                <Reason />
+                              </>,
+                              (f) => ({
+                                classId: cid,
+                                id: sl.id,
+                                reason: text(f, "reason"),
+                              }),
+                            )
+                          }
+                        >
+                          Retire slot
+                        </button>
+                      )}
+                    </div>
+                  ))}
+              </section>
               <div className="teaching-columns">
                 <section className="admin-card">
                   <div className="teaching-section-heading">
@@ -1351,7 +1665,7 @@ export function TeachingWorkspace({
                       <FileText size={18} />
                       Class resources
                     </h2>
-                    {admin && !c.archived && (
+                    {!c.archived && (
                       <button onClick={() => attach()}>Assign resource</button>
                     )}
                   </div>
@@ -1380,7 +1694,21 @@ export function TeachingWorkspace({
                           >
                             View
                           </button>
-                          {admin && !c.archived && (
+                          {!c.archived && (
+                            <button
+                              onClick={() => release(v.id, !l.learner_visible)}
+                            >
+                              {l.learner_visible
+                                ? "Return to staff-only"
+                                : "Release to learners"}
+                            </button>
+                          )}
+                          <small>
+                            {l.learner_visible
+                              ? "Released to learners"
+                              : "Staff-only"}
+                          </small>
+                          {!c.archived && (
                             <button
                               onClick={() =>
                                 show(
@@ -1411,7 +1739,7 @@ export function TeachingWorkspace({
                     <CalendarDays size={18} />
                     Sessions & retained history
                   </h2>
-                  {admin && !c.archived && (
+                  {!c.archived && (
                     <button className="admin-primary" onClick={addSession}>
                       Schedule session
                     </button>
@@ -1466,6 +1794,13 @@ export function TeachingWorkspace({
                     <p>{session.venue_detail}</p>
                   )}
                   <div className="teaching-actions">
+                    {!c.archived &&
+                      session.status === "scheduled" &&
+                      session.starts_at > ds.now && (
+                        <button onClick={() => reschedule(session)}>
+                          Reschedule session
+                        </button>
+                      )}
                     {!c.archived && session.status !== "cancelled" && (
                       <button onClick={() => register(session)}>
                         {session.status === "completed"
@@ -1554,6 +1889,22 @@ export function TeachingWorkspace({
                           >
                             View file
                           </button>
+                          {!c.archived && (
+                            <button
+                              onClick={() =>
+                                release(v.id, !m.learner_visible, session.id)
+                              }
+                            >
+                              {m.learner_visible
+                                ? "Return to staff-only"
+                                : "Release to learners"}
+                            </button>
+                          )}
+                          <small>
+                            {m.learner_visible
+                              ? "Released to learners"
+                              : "Staff-only"}
+                          </small>
                         </div>
                       ) : null;
                     })}
@@ -1590,6 +1941,10 @@ export function TeachingWorkspace({
           changed={load}
           labels={Object.fromEntries([
             ...ds.classes.map((c) => [c.id, c.name]),
+            ...(ds.slots || []).map((sl) => [
+              sl.id,
+              `${["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][sl.weekday]} ${sl.starts_at.slice(0, 5)}–${sl.ends_at.slice(0, 5)}`,
+            ]),
             ...ds.tutors.map((t) => [t.id, t.name]),
             ...ds.topics.map((t) => [t.id, t.title]),
             ...ds.venues.map((v) => [v.id, v.name]),

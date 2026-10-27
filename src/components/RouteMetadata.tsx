@@ -38,26 +38,31 @@ export default function RouteMetadata() {
   const path = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
   const page = (pages as Record<string, PageMetadata>)[path];
   const isIndexable = Boolean(page && page.indexable !== false);
-  const metadata =
-    path === "/tutor"
+  const metadata = ["/tutor", "/student"].includes(path)
+    ? {
+        title:
+          path === "/student"
+            ? "Student Portal | Viva Tutorials"
+            : "Tutor Portal | Viva Tutorials",
+        description:
+          path === "/student"
+            ? "Your secure Viva Tutorials learning space."
+            : "Your secure Viva Tutorials teaching workspace.",
+      }
+    : path === "/parent"
       ? {
-          title: "Tutor Portal | Viva Tutorials",
-          description: "Your secure Viva Tutorials teaching workspace.",
+          title: "Parent Portal | Viva Tutorials",
+          description: "Your secure Viva Tutorials family account.",
         }
-      : path === "/parent"
+      : path === "/admin"
         ? {
-            title: "Parent Portal | Viva Tutorials",
-            description: "Your secure Viva Tutorials family account.",
+            title: "Admin | Viva Tutorials",
+            description: "Authorized Viva Tutorials administration.",
           }
-        : path === "/admin"
-          ? {
-              title: "Admin | Viva Tutorials",
-              description: "Authorized Viva Tutorials administration.",
-            }
-          : (page ?? {
-              title: "Page Not Found | Viva Tutorials",
-              description: "The page you requested could not be found.",
-            });
+        : (page ?? {
+            title: "Page Not Found | Viva Tutorials",
+            description: "The page you requested could not be found.",
+          });
   const canonical = `${siteUrl}${path}`;
 
   useEffect(() => {
@@ -66,7 +71,7 @@ export default function RouteMetadata() {
     updateMeta(
       "name",
       "robots",
-      ["/admin", "/parent", "/tutor"].includes(path)
+      ["/admin", "/parent", "/tutor", "/student"].includes(path)
         ? "noindex,nofollow"
         : isIndexable
           ? "index,follow"

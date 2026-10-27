@@ -1,4 +1,6 @@
-# Teaching release 1: setup and complete test guide
+# Teaching foundation: setup and complete test guide
+
+Release 2 is now included in the SQL bundle. Follow [connected-portals.md](connected-portals.md) for the current upgrade, student access, day-specific scheduling and tutor permissions. The steps below retain the foundation acceptance checks.
 
 Updated 27 October 2026 (Africa/Johannesburg). The owner reports the parent and
 accounting portals working. This release adds teaching setup, private materials,
@@ -23,10 +25,7 @@ finance permissions do not grant a tutor administrative access.
 Admin Materials: private PDF/JPEG/PNG files up to 10 MB; version history; Storage
 size/type checks; resume/verify interrupted uploads; explicit class/session
 attachments. Session attachments save specific versions; removing a default
-class resource does not erase its existing session attachments. Files are not
-published on `/study-materials` and are not available to parents or learners.
-Question papers/memoranda are staff resources in this release. Learner release
-windows and submissions arrive with the next assessment/learner release.
+class resource does not erase its existing session attachments. Files are not published on `/study-materials`. They default to staff-only. Release 2 adds explicit learner release per class/session attachment, also available through parent-assisted learning. Scheduled assessment release windows and submissions remain next phase.
 
 Tutor `/tutor`: email-link sign-in, own assigned classes, session roster, starting
 marks/targets from enrollment, private assigned resources, attendance, completion,
@@ -56,6 +55,7 @@ selected text and run the full script. It combines these canonical migrations:
 1. `20261027160000_teaching_foundation.sql`
 2. `20261027161000_teaching_operations.sql`
 3. `20261027162000_teaching_reads.sql`
+4. `20261027163000_connected_portals.sql`
 
 The script preserves existing financial and parent records, creates a private
 `teaching-materials` bucket, adds role/teaching tables and service-only functions,
@@ -200,4 +200,4 @@ Storage and email. Live SMTP, redirect allowlists, deployed storage permissions
 and hosting rewrites still require the controlled test above. No live migration,
 real email or financial transaction is performed by these implementation checks.
 
-Local release verification: 162 tests across 19 files passed, both TypeScript targets passed, lint has zero errors and seven existing warnings, and the production build exited 0. Chromium and WebKit browser checks passed with synthetic Auth/Storage/email and actual API/SQL.
+The original foundation verification passed 162 tests across 19 files. Current release verification and acceptance steps are recorded in connected-portals.md.

@@ -16,7 +16,7 @@ writeFileSync(
 );
 writeFileSync(
   "docs/teaching-setup.sql",
-  "-- Complete teaching release 1 upgrade. Run ALL of this file after parent setup.\nbegin;\n" +
+  "-- Complete teaching release 2 upgrade. Run ALL of this file after parent setup.\nbegin;\n" +
     block +
     "\ncommit;\n",
 );

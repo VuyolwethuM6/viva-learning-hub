@@ -1,0 +1,140 @@
+.student-workspace {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  color: #211733;
+  line-height: 1.65;
+  min-width: 0;
+}
+.learning-page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.learning-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  color: #786b91;
+}
+.learning-hero {
+  background: linear-gradient(120deg, #5428cc, #8250ed);
+  padding: 25px;
+  border-radius: 23px;
+  color: white;
+  margin-bottom: 20px;
+}
+.learning-hero h1 {
+  font-size: clamp(25px, 5vw, 36px);
+  margin: 12px 0;
+  line-height: 1.25;
+}
+.learning-hero p {
+  color: #eee6ff;
+}
+.learning-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 20px 0;
+}
+.learning-stats article {
+  background: white;
+  border: 1px solid #e7dff4;
+  border-radius: 17px;
+  padding: 17px 10px;
+  display: grid;
+  gap: 6px;
+}
+.learning-stats strong {
+  font-size: 24px;
+  color: #5428cc;
+}
+.learning-stats span {
+  font-size: 11px;
+  color: #786b91;
+}
+.learning-grid {
+  display: grid;
+  gap: 14px;
+  margin: 15px 0 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+}
+.learning-card {
+  background: white;
+  border: 1px solid #e7dff4;
+  border-radius: 20px;
+  padding: 20px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.student-workspace h3 {
+  font-size: 16px;
+  margin: 14px 0 8px;
+}
+.learning-card p {
+  font-size: 13px;
+  margin: 8px 0;
+  color: #786b91;
+}
+.learning-card svg {
+  vertical-align: middle;
+}
+.learning-class {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 8px;
+}
+.learning-class.selected {
+  border: 2px solid #7543e8;
+}
+.learning-class span,
+.learning-class small {
+  font-size: 12px;
+  color: #786b91;
+}
+.learning-empty {
+  padding: 22px;
+  border: 1px dashed #d2c5ec;
+  border-radius: 16px;
+  color: #786b91;
+  font-size: 13px;
+}
+.learning-action {
+  display: inline-flex;
+  padding: 10px 14px;
+  background: #7543e8;
+  color: white !important;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+.parent-assisted {
+  margin-top: 24px;
+}
+.parent-assisted summary {
+  font-weight: 800;
+  cursor: pointer;
+}
+.student-shell .tutor-intro {
+  display: none;
+}
+.portal-privacy {
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  margin: 14px;
+}
+@media (min-width: 1024px) {
+  .portal-desktop-tabs {
+    display: flex !important;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+}
+.portal-desktop-tabs {
+  display: none;
+}

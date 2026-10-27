@@ -1,0 +1,78 @@
+.portal-dock-scope.admin-shell,
+.portal-dock-scope.parent-app {
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  display: block;
+}
+.portal-dock-scope nav {
+  position: fixed !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  transform: none;
+  z-index: 40;
+}
+.viva-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 11px 16px;
+  border-radius: 13px;
+  background: #16843f !important;
+  color: white !important;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid #16843f;
+}
+.viva-whatsapp svg {
+  flex-shrink: 0;
+}
+.viva-whatsapp:focus-visible {
+  outline: 3px solid #f27435;
+  outline-offset: 3px;
+}
+.portal-dock-scope .tutor-bottom-nav {
+  display: flex;
+}
+.portal-support {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+.portal-link {
+  color: #5428cc;
+  text-decoration: underline;
+}
+@media (max-width: 1023px) {
+  .admin-main {
+    padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .tutor-main {
+    padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+@media (min-width: 1024px) {
+  .portal-dock-scope .tutor-bottom-nav {
+    display: none;
+  }
+}
+
+.portal-desktop-tabs {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .portal-desktop-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+}

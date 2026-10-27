@@ -16,6 +16,7 @@ export type TeachingClass = {
   mode: string;
 };
 export type TeachingSession = {
+  series_id?: string | null;
   id: string;
   class_id: string;
   topic_id: string;
@@ -59,12 +60,21 @@ export type TeachingMaterial = {
   subject: string;
   kind: string;
   archived: boolean;
+  owner_class_id?: string | null;
 };
 export type TeachingSnapshot = {
   today: string;
   now: string;
   audience: "admin" | "tutor";
   tutorName: string | null;
+  slots: {
+    id: string;
+    class_id: string;
+    weekday: number;
+    starts_at: string;
+    ends_at: string;
+    active: boolean;
+  }[];
   programmes: { grade: string; weekdays: number[] }[];
   closures: { day: string; reason: string }[];
   tutors: {
@@ -80,6 +90,7 @@ export type TeachingSnapshot = {
     mode: string;
     detail: string;
     active: boolean;
+    learner_visible?: boolean;
   }[];
   topics: {
     id: string;
@@ -88,11 +99,14 @@ export type TeachingSnapshot = {
     title: string;
     goal: string;
     active: boolean;
+    learner_visible?: boolean;
   }[];
   learners: {
     id: string;
     name: string;
     studentNumber: string;
+    learnerEmail: string;
+    studentAccess: boolean;
     grade: string;
     subjects: string[];
   }[];
@@ -113,11 +127,17 @@ export type TeachingSnapshot = {
   roster: TeachingRoster[];
   materials: TeachingMaterial[];
   versions: TeachingVersion[];
-  classMaterials: { class_id: string; version_id: string; active: boolean }[];
+  classMaterials: {
+    class_id: string;
+    version_id: string;
+    active: boolean;
+    learner_visible: boolean;
+  }[];
   sessionMaterials: {
     session_id: string;
     version_id: string;
     active: boolean;
+    learner_visible?: boolean;
   }[];
   history: {
     id: string;
