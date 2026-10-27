@@ -4,6 +4,8 @@ React/TypeScript website for Viva Tutorials, with Vercel API routes for enrollme
 
 ## Development documentation
 
+- [Teaching setup and testing](docs/teaching-test-guide.md): classes/sessions, private materials, tutor email-link access and parent attendance.
+
 - [Parent portal setup and testing](docs/parent-portal.md): simple email-link sign-in, guardian access, real learner/finance data and private documents.
 
 - [Accounting setup and complete testing](docs/accounting-test-guide.md): combined migration, receipts/credits, expenses, reconciliation, reports, lifecycle controls and scheduled work.

@@ -52,6 +52,7 @@ import {
   type Message,
 } from "@/lib/admin-types";
 import { ParentAccessControls } from "@/components/admin/ParentAccessControls";
+import { TeachingWorkspace } from "@/components/admin/TeachingWorkspace";
 import { FinanceWorkspace } from "@/components/admin/FinanceWorkspace";
 import {
   LearnerAccountControls,
@@ -1468,25 +1469,32 @@ export default function Admin() {
                   </section>
                 </>
               )}
-              {!tabs.slice(0, 6).includes(tab) && (
-                <section className="admin-card future-card">
-                  <span className="future-icon">
-                    <BookOpen size={32} />
-                  </span>
-                  <span className="eyebrow">GROWING WITH VIVA</span>
-                  <h1>{tab}</h1>
-                  <Badge value="coming_soon" />
-                  <h2>Not available yet.</h2>
-                  <p>
-                    This space is reserved for the next stage of your Viva
-                    system. Your current workspace supports application review,
-                    tuition invoices, payment recording and activation.
-                  </p>
-                  {tab === "System health" && (
-                    <p>Live monitoring and backup status are not connected.</p>
-                  )}
-                </section>
+              {["Classes", "Materials", "Tutors"].includes(tab) && (
+                <TeachingWorkspace section={tab} />
               )}
+              {!tabs.slice(0, 6).includes(tab) &&
+                !["Classes", "Materials", "Tutors"].includes(tab) && (
+                  <section className="admin-card future-card">
+                    <span className="future-icon">
+                      <BookOpen size={32} />
+                    </span>
+                    <span className="eyebrow">GROWING WITH VIVA</span>
+                    <h1>{tab}</h1>
+                    <Badge value="coming_soon" />
+                    <h2>Not available yet.</h2>
+                    <p>
+                      This space is reserved for the next stage of your Viva
+                      system. Your current workspace supports application
+                      review, tuition invoices, payment recording and
+                      activation.
+                    </p>
+                    {tab === "System health" && (
+                      <p>
+                        Live monitoring and backup status are not connected.
+                      </p>
+                    )}
+                  </section>
+                )}
             </>
           )}
         </main>
@@ -1833,7 +1841,10 @@ export default function Admin() {
               </div>
             )}
           </details>
-          <ParentAccessControls application={selected} role={data?.finance_role} />
+          <ParentAccessControls
+            application={selected}
+            role={data?.finance_role}
+          />
           <LearnerAccountControls
             application={selected}
             today={data?.today || ""}

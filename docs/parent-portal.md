@@ -19,15 +19,16 @@ is calculated from their complete invoice history. Statements refuse more than
 2,000 net movements rather than silently dropping older activity. Available
 credit is separate from unpaid invoices until staff allocate it.
 
-Attendance, academic results and tutor publishing are not implemented yet; their
-cards explain that clearly. Programme days are not an attendance record or a
-confirmed class timetable. The portal cannot record a payment, change an invoice,
+The teaching-foundation release connects confirmed session attendance and upcoming
+classes after its separate migration; see teaching-test-guide.md. Academic results
+and assessment publishing remain future work. Programme days are separate from
+the actual class timetable and are not themselves an attendance record. The portal cannot record a payment, change an invoice,
 initiate a transfer, or change learner/guardian details. Contact requests use the
 family's own email/phone application.
 
 ## Simple authentication
 
-Parents enter **only their guardian email**, then tap **Open my parent portal**
+Parents enter **only their guardian email**, then tap **Open my Viva portal**
 in the email. There is no password, PIN, code field or account-creation form.
 Returning parents with a valid session go directly to their family account.
 
@@ -100,12 +101,12 @@ Parent routes are excluded from application analytics and marked noindex/no-stor
    **not** automatically configure Supabase Auth emails. Supabase's default mail
    service has recipient/rate restrictions and is not the family-facing sender.
 6. Under **Authentication → Email Templates**, set the subject to
-   `Open your Viva Tutorials parent portal`, and paste
+   `Open your Viva Tutorials portal`, and paste
    [parent-signin-email.html](parent-signin-email.html) into **Magic Link** and
    **Confirm signup**. Both templates need the supplied link target:
 
    ```html
-   <a href="{{ .RedirectTo }}&amp;token_hash={{ .TokenHash }}">Open my parent portal</a>
+   <a href="{{ .RedirectTo }}&amp;token_hash={{ .TokenHash }}">Open my Viva portal</a>
    ```
 
    `.RedirectTo` is the configured `/api/parent?action=callback` URL sent by the
@@ -164,7 +165,7 @@ order by updated_at desc;
 1. Use a controlled guardian inbox and two reviewed synthetic children with that
    exact email. Keep another family on a different inbox. Enable the first family.
 2. Open `/parent` in a private browser. It should ask for email only. Request a
-   link, check actual inbox delivery, tap **Open my parent portal**, and confirm
+   link, check actual inbox delivery, tap **Open my Viva portal**, and confirm
    the link returns to the intended work deployment.
 3. Choose between the two children. Confirm names, subjects, programme days,
    lifecycle status and learner invoice balance match the admin records. The

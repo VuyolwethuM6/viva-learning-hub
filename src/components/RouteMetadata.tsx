@@ -39,20 +39,25 @@ export default function RouteMetadata() {
   const page = (pages as Record<string, PageMetadata>)[path];
   const isIndexable = Boolean(page && page.indexable !== false);
   const metadata =
-    path === "/parent"
+    path === "/tutor"
       ? {
-          title: "Parent Portal | Viva Tutorials",
-          description: "Your secure Viva Tutorials family account.",
+          title: "Tutor Portal | Viva Tutorials",
+          description: "Your secure Viva Tutorials teaching workspace.",
         }
-      : path === "/admin"
+      : path === "/parent"
         ? {
-            title: "Admin | Viva Tutorials",
-            description: "Authorized Viva Tutorials administration.",
+            title: "Parent Portal | Viva Tutorials",
+            description: "Your secure Viva Tutorials family account.",
           }
-        : (page ?? {
-            title: "Page Not Found | Viva Tutorials",
-            description: "The page you requested could not be found.",
-          });
+        : path === "/admin"
+          ? {
+              title: "Admin | Viva Tutorials",
+              description: "Authorized Viva Tutorials administration.",
+            }
+          : (page ?? {
+              title: "Page Not Found | Viva Tutorials",
+              description: "The page you requested could not be found.",
+            });
   const canonical = `${siteUrl}${path}`;
 
   useEffect(() => {
@@ -61,7 +66,7 @@ export default function RouteMetadata() {
     updateMeta(
       "name",
       "robots",
-      ["/admin", "/parent"].includes(path)
+      ["/admin", "/parent", "/tutor"].includes(path)
         ? "noindex,nofollow"
         : isIndexable
           ? "index,follow"

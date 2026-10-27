@@ -1,3 +1,5 @@
+import { teachingRead, teachingMutation } from "./teaching-service.js";
+import type { PortalAudience } from "./parent-auth.js";
 import type { ServerResponse } from "node:http";
 import { privateResponse, rpc, sameOrigin, uuid } from "./admin.js";
 import {
@@ -31,6 +33,7 @@ import type { ParentSnapshot } from "../../src/lib/parent-types.js";
 export default async function parentHandler(
   request: ApiRequest,
   response: ServerResponse,
+  audience: PortalAudience = "parent",
 ) {
   privateResponse(response);
   try {
@@ -40,7 +43,7 @@ export default async function parentHandler(
       url.searchParams.get("action") === "callback"
     ) {
       const hash = url.searchParams.get("token_hash") || "";
-      let destination = "/parent";
+      let destination = `/${audience}`;
       try {
         if (!/^[A-Za-z0-9_-]{32,256}$/.test(hash))
           throw new HttpError(401, "Invalid sign-in link.");
@@ -48,19 +51,27 @@ export default async function parentHandler(
           token_hash: hash,
           type: "email",
         });
-        await completeParentSession(response, auth);
+        await completeParentSession(response, auth, undefined, audience);
       } catch {
         // An old email link must not sign an already authenticated parent out.
-        destination = "/parent?signin=expired";
+        destination = `/${audience}?signin=expired`;
       }
       response.statusCode = 303;
       response.setHeader("Location", destination);
       return response.end();
     }
     if (request.method === "GET") {
-      const user = await requireParent(request);
+      const user = await requireParent(request, audience);
       if (url.searchParams.get("action") === "session")
         return sendJson(response, 200, { user });
+      if (audience === "tutor")
+        return await teachingRead(request, response, user.id, "tutor");
+      if (url.searchParams.get("action") === "teaching")
+        return sendJson(
+          response,
+          200,
+          await rpc("teaching_parent_snapshot", { p_user: user.id }),
+        );
       if (url.searchParams.get("action") === "document") {
         const kind = url.searchParams.get("kind") || "",
           id = uuid(url.searchParams.get("id"));
@@ -107,7 +118,7 @@ export default async function parentHandler(
       throw new HttpError(405, "Method not allowed.");
     sameOrigin(request);
     if (request.method === "DELETE") {
-      const token = parentCookie(request, "access");
+      const token = parentCookie(request, "access", audience);
       if (token) {
         try {
           await parentAuthFetch("logout?scope=local", {}, token);
@@ -115,12 +126,20 @@ export default async function parentHandler(
           /* Local cookies are always cleared. */
         }
       }
-      parentCookies(response);
+      parentCookies(response, undefined, audience);
       return sendJson(response, 200, { success: true });
     }
-    const body = await readJsonBody(request, 4096, "Parent sign-in");
+    const body = await readJsonBody(
+      request,
+      audience === "tutor" ? 16384 : 4096,
+      "Portal request",
+    );
+    if (audience === "tutor" && body.action === "teaching") {
+      const user = await requireParent(request, audience);
+      return await teachingMutation(response, user.id, "tutor", body);
+    }
     if (body.action === "refresh") {
-      const token = parentCookie(request, "refresh");
+      const token = parentCookie(request, "refresh", audience);
       if (!token || token.length > 8192)
         throw new HttpError(401, "Please sign in again.");
       const auth = await parentAuthFetch("token?grant_type=refresh_token", {
@@ -128,19 +147,27 @@ export default async function parentHandler(
       });
       try {
         return sendJson(response, 200, {
-          user: await completeParentSession(response, auth),
+          user: await completeParentSession(
+            response,
+            auth,
+            undefined,
+            audience,
+          ),
         });
       } catch (error) {
-        parentCookies(response);
+        parentCookies(response, undefined, audience);
         throw error;
       }
     }
     const email = parentEmail(body.email);
     if (body.action === "request_link") {
-      const base = process.env.PARENT_PORTAL_URL || process.env.PUBLIC_SITE_URL;
+      const base =
+        (audience === "tutor" ? process.env.TUTOR_PORTAL_URL : undefined) ||
+        process.env.PARENT_PORTAL_URL ||
+        process.env.PUBLIC_SITE_URL;
       let callback: URL;
       try {
-        callback = new URL("/api/parent?action=callback", base);
+        callback = new URL(`/api/${audience}?action=callback`, base);
         if (
           callback.protocol !== "https:" &&
           !(
@@ -155,8 +182,8 @@ export default async function parentHandler(
           "Parent sign-in is not configured. Please contact Viva Tutorials.",
         );
       }
-      await limitParentAuth(request, email, "send");
-      const allowed = await rpc<boolean>("parent_signin_allowed", {
+      await limitParentAuth(request, email, "send", audience);
+      const allowed = await rpc<boolean>(`${audience}_signin_allowed`, {
         p_email: email,
       });
       if (allowed) {
@@ -174,7 +201,9 @@ export default async function parentHandler(
       return sendJson(response, 200, {
         success: true,
         message:
-          "If parent access is enabled for this email, a sign-in link is on its way. Open the email and tap Open my parent portal.",
+          audience === "parent"
+            ? "If parent access is enabled for this email, a sign-in link is on its way. Open the email and tap Open my Viva portal."
+            : "If tutor access is enabled for this email, a sign-in link is on its way. Open the email to sign in.",
       });
     }
     throw new HttpError(400, "Unknown parent sign-in action.");

@@ -6,6 +6,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { ParentTeaching } from "@/components/ParentTeaching";
+import "@/components/admin/teaching.css";
 import { Helmet } from "react-helmet-async";
 import {
   ArrowDownToLine,
@@ -418,7 +420,7 @@ export default function Parent() {
               <>
                 If access is enabled for{" "}
                 <strong>{email.trim().toLowerCase()}</strong>, you’ll receive an
-                email. Open it and tap “Open my parent portal”.
+                email. Open it and tap “Open my Viva portal”.
               </>
             ) : (
               "Sign in with the guardian email on your enrollment. We’ll email you a sign-in link."
@@ -451,8 +453,8 @@ export default function Parent() {
                 <h3>One tap and you’re in.</h3>
                 <p>
                   Open the email from Viva Tutorials, then tap{" "}
-                  <strong>Open my parent portal</strong>. You don’t need to type
-                  a code.
+                  <strong>Open my Viva portal</strong>. You don’t need to type a
+                  code.
                 </p>
               </div>
             )}
@@ -855,16 +857,7 @@ export default function Parent() {
                     <p className="parent-muted">School: {child.school}</p>
                   )}
                 </section>
-                <section className="parent-card">
-                  <h2>Attendance</h2>
-                  <Empty
-                    title="Attendance tracking is coming"
-                    icon={<CalendarDays size={25} />}
-                  >
-                    Class attendance has not been connected to this portal yet.
-                    Contact Viva for a current attendance update.
-                  </Empty>
-                </section>
+                <ParentTeaching applicationId={child.id} />
                 <section className="parent-card">
                   <h2>Results & progress</h2>
                   <Empty title="Their next chapter starts here">

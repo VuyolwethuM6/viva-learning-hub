@@ -1,3 +1,4 @@
+import { teachingRead, teachingMutation } from "../_lib/teaching-service.js";
 import type { ServerResponse } from "node:http";
 import {
   db,
@@ -23,6 +24,13 @@ export default async function handler(
   privateResponse(response);
   try {
     const actor = await requireAdmin(request);
+    if (
+      request.method === "GET" &&
+      new URL(request.url || "", "http://localhost").searchParams.get(
+        "teaching",
+      ) === "1"
+    )
+      return await teachingRead(request, response, actor.id, "admin");
     if (request.method === "GET")
       return sendJson(
         response,
@@ -33,6 +41,8 @@ export default async function handler(
       throw new HttpError(405, "Method not allowed.");
     sameOrigin(request);
     const body = await readJsonBody(request, 16_384, "Admin records");
+    if (body.action === "teaching")
+      return await teachingMutation(response, actor.id, "admin", body);
     if (body.action === "parent_access") {
       if (body.enabled !== undefined && typeof body.enabled !== "boolean")
         throw new HttpError(
