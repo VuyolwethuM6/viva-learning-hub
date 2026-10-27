@@ -1,3 +1,4 @@
+import { academicRead, academicMutation } from "../_lib/academic-service.js";
 import { teachingRead, teachingMutation } from "../_lib/teaching-service.js";
 import type { ServerResponse } from "node:http";
 import {
@@ -27,6 +28,13 @@ export default async function handler(
     if (
       request.method === "GET" &&
       new URL(request.url || "", "http://localhost").searchParams.get(
+        "academic",
+      ) === "1"
+    )
+      return await academicRead(request, response, actor.id, "admin");
+    if (
+      request.method === "GET" &&
+      new URL(request.url || "", "http://localhost").searchParams.get(
         "teaching",
       ) === "1"
     )
@@ -40,7 +48,9 @@ export default async function handler(
     if (request.method !== "POST")
       throw new HttpError(405, "Method not allowed.");
     sameOrigin(request);
-    const body = await readJsonBody(request, 16_384, "Admin records");
+    const body = await readJsonBody(request, 32_768, "Admin records");
+    if (body.action === "academic")
+      return await academicMutation(response, actor.id, "admin", body);
     if (body.action === "teaching")
       return await teachingMutation(response, actor.id, "admin", body);
     if (body.action === "parent_access") {

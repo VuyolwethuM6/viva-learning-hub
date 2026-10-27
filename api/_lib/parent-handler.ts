@@ -1,3 +1,4 @@
+import { academicRead, academicMutation } from "./academic-service.js";
 import { teachingRead, teachingMutation } from "./teaching-service.js";
 import type { PortalAudience } from "./parent-auth.js";
 import type { ServerResponse } from "node:http";
@@ -64,6 +65,8 @@ export default async function parentHandler(
       const user = await requireParent(request, audience);
       if (url.searchParams.get("action") === "session")
         return sendJson(response, 200, { user });
+      if (url.searchParams.get("academic") === "1")
+        return await academicRead(request, response, user.id, audience);
       if (
         audience === "student" ||
         (audience === "parent" && url.searchParams.get("action") === "student")
@@ -136,9 +139,16 @@ export default async function parentHandler(
     }
     const body = await readJsonBody(
       request,
-      audience === "tutor" ? 16384 : 4096,
+      audience === "parent" ? 4096 : 32768,
       "Portal request",
     );
+    if (
+      (audience === "tutor" || audience === "student") &&
+      body.action === "academic"
+    ) {
+      const user = await requireParent(request, audience);
+      return await academicMutation(response, user.id, audience, body);
+    }
     if (audience === "tutor" && body.action === "teaching") {
       const user = await requireParent(request, audience);
       return await teachingMutation(response, user.id, "tutor", body);

@@ -91,7 +91,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
   await db.exec(
-    "truncate public.teaching_requests,public.teaching_events,public.teaching_tutors,public.teaching_venues,public.teaching_topics,public.teaching_classes,public.applications,public.accounting_journals,public.accounting_requests,public.parent_accounts,storage.objects,public.tuition_closures cascade;create or replace function public.teaching_now() returns timestamptz language sql stable as $$select timestamptz '2026-10-27 12:00:00+02'$$;",
+    "truncate public.teaching_requests,public.teaching_events,public.teaching_tutors,public.teaching_venues,public.teaching_topics,public.teaching_classes,public.applications,public.accounting_journals,public.accounting_requests,public.parent_accounts,storage.objects,public.tuition_closures cascade;create or replace function public.teaching_now() returns timestamptz language sql stable as $$select timestamptz '2026-10-27 12:00:00+02'$$;create or replace function public.academic_now() returns timestamptz language sql volatile as $$select public.teaching_now()$$;",
   );
   await db.query(
     "insert into public.applications(id,application_number,learner_name,learner_email,guardian_name,guardian_email,grade_level,tutoring_mode,selected_subjects,monthly_fee,status,enrollment_state,reviewed_at,reviewed_by) values($1,'VT-TEST','Alex Learner','learner@example.test','Parent','parent@example.test','Grade 12','Online',array['Mathematics'],500,'active','active',now(),$2)",
@@ -156,7 +156,7 @@ describe("teaching foundation real PostgreSQL boundaries", () => {
     const files = readdirSync("supabase/migrations")
       .filter((n) => n.startsWith("2026102716"))
       .sort();
-    expect(files).toHaveLength(4);
+    expect(files).toHaveLength(5);
     const source = files
       .map((n) => readFileSync("supabase/migrations/" + n, "utf8"))
       .join("\n\n");
@@ -866,6 +866,769 @@ describe("connected student portals and day-specific scheduling", () => {
           [role],
         ),
       ).toBe(false);
+    }
+  });
+});
+
+describe("academic assignments, submissions, review, exams and progress", () => {
+  const student = "55555555-5555-4555-8555-555555555555";
+  const academic = (
+    operation: string,
+    data: Record<string, unknown> = {},
+    audience = "tutor",
+    actor = teacher,
+  ) =>
+    val("select public.academic_mutate($1,$2,$3,$4) value", [
+      actor,
+      audience,
+      operation,
+      JSON.stringify({ requestId: randomUUID(), ...data }),
+    ]);
+  async function setup(extra: Record<string, unknown> = {}) {
+    await db.query(
+      "insert into auth.users values($1,'learner@example.test','2026-10-01') on conflict(id) do nothing",
+      [student],
+    );
+    await op("student_access", {
+      applicationId: app,
+      enabled: true,
+      reason: "Learner email verified",
+    });
+    await val("select public.student_bind($1) value", [student]);
+    const period = await academic(
+      "period_create",
+      {
+        classId: cid,
+        startsOn: "2026-10-01",
+        endsOn: "2026-11-30",
+        method: String(extra.periodMethod || "total_marks"),
+      },
+      "admin",
+      admin,
+    );
+    const task = await academic("task_create", {
+      classId: cid,
+      periodId: period.id,
+      topicId,
+      kind: "homework",
+      purpose: "formative",
+      format: "Worksheet",
+      instructions: "Complete the worksheet and explain your answers.",
+      submissionMethod: "text",
+      opensAt: "2026-10-27T10:00",
+      dueAt: "2026-10-28T16:00",
+      closesAt: "2026-10-28T16:00",
+      maxMarks: 20,
+      countsAverage: true,
+      weight: 1,
+      maxAttempts: 2,
+      ...extra,
+    });
+    await academic("task_assign", {
+      taskId: task.taskId,
+      revision: 0,
+      learners: [app],
+    });
+    return { tid: task.taskId, pid: period.id };
+  }
+  const start = (tid: unknown) =>
+    academic("attempt_start", { taskId: tid }, "student", student);
+  const snap = (audience = "student", actor = student, application?: string) =>
+    val<{
+      tasks: Record<string, unknown>[];
+      attempts: Record<string, unknown>[];
+      grades: Record<string, unknown>[];
+      progress: Record<string, unknown>[];
+      resources: unknown[];
+      reports: Record<string, unknown>[];
+    }>("select public.academic_snapshot($1,$2,$3) value", [
+      actor,
+      audience,
+      application || null,
+    ]);
+  async function submit(tid: unknown, answer = "My confirmed answer") {
+    const attempt = await start(tid);
+    const result = await academic(
+      "submit",
+      { attemptId: attempt.attemptId, revision: 0, answer },
+      "student",
+      student,
+    );
+    return { id: attempt.attemptId, receipt: result.receipt, ...result };
+  }
+  async function grade(tid: unknown, attemptId: unknown, score = 15) {
+    const result = await academic("grade_save", {
+      taskId: tid,
+      attemptId,
+      revision: 0,
+      score,
+      feedback: "Good understanding; revise the last step.",
+      staffNote: "Private marking note",
+    });
+    await academic("grade_review", { taskId: tid, gradeId: result.gradeId });
+    return result.gradeId;
+  }
+  it("assigns class-scoped work and keeps all draft marks private until admin publication", async () => {
+    const { tid } = await setup();
+    const attempt = await submit(tid);
+    const gradeId = await grade(tid, attempt.id);
+    expect((await snap()).grades).toHaveLength(0);
+    await expect(
+      academic("grade_publish", { taskId: tid, gradeId }),
+    ).rejects.toThrow("Administrator");
+    await academic("grade_publish", { taskId: tid, gradeId }, "admin", admin);
+    const data = await snap();
+    expect(data.grades[0].score).toBe(15);
+    expect(JSON.stringify(data)).not.toContain("Private marking note");
+    expect(data.progress[0].average).toBe(75);
+  });
+  it("saves drafts but confirms submission only once with an immutable receipt", async () => {
+    const { tid } = await setup();
+    const attempt = await start(tid);
+    await academic(
+      "draft_save",
+      { attemptId: attempt.attemptId, revision: 0, answer: "Draft answer" },
+      "student",
+      student,
+    );
+    const data = await snap();
+    expect(data.attempts[0].receipt).toBeNull();
+    expect((await snap("tutor", teacher)).attempts).toHaveLength(0);
+    await expect(
+      academic(
+        "submit",
+        { attemptId: attempt.attemptId, revision: 0, answer: "Stale" },
+        "student",
+        student,
+      ),
+    ).rejects.toThrow("changed");
+    const requestId = randomUUID(),
+      args = {
+        requestId,
+        attemptId: attempt.attemptId,
+        revision: 1,
+        answer: "Final answer",
+      };
+    const first = await academic("submit", args, "student", student);
+    expect(first.receipt).toBeTruthy();
+    expect(await academic("submit", args, "student", student)).toEqual(first);
+    await expect(
+      academic(
+        "draft_save",
+        {
+          attemptId: attempt.attemptId,
+          revision: 2,
+          answer: "Changed afterwards",
+        },
+        "student",
+        student,
+      ),
+    ).rejects.toThrow("unsubmitted");
+  });
+  it("enforces exam opening, exact closing, duration and preserves expired drafts", async () => {
+    const { tid } = await setup({
+      kind: "exam",
+      purpose: "summative",
+      format: "Exam",
+      maxAttempts: 1,
+      opensAt: "2026-10-27T12:01",
+      dueAt: "2026-10-27T13:00",
+      closesAt: "2026-10-27T13:00",
+      durationMinutes: 15,
+    });
+    await expect(start(tid)).rejects.toThrow("not open");
+    await db.exec(
+      "create or replace function public.teaching_now() returns timestamptz language sql stable as $$select timestamptz '2026-10-27 12:01:00+02'$$",
+    );
+    const attempt = await start(tid);
+    await db.exec(
+      "create or replace function public.teaching_now() returns timestamptz language sql stable as $$select timestamptz '2026-10-27 12:16:00+02'$$",
+    );
+    await expect(
+      academic(
+        "submit",
+        { attemptId: attempt.attemptId, revision: 0, answer: "Too late" },
+        "student",
+        student,
+      ),
+    ).rejects.toThrow("deadline");
+    expect((await snap()).attempts[0].state).toBe("draft");
+    await academic("extension", {
+      taskId: tid,
+      applicationId: app,
+      closesAt: "2026-10-27T14:00",
+      extraMinutes: 30,
+      reason: "Authorized additional assessment time",
+    });
+    const result = await academic(
+      "submit",
+      { attemptId: attempt.attemptId, revision: 0, answer: "Within extension" },
+      "student",
+      student,
+    );
+    expect(result.receipt).toBeTruthy();
+    await expect(start(tid)).rejects.toThrow("already submitted");
+  });
+  it("requires verified uploaded files and rejects finalization/submission after the hard close", async () => {
+    const { tid } = await setup({ submissionMethod: "file" });
+    const attempt = await start(tid);
+    const id = randomUUID();
+    const up = await academic(
+      "upload_prepare",
+      {
+        attemptId: attempt.attemptId,
+        id,
+        name: "work.pdf",
+        mime: "application/pdf",
+        size: 5,
+      },
+      "student",
+      student,
+    );
+    await expect(
+      academic(
+        "submit",
+        { attemptId: attempt.attemptId, revision: 0 },
+        "student",
+        student,
+      ),
+    ).rejects.toThrow("verify");
+    await expect(
+      academic(
+        "upload_finalize",
+        { attemptId: attempt.attemptId, id },
+        "student",
+        student,
+      ),
+    ).rejects.toThrow("verified");
+    await db.query(
+      "insert into storage.objects(bucket_id,name,metadata) values('academic-submissions',$1,$2)",
+      [
+        up.storage_path,
+        JSON.stringify({ size: 5, mimetype: "application/pdf" }),
+      ],
+    );
+    await academic(
+      "upload_finalize",
+      { attemptId: attempt.attemptId, id },
+      "student",
+      student,
+    );
+    await academic(
+      "submit",
+      { attemptId: attempt.attemptId, revision: 0 },
+      "student",
+      student,
+    );
+    expect(
+      (
+        await val(
+          "select public.academic_file($1,'tutor',$2,'submission') value",
+          [teacher, id],
+        )
+      ).bucket,
+    ).toBe("academic-submissions");
+    await expect(
+      val("select public.academic_file($1,'parent',$2,'submission',$3) value", [
+        parent,
+        id,
+        app,
+      ]),
+    ).rejects.toThrow();
+  });
+  it("excludes diagnostic results and unmarked work from averages, with missing counts shown", async () => {
+    const { tid, pid } = await setup({
+      purpose: "diagnostic",
+      countsAverage: false,
+    });
+    const attempt = await submit(tid);
+    const gid = await grade(tid, attempt.id, 8);
+    await academic(
+      "grade_publish",
+      { taskId: tid, gradeId: gid },
+      "admin",
+      admin,
+    );
+    const t2 = await academic("task_create", {
+      classId: cid,
+      periodId: pid,
+      topicId,
+      kind: "homework",
+      purpose: "summative",
+      format: "Test",
+      instructions: "Answer every question carefully.",
+      submissionMethod: "text",
+      opensAt: "2026-10-27T10:00",
+      dueAt: "2026-10-28T16:00",
+      closesAt: "2026-10-28T16:00",
+      maxMarks: 20,
+      countsAverage: true,
+      weight: 1,
+      maxAttempts: 1,
+    });
+    await academic("task_assign", {
+      taskId: t2.taskId,
+      revision: 0,
+      learners: [app],
+    });
+    const data = await snap();
+    expect(data.progress[0].average).toBeNull();
+    expect(data.progress[0].missingCount).toBe(1);
+    expect((data.progress[0].diagnostics as unknown[]).length).toBe(1);
+  });
+  it("retains published mark corrections and frozen report versions", async () => {
+    const { tid, pid } = await setup();
+    const attempt = await submit(tid);
+    const gid = await grade(tid, attempt.id);
+    await academic(
+      "grade_publish",
+      { taskId: tid, gradeId: gid },
+      "admin",
+      admin,
+    );
+    const report = await academic(
+      "report_publish",
+      {
+        classId: cid,
+        periodId: pid,
+        applicationId: app,
+        fingerprint: (await snap()).progress[0].fingerprint,
+        reason: "Period progress reviewed and published",
+      },
+      "admin",
+      admin,
+    );
+    const correction = await academic("grade_save", {
+      taskId: tid,
+      attemptId: attempt.id,
+      revision: 1,
+      score: 18,
+      feedback: "Rechecked working; additional marks awarded.",
+      reason: "Mark reviewed against memorandum",
+    });
+    expect((await snap()).progress[0].average).toBe(75);
+    await academic("grade_review", {
+      taskId: tid,
+      gradeId: correction.gradeId,
+    });
+    await academic(
+      "grade_publish",
+      { taskId: tid, gradeId: correction.gradeId },
+      "admin",
+      admin,
+    );
+    const data = await snap();
+    expect(data.progress[0].average).toBe(90);
+    expect((data.reports[0].content as Record<string, unknown>).average).toBe(
+      75,
+    );
+    await expect(
+      db.query(
+        "update public.academic_reports set reason='erase' where id=$1",
+        [report.reportId],
+      ),
+    ).rejects.toThrow("immutable");
+  });
+  it("lets parents read only their children and rejects all parent writes", async () => {
+    await setup();
+    await val(
+      "select public.admin_parent_access($1,$2,true,'Guardian verified for academic reads') value",
+      [admin, app],
+    );
+    await val("select public.parent_bind($1) value", [parent]);
+    expect((await snap("parent", parent, app)).tasks).toHaveLength(1);
+    await expect(snap("parent", parent, randomUUID())).rejects.toThrow(
+      "family",
+    );
+    await expect(
+      academic("attempt_start", {}, "parent", parent),
+    ).rejects.toThrow("read-only");
+  });
+  it("blocks student ownership spoofing, staff role escalation and browser access", async () => {
+    const { tid } = await setup();
+    await expect(
+      academic("period_create", { classId: cid }, "student", student),
+    ).rejects.toThrow("staff");
+    await expect(
+      academic("task_create", { classId: randomUUID() }),
+    ).rejects.toThrow("not assigned");
+    for (const role of ["anon", "authenticated"]) {
+      expect(
+        await val<boolean>(
+          "select has_table_privilege($1,'public.academic_grades','SELECT') value",
+          [role],
+        ),
+      ).toBe(false);
+      expect(
+        await val<boolean>(
+          "select has_function_privilege($1,'public.academic_mutate(uuid,text,text,jsonb)','EXECUTE') value",
+          [role],
+        ),
+      ).toBe(false);
+    }
+    await expect(
+      academic("attempt_start", { taskId: randomUUID() }, "student", student),
+    ).rejects.toThrow("not found");
+    expect(tid).toBeTruthy();
+  });
+  it("supports returned homework attempts without rewriting the earlier submission", async () => {
+    const { tid } = await setup();
+    const first = await submit(tid);
+    await academic("attempt_return", {
+      attemptId: first.id,
+      reason: "Please include the missing working",
+    });
+    const second = await start(tid);
+    expect(second.attemptId).not.toBe(first.id);
+    const data = await snap();
+    expect(data.attempts.find((a) => a.id === first.id)?.receipt).toBe(
+      first.receipt,
+    );
+    expect(data.attempts.find((a) => a.id === first.id)?.state).toBe(
+      "returned",
+    );
+  });
+  it.each([
+    ["total_marks", 45.83],
+    ["equal_weight", 57.5],
+    ["weighted", 48.75],
+  ])(
+    "calculates %s averages from published results with explicit weights",
+    async (method, expected) => {
+      const { tid, pid } = await setup({ periodMethod: method, weight: 1 });
+      const first = await submit(tid);
+      const g1 = await grade(tid, first.id, 15);
+      await academic(
+        "grade_publish",
+        { taskId: tid, gradeId: g1 },
+        "admin",
+        admin,
+      );
+      const second = await academic("task_create", {
+        classId: cid,
+        periodId: pid,
+        topicId,
+        kind: "homework",
+        purpose: "summative",
+        format: "Test",
+        instructions: "Complete this independently and show working.",
+        submissionMethod: "text",
+        opensAt: "2026-10-27T10:00",
+        dueAt: "2026-10-28T16:00",
+        closesAt: "2026-10-28T16:00",
+        maxMarks: 100,
+        countsAverage: true,
+        weight: 3,
+        maxAttempts: 1,
+      });
+      await academic("task_assign", {
+        taskId: second.taskId,
+        revision: 0,
+        learners: [app],
+      });
+      const attempt = await submit(second.taskId);
+      const g2 = await grade(second.taskId, attempt.id, 40);
+      await academic(
+        "grade_publish",
+        { taskId: second.taskId, gradeId: g2 },
+        "admin",
+        admin,
+      );
+      const progress = (await snap()).progress[0];
+      expect(progress.average).toBe(expected);
+      expect(progress.assessmentCount).toBe(2);
+      expect(progress.missingCount).toBe(0);
+    },
+  );
+  it("records pending upload recovery, discard and exact hard-close rejection without a false receipt", async () => {
+    const { tid } = await setup({ submissionMethod: "file" });
+    const attempt = await start(tid),
+      id = randomUUID();
+    const args = {
+      attemptId: attempt.attemptId,
+      id,
+      name: "answer.pdf",
+      mime: "application/pdf",
+      size: 5,
+    };
+    const upload = await academic("upload_prepare", args, "student", student);
+    await expect(
+      academic("upload_resume", { ...args, size: 9 }, "student", student),
+    ).rejects.toThrow("original");
+    expect(
+      (await academic("upload_resume", args, "student", student)).storage_path,
+    ).toBe(upload.storage_path);
+    await academic(
+      "upload_discard",
+      { attemptId: attempt.attemptId, id },
+      "student",
+      student,
+    );
+    const next = randomUUID();
+    const prepared = await academic(
+      "upload_prepare",
+      { ...args, id: next },
+      "student",
+      student,
+    );
+    await db.query(
+      "insert into storage.objects(bucket_id,name,metadata) values('academic-submissions',$1,$2)",
+      [
+        prepared.storage_path,
+        JSON.stringify({ size: 5, mimetype: "application/pdf" }),
+      ],
+    );
+    await db.exec(
+      "create or replace function public.teaching_now() returns timestamptz language sql stable as $$select timestamptz '2026-10-28 16:00:00+02'$$",
+    );
+    await expect(
+      academic(
+        "upload_finalize",
+        { attemptId: attempt.attemptId, id: next },
+        "student",
+        student,
+      ),
+    ).rejects.toThrow("deadline");
+    await expect(
+      academic(
+        "submit",
+        { attemptId: attempt.attemptId, revision: 0 },
+        "student",
+        student,
+      ),
+    ).rejects.toThrow("deadline");
+    expect((await snap()).attempts[0].receipt).toBeNull();
+  });
+  it("hides questions before opening, keeps memoranda private through extensions, and blocks new access after revocation", async () => {
+    const { pid } = await setup();
+    const id = randomUUID();
+    const material = await op("material_prepare", {
+      id,
+      title: "Private diagnostic",
+      grade: "Grade 12",
+      subject: "Mathematics",
+      kind: "Question paper",
+      name: "diagnostic.pdf",
+      mime: "application/pdf",
+      size: 5,
+    });
+    await db.query(
+      "insert into storage.objects(bucket_id,name,metadata) values('teaching-materials',$1,$2)",
+      [
+        material.storage_path,
+        JSON.stringify({ size: 5, mimetype: "application/pdf" }),
+      ],
+    );
+    await op("material_finalize", { versionId: id });
+    const task = await academic(
+      "task_create",
+      {
+        classId: cid,
+        periodId: pid,
+        topicId,
+        kind: "exam",
+        purpose: "diagnostic",
+        format: "Test",
+        instructions: "Private questions must not appear before opening.",
+        submissionMethod: "text",
+        opensAt: "2026-10-27T13:00",
+        dueAt: "2026-10-27T14:00",
+        closesAt: "2026-10-27T14:00",
+        durationMinutes: 30,
+        maxMarks: 20,
+        countsAverage: false,
+        weight: 1,
+        maxAttempts: 1,
+        resources: [{ versionId: id, role: "memo" }],
+      },
+      "admin",
+      admin,
+    );
+    await academic("task_assign", {
+      taskId: task.taskId,
+      revision: 0,
+      learners: [app],
+    });
+    expect(JSON.stringify(await snap())).not.toContain(
+      "Private questions must not appear",
+    );
+    await expect(
+      val("select public.academic_file($1,'student',$2,'resource') value", [
+        student,
+        id,
+      ]),
+    ).rejects.toThrow("not released");
+    await academic("extension", {
+      taskId: task.taskId,
+      applicationId: app,
+      closesAt: "2026-10-27T15:00",
+      extraMinutes: 30,
+      reason: "Additional time approved",
+    });
+    await db.exec(
+      "create or replace function public.teaching_now() returns timestamptz language sql stable as $$select timestamptz '2026-10-27 14:00:00+02'$$",
+    );
+    await expect(
+      academic(
+        "memo_release",
+        { taskId: task.taskId, reason: "Assessment closed" },
+        "admin",
+        admin,
+      ),
+    ).rejects.toThrow("every learner");
+    await db.exec(
+      "create or replace function public.teaching_now() returns timestamptz language sql stable as $$select timestamptz '2026-10-27 15:00:00+02'$$",
+    );
+    await academic(
+      "memo_release",
+      { taskId: task.taskId, reason: "All assessment windows closed" },
+      "admin",
+      admin,
+    );
+    expect(
+      (
+        await val(
+          "select public.academic_file($1,'student',$2,'resource') value",
+          [student, id],
+        )
+      ).bucket,
+    ).toBe("teaching-materials");
+    await expect(
+      academic("extension", {
+        taskId: task.taskId,
+        applicationId: app,
+        closesAt: "2026-10-27T16:00",
+        extraMinutes: 60,
+        reason: "Cannot reopen after memo",
+      }),
+    ).rejects.toThrow("memorandum");
+    await op("student_access", {
+      applicationId: app,
+      enabled: false,
+      reason: "Learner access revoked",
+    });
+    await expect(snap()).rejects.toThrow("Student access");
+  });
+  it("preserves academic marks, frozen reports, private storage and accounting when the full setup is rerun", async () => {
+    const { tid, pid } = await setup();
+    const attempt = await submit(tid);
+    const gradeId = await grade(tid, attempt.id);
+    await academic("grade_publish", { taskId: tid, gradeId }, "admin", admin);
+    const progress = (await snap()).progress[0];
+    await academic(
+      "report_publish",
+      {
+        classId: cid,
+        periodId: pid,
+        applicationId: app,
+        fingerprint: progress.fingerprint,
+        reason: "Report reviewed before upgrade rerun",
+      },
+      "admin",
+      admin,
+    );
+    const count = await val<number>(
+      "select count(*)::integer value from public.teaching_events",
+    );
+    await db.exec(readFileSync("docs/teaching-setup.sql", "utf8"));
+    const data = await snap();
+    expect(data.grades).toHaveLength(1);
+    expect(data.reports).toHaveLength(1);
+    expect((data.reports[0].content as Record<string, unknown>).average).toBe(
+      75,
+    );
+    expect(
+      await val<number>(
+        "select count(*)::integer value from public.teaching_events",
+      ),
+    ).toBe(count);
+    expect(
+      await val<boolean>(
+        "select public value from storage.buckets where id='academic-submissions'",
+      ),
+    ).toBe(false);
+    expect(
+      await val<number>(
+        "select count(*)::integer value from public.accounting_journals",
+      ),
+    ).toBe(0);
+  });
+  it("blocks class/session release from bypassing academic paper and memorandum privacy", async () => {
+    const { pid } = await setup();
+    const id = randomUUID();
+    const resource = await op("material_prepare", {
+      id,
+      title: "Unreleased exam paper",
+      grade: "Grade 12",
+      subject: "Mathematics",
+      kind: "Question paper",
+      name: "paper.pdf",
+      mime: "application/pdf",
+      size: 5,
+    });
+    await db.query(
+      "insert into storage.objects(bucket_id,name,metadata) values('teaching-materials',$1,$2)",
+      [
+        resource.storage_path,
+        JSON.stringify({ size: 5, mimetype: "application/pdf" }),
+      ],
+    );
+    await op("material_finalize", { versionId: id });
+    await academic(
+      "task_create",
+      {
+        classId: cid,
+        periodId: pid,
+        topicId,
+        kind: "exam",
+        purpose: "summative",
+        format: "Exam",
+        instructions: "Unreleased timed assessment questions.",
+        submissionMethod: "text",
+        opensAt: "2026-10-27T13:00",
+        dueAt: "2026-10-27T14:00",
+        closesAt: "2026-10-27T14:00",
+        durationMinutes: 30,
+        maxMarks: 20,
+        countsAverage: true,
+        weight: 1,
+        maxAttempts: 1,
+        resources: [{ versionId: id, role: "instructions" }],
+      },
+      "admin",
+      admin,
+    );
+    await op("class_material", { classId: cid, versionId: id });
+    await expect(
+      op("material_release", { classId: cid, versionId: id, visible: true }),
+    ).rejects.toThrow("protected by an academic task");
+    const sid = await session();
+    await expect(
+      op("material_release", {
+        classId: cid,
+        sessionId: sid,
+        versionId: id,
+        visible: true,
+      }),
+    ).rejects.toThrow("protected by an academic task");
+  });
+  it("uses wall time inside a waiting transaction rather than its start time for deadlines", async () => {
+    await db.exec(
+      "create or replace function public.academic_now() returns timestamptz language sql volatile set search_path='' as $$select clock_timestamp()$$;begin;",
+    );
+    try {
+      const first = await val<string>(
+        "select public.academic_now()::text value",
+      );
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      expect(
+        await val<number>(
+          "select extract(epoch from (public.academic_now()-$1::timestamptz))::float value",
+          [first],
+        ),
+      ).toBeGreaterThan(0.02);
+    } finally {
+      await db.exec("rollback");
     }
   });
 });

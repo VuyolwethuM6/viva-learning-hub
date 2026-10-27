@@ -4,6 +4,7 @@ React/TypeScript website for Viva Tutorials, with Vercel API routes for enrollme
 
 ## Development documentation
 
+- [Academic workflow setup and testing](docs/academic-workflow.md): assigned work, diagnostics, submissions, marking/review/publication, timed assessments, calculated progress and frozen report PDFs.
 - [Connected portal upgrade and testing](docs/connected-portals.md): student access, day-specific timetable, tutor planning/material release and mobile fixes.
 - [Teaching setup and testing](docs/teaching-test-guide.md): classes/sessions, private materials, tutor email-link access and parent attendance.
 

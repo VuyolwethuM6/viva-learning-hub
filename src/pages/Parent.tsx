@@ -1,3 +1,4 @@
+import { ParentAcademics } from "@/components/AcademicLearner";
 import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
 import { StudentWorkspace } from "@/components/StudentWorkspace";
 import {
@@ -868,14 +869,10 @@ export default function Parent() {
                   )}
                 </section>
                 <ParentTeaching applicationId={child.id} />
-                <section className="parent-card">
-                  <h2>Results & progress</h2>
-                  <Empty title="Their next chapter starts here">
-                    Tutor assessments and progress reports will appear once the
-                    academic tools are connected. Enrollment marks are not shown
-                    as current results.
-                  </Empty>
-                </section>
+                <ParentAcademics
+                  key={`academic-${child.id}`}
+                  application={child.id}
+                />
                 <section className="parent-card parent-contact-card">
                   <Mail size={25} />
                   <h2>A conversation can make a difference.</h2>

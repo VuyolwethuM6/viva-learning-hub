@@ -1,8 +1,9 @@
+> Current delivery: the academic release now implements assigned work, submissions, human marking, admin publication, timed assessments, explicit averages and report PDFs. See [academic-workflow.md](academic-workflow.md) for current behaviour and limitations. The design below preserves the original requirements and delivery sequence.
+
 # Teaching workflow: agreed requirements and proposed delivery
 
 Recorded 27 October 2026 (Africa/Johannesburg). Release 2 now delivers day-specific scheduling, expanded tutor actions and the student portal foundation; see [connected-portals.md](connected-portals.md) for the implementation and tests. This records the full design; the teaching foundation is now implemented as
-described in teaching-test-guide.md. Learner submissions, assessments/averages,
-timed exams and public catalog editing remain planned. The owner reports the parent
+described in teaching-test-guide.md. Learner submissions, assessments/averages and timed assessments are now implemented in academic-workflow.md; public catalog editing remains planned. The owner reports the parent
 portal working; the new teaching foundation still needs its deployment acceptance
 test.
 
@@ -186,4 +187,4 @@ workflows and later targeted improvements to existing screens.
 
 The foundation must accommodate all four stages even though they are delivered
 separately. Delivered foundation/setup is documented in teaching-test-guide.md; later-stage
-features in this plan are not claimed as implemented.
+features are implemented only where confirmed in academic-workflow.md; richer curriculum/AI and public catalog work remain planned.

@@ -16,7 +16,17 @@ writeFileSync(
 );
 writeFileSync(
   "docs/teaching-setup.sql",
-  "-- Complete teaching release 2 upgrade. Run ALL of this file after parent setup.\nbegin;\n" +
+  "-- Complete teaching and academic release 3 upgrade. Run ALL of this file after parent setup.\nbegin;\n" +
     block +
+    "\ncommit;\n",
+);
+
+writeFileSync(
+  "docs/academic-setup.sql",
+  "-- Academic upgrade only. Run ALL after connected portal setup.\nbegin;\n" +
+    readFileSync(
+      "supabase/migrations/20261027164000_academic_workflow.sql",
+      "utf8",
+    ) +
     "\ncommit;\n",
 );

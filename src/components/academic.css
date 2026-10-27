@@ -1,0 +1,255 @@
+.academic-workspace {
+  min-width: 0;
+  margin: 22px 0;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  line-height: 1.65;
+  color: #211733;
+}
+.academic-heading,
+.academic-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.academic-toolbar label {
+  flex: 1;
+  min-width: min(100%, 230px);
+}
+.academic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+.academic-task-card {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left;
+  gap: 7px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.academic-task-card.selected {
+  border: 2px solid #7543e8;
+}
+.academic-task-card small,
+.academic-task-card span {
+  font-size: 12px;
+  color: #786b91;
+}
+.academic-empty {
+  padding: 20px;
+  border: 1px dashed #d7c9ee;
+  border-radius: 15px;
+  color: #786b91;
+  background: #faf8ff;
+  margin: 16px 0;
+}
+.academic-task-detail {
+  margin: 20px 0;
+}
+.academic-task-detail p {
+  margin: 10px 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.academic-instructions,
+.academic-answer {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.academic-answer {
+  background: #f5f1fc;
+  border-radius: 13px;
+  padding: 15px;
+  max-height: 320px;
+  overflow: auto;
+  font: inherit;
+  font-size: 13px;
+}
+.academic-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eee7f7;
+  min-width: 0;
+}
+.academic-row > span,
+.academic-row > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  flex: 1 1 180px;
+}
+.academic-learner {
+  padding: 20px 0;
+  border-top: 1px solid #e7dff4;
+}
+.academic-learner h3 {
+  margin: 10px 0;
+}
+.academic-receipt {
+  font-size: 11px !important;
+  background: #e8f7ee;
+  color: #187343;
+  padding: 12px;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.academic-mark-history {
+  border-left: 3px solid #e7dff4;
+  padding: 12px;
+  margin-top: 10px;
+}
+.academic-form {
+  display: grid;
+  gap: 12px;
+}
+.academic-form label,
+.academic-answer-input {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.academic-form fieldset {
+  padding: 14px;
+  border: 1px solid #e7dff4;
+  border-radius: 14px;
+}
+.academic-form input[type="checkbox"] {
+  width: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.academic-review {
+  font-size: 12px;
+}
+.academic-review > div {
+  padding: 10px 0;
+}
+.academic-review dd {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.academic-upload {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 15px 0;
+  padding: 15px;
+  background: #f6f2fc;
+  border-radius: 14px;
+  overflow-wrap: anywhere;
+}
+.academic-upload > strong {
+  flex: 1 1 100%;
+  font-size: 13px;
+}
+.academic-published {
+  border-left: 4px solid #198b46;
+  background: #eff9f3;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 20px;
+}
+.academic-average {
+  display: block;
+  font-size: 26px;
+  color: #6332cc;
+  margin: 12px 0;
+}
+.academic-countdown {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 800;
+  color: #6b39c9;
+  background: #f2ebff;
+  padding: 14px;
+  border-radius: 12px;
+}
+.academic-parent {
+  margin-top: 22px;
+}
+.academic-parent > summary {
+  font-weight: 800;
+  cursor: pointer;
+}
+.parent-app .academic-workspace button {
+  border: 1px solid #e7dff4;
+  border-radius: 12px;
+  padding: 10px 14px;
+  min-height: 44px;
+  background: #f5f0ff;
+  color: #5428cc;
+  font-weight: 700;
+}
+.parent-app .academic-workspace h2 {
+  font-size: 21px;
+}
+.parent-app .academic-workspace h3 {
+  font-size: 16px;
+}
+.academic-panel {
+  background: white;
+  border: 1px solid #e7dff4;
+  border-radius: 18px;
+  padding: 18px;
+  margin-top: 20px;
+}
+.academic-workspace input,
+.academic-workspace select,
+.academic-workspace textarea {
+  max-width: 100%;
+}
+.academic-workspace input[type="datetime-local"] {
+  min-width: 0;
+}
+.academic-answer-input textarea {
+  width: 100%;
+  border: 1px solid #e7dff4;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 400;
+}
+.academic-workspace summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+.academic-workspace button {
+  touch-action: manipulation;
+}
+@media (max-width: 420px) {
+  .academic-workspace .teaching-actions > * {
+    flex: 1 1 140px;
+  }
+  .academic-workspace .page-heading h1 {
+    font-size: 25px;
+  }
+}
+
+.academic-document-scope.admin-shell {
+  min-height: 0;
+  background: transparent;
+  padding: 0;
+}
+.academic-workspace .learning-card {
+  background: #fff;
+  border: 1px solid #e7dff4;
+  border-radius: 20px;
+  padding: 20px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
