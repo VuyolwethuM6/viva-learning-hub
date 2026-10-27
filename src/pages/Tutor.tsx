@@ -194,6 +194,9 @@ export default function Tutor() {
             Need access?{" "}
             <WhatsAppButton message="Hello Viva, I need help accessing the tutor portal." />
           </small>
+          <a className="portal-login-privacy" href="/privacy-policy">
+            Privacy
+          </a>
         </main>
       </div>
     );
@@ -232,10 +235,6 @@ export default function Tutor() {
             <h1>Your teaching account</h1>
             <p>{user.email}</p>
             <p>Your assigned teaching account.</p>
-            <WhatsAppButton message="Hello Viva, I need assistance with my tutor account or teaching schedule." />
-            <p>
-              <a href="/privacy-policy">Privacy</a>
-            </p>
             <button onClick={() => setLogout(true)}>Sign out</button>
           </section>
         ) : section === "Work" ? (
@@ -247,14 +246,6 @@ export default function Tutor() {
             onNavigate={setSection}
             onSessionExpired={expired}
           />
-        )}
-        {section !== "More" && (
-          <div className="portal-support">
-            <WhatsAppButton
-              message={`Hello Viva, I need help with ${section.toLowerCase()} in my tutor portal.`}
-            />
-            <a href="/privacy-policy">Privacy</a>
-          </div>
         )}
       </main>
       <PortalDock>

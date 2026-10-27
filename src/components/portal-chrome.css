@@ -76,3 +76,14 @@
     margin-bottom: 24px;
   }
 }
+
+.portal-login-privacy {
+  display: block;
+  margin-top: 16px;
+  text-align: center;
+  font-size: 12px;
+  text-decoration: underline;
+}
+.login-footnote .viva-whatsapp {
+  margin-right: 12px;
+}

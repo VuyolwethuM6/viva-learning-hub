@@ -13,8 +13,8 @@ policies are unchanged.
 
 - Fixed mobile docks rendered outside page containers in admin, parent, tutor
   and student portals. Bottom clearance and device safe-area padding; desktop
-  navigation remains available. Dashboard footer branding removed; Privacy kept.
-- Portal support uses WhatsApp +27 73 391 3206, with editable contextual messages.
+  navigation remains available. Dashboard footer branding removed. WhatsApp and Privacy are now on login screens only.
+- Login-screen support uses WhatsApp +27 73 391 3206, with editable contextual messages.
   Opening a link does not send a message or guarantee a response time.
 - Tutor Today, Classes, Work and Account. Today/Upcoming/Needs
   completion/Past session views use stored records. Class-scoped topic creation,

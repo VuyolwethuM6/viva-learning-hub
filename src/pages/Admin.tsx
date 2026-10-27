@@ -795,7 +795,8 @@ export default function Admin() {
               Back to Viva Tutorials
             </a>
             <p className="login-footnote">
-              Need account help? Contact the owner of your Viva workspace.
+              <WhatsAppButton message="Hello Viva, I need help accessing the admin portal." />
+              <a href="/privacy-policy">Privacy</a>
             </p>
           </section>
         </div>
@@ -1469,15 +1470,7 @@ export default function Admin() {
               )}
             </>
           )}
-          <div className="portal-support">
-            <WhatsAppButton
-              message={`Hello Viva, I need assistance with the admin ${tab.toLowerCase()} section.`}
-            />
-          </div>
         </main>
-        <a className="portal-privacy" href="/privacy-policy">
-          Privacy
-        </a>
       </div>
       <PortalDock>
         <nav className="admin-bottom-nav" aria-label="Mobile navigation">
