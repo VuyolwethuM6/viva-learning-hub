@@ -24,6 +24,14 @@ export type Application = {
   status: string;
   created_at: string;
   tuition_start_date: string | null;
+  enrollment_state?: string;
+  activated_at?: string | null;
+  billing_end_date?: string | null;
+  withdrawn_on?: string | null;
+  lifecycle_reason?: string | null;
+  arrangement_until?: string | null;
+  arrangement_note?: string | null;
+  activation_invoice_id?: string | null;
 };
 export type Invoice = {
   id: string;
@@ -40,6 +48,8 @@ export type Invoice = {
   programme_weekdays?: number[];
   amount_cents: number;
   paid_cents: number;
+  credited_cents?: number;
+  recognised_cents?: number;
   created_at: string;
 };
 export type Payment = {
@@ -51,6 +61,9 @@ export type Payment = {
   transaction_reference: string;
   note: string;
   verified_by: string;
+  receipt_id?: string;
+  net_cents?: number;
+  receipt_reversed_at?: string | null;
 };
 export type Audit = {
   id: string;
@@ -63,7 +76,7 @@ export type Audit = {
 };
 export type Message = {
   id: string;
-  invoice_id: string;
+  invoice_id: string | null;
   kind: string;
   state: string;
   attempts: number;
@@ -82,6 +95,10 @@ export type Message = {
     month?: string;
     balanceCents?: number;
     paidCents?: number;
+    documentNumber?: string;
+    payer?: string;
+    totalCents?: number;
+    creditCents?: number;
   };
 };
 export type Snapshot = {
@@ -95,7 +112,17 @@ export type Snapshot = {
   today: string;
   truncated: boolean;
   messages_truncated?: boolean;
+  finance_role?: string;
 };
+export const invoiceCharge = (invoice: Invoice) =>
+  invoice.amount_cents - Number(invoice.credited_cents || 0);
+export const invoiceBalance = (invoice: Invoice) =>
+  invoiceCharge(invoice) - Number(invoice.paid_cents);
+export const learnerState = (application: Application) =>
+  application.enrollment_state &&
+  application.enrollment_state !== "not_enrolled"
+    ? application.enrollment_state
+    : application.status;
 export const rand = (cents: number) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(
     cents / 100,

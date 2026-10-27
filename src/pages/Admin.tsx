@@ -42,12 +42,21 @@ import {
 } from "lucide-react";
 import {
   firstInvoiceEstimate,
+  invoiceBalance,
+  invoiceCharge,
+  learnerState,
   rand,
   type Application,
   type Invoice,
   type Snapshot,
   type Message,
 } from "@/lib/admin-types";
+import { FinanceWorkspace } from "@/components/admin/FinanceWorkspace";
+import {
+  LearnerAccountControls,
+  InvoiceAccountingControls,
+} from "@/components/admin/LearnerAccountControls";
+import { randToCents } from "@/lib/accounting-input";
 import { AuditTrail } from "@/components/admin/AuditTrail";
 import { NotificationQueue } from "@/components/admin/NotificationQueue";
 import { humanStatus, notificationName } from "@/lib/admin-format";
@@ -179,6 +188,10 @@ export default function Admin() {
     blobURLs.current.forEach((url) => URL.revokeObjectURL(url));
     blobURLs.current.clear();
   }, []);
+  useEffect(() => {
+    window.addEventListener("viva-admin-expired", clearSession);
+    return () => window.removeEventListener("viva-admin-expired", clearSession);
+  }, [clearSession]);
   const refresh = useCallback(async () => {
     try {
       const snapshot = await api<Snapshot>("records");
@@ -198,6 +211,16 @@ export default function Admin() {
           "The admin response was incomplete. Check migrations and refresh.",
         );
       setData(snapshot);
+      setSelected((previous) =>
+        previous
+          ? snapshot.applications.find((a) => a.id === previous.id) || null
+          : null,
+      );
+      setInvoice((previous) =>
+        previous
+          ? snapshot.invoices.find((i) => i.id === previous.id) || null
+          : null,
+      );
       return snapshot;
     } catch (e) {
       if (e instanceof ApiError && [401, 403].includes(e.status))
@@ -273,24 +296,31 @@ export default function Admin() {
     setPaymentId(crypto.randomUUID());
     setError("");
   }
+  const readOnly = data?.finance_role === "viewer";
   const apps = data?.applications || [];
   const invoices = data?.invoices || [];
   const payments = data?.payments || [];
   const appById = (id: string) => apps.find((a) => a.id === id);
   const invoiceStatus = (i: Invoice) =>
-    Number(i.paid_cents) >= i.amount_cents
-      ? "paid"
-      : Number(i.paid_cents) > 0
-        ? "part paid"
-        : i.due_date < (data?.today || "")
-          ? "overdue"
-          : "unpaid";
+    invoiceCharge(i) <= 0
+      ? "credited"
+      : Number(i.paid_cents) >= invoiceCharge(i)
+        ? "paid"
+        : Number(i.paid_cents) > 0
+          ? "part paid"
+          : i.due_date < (data?.today || "")
+            ? "overdue"
+            : "unpaid";
   const sectionApps = apps.filter((a) =>
-    tab === "Students" ? a.status === "active" : a.status !== "active",
+    tab === "Students"
+      ? a.status === "active" ||
+        ["suspended", "withdrawn"].includes(a.enrollment_state || "")
+      : a.status !== "active" &&
+        !["suspended", "withdrawn"].includes(a.enrollment_state || ""),
   );
   const visibleApps = sectionApps.filter(
     (a) =>
-      (filter === "all" || a.status === filter) &&
+      (filter === "all" || learnerState(a) === filter) &&
       `${a.learner_name} ${a.student_number} ${a.guardian_email} ${a.application_number}`
         .toLowerCase()
         .includes(query.toLowerCase()),
@@ -299,7 +329,10 @@ export default function Admin() {
     (p) => p.grade === selected?.grade_level,
   );
   const estimate =
-    selected && programme
+    selected &&
+    programme &&
+    Number(start.slice(5, 7)) >= 2 &&
+    Number(start.slice(5, 7)) <= 11
       ? firstInvoiceEstimate(
           Number(selected.monthly_fee),
           start,
@@ -311,15 +344,11 @@ export default function Admin() {
   const monthInvoices = invoices.filter(
     (i) => i.billing_month.slice(0, 7) === billingMonth,
   );
-  const billed = monthInvoices.reduce((n, i) => n + i.amount_cents, 0);
+  const billed = monthInvoices.reduce((n, i) => n + invoiceCharge(i), 0);
   const collected = monthInvoices.reduce((n, i) => n + Number(i.paid_cents), 0);
-  const outstanding = monthInvoices.reduce(
-    (n, i) => n + i.amount_cents - Number(i.paid_cents),
-    0,
-  );
+  const outstanding = monthInvoices.reduce((n, i) => n + invoiceBalance(i), 0);
   const overdue = invoices.filter(
-    (i) =>
-      i.due_date < (data?.today || "") && i.amount_cents > Number(i.paid_cents),
+    (i) => i.due_date < (data?.today || "") && invoiceBalance(i) > 0,
   );
   const queue = (data?.messages || []).filter(
     (m) => !["sent", "cancelled"].includes(m.state),
@@ -356,9 +385,11 @@ export default function Admin() {
   const selectedInvoices = invoices.filter(
     (i) => i.application_id === selected?.id,
   );
-  const firstInvoice = [...selectedInvoices].sort((a, b) =>
-    a.billing_month.localeCompare(b.billing_month),
-  )[0];
+  const firstInvoice =
+    selectedInvoices.find((i) => i.id === selected?.activation_invoice_id) ||
+    [...selectedInvoices]
+      .filter((i) => invoiceCharge(i) > 0)
+      .sort((a, b) => a.billing_month.localeCompare(b.billing_month))[0];
   const nextMonth = data
     ? new Date(`${data.today.slice(0, 7)}-01T12:00:00Z`)
     : null;
@@ -406,16 +437,17 @@ export default function Admin() {
     }
   }
   async function openPDF(
-    kind: "invoice" | "receipt",
+    kind: string,
     id: string,
     title: string,
+    range?: { from: string; to: string },
   ) {
     await run(async () => {
       const controller = new AbortController();
       const timer = window.setTimeout(() => controller.abort(), 30000);
       try {
         const result = await fetch(
-          `/api/admin/documents?kind=${kind}&id=${encodeURIComponent(id)}`,
+          `/api/admin/documents?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}${range ? `&from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}` : ""}`,
           { credentials: "same-origin", signal: controller.signal },
         );
         if (!result.ok) {
@@ -564,7 +596,7 @@ export default function Admin() {
               <td data-label="Due">{dateLabel(i.due_date)}</td>
               <td data-label="Total">{rand(i.amount_cents)}</td>
               <td data-label="Outstanding">
-                <strong>{rand(i.amount_cents - Number(i.paid_cents))}</strong>
+                <strong>{rand(invoiceBalance(i))}</strong>
               </td>
               <td data-label="Status">
                 <Badge value={stage(invoiceStatus(i))} />
@@ -908,7 +940,8 @@ export default function Admin() {
                         [
                           "Active learners",
                           "active",
-                          apps.filter((a) => a.status === "active").length,
+                          apps.filter((a) => learnerState(a) === "active")
+                            .length,
                         ],
                         [
                           "Pending review",
@@ -1092,13 +1125,14 @@ export default function Admin() {
                         {Array.from(
                           new Set(
                             apps
-                              .filter((a) => a.status === "active")
+                              .filter((a) => learnerState(a) === "active")
                               .map((a) => a.grade_level),
                           ),
                         ).map((grade) => {
                           const count = apps.filter(
                             (a) =>
-                              a.status === "active" && a.grade_level === grade,
+                              learnerState(a) === "active" &&
+                              a.grade_level === grade,
                           ).length;
                           return (
                             <div key={grade}>
@@ -1106,7 +1140,7 @@ export default function Admin() {
                               <div>
                                 <i
                                   style={{
-                                    width: `${(count / Math.max(1, apps.filter((a) => a.status === "active").length)) * 100}%`,
+                                    width: `${(count / Math.max(1, apps.filter((a) => learnerState(a) === "active").length)) * 100}%`,
                                   }}
                                 />
                               </div>
@@ -1114,7 +1148,7 @@ export default function Admin() {
                             </div>
                           );
                         })}
-                        {!apps.some((a) => a.status === "active") && (
+                        {!apps.some((a) => learnerState(a) === "active") && (
                           <p className="admin-muted">
                             No active learners yet. Approved learners join this
                             view after their first invoice is settled and
@@ -1137,7 +1171,7 @@ export default function Admin() {
                       <p>
                         {tab === "Applications"
                           ? "Review applications and follow approvals through first payment."
-                          : "Activated learners who have completed approval and first payment."}
+                          : "Enrolled learner accounts, including active, suspended and withdrawn learners."}
                       </p>
                     </div>
                     <span className="record-count">
@@ -1156,35 +1190,42 @@ export default function Admin() {
                         placeholder="Search learner, student number or parent email"
                       />
                     </label>
-                    {tab === "Applications" && (
+                    {
                       <label className="status-select">
-                        <span>Application status</span>
+                        <span>
+                          {tab === "Applications"
+                            ? "Application status"
+                            : "Learner status"}
+                        </span>
                         <select
                           value={filter}
                           onChange={(e) => setFilter(e.target.value)}
                         >
                           <option value="all">All statuses</option>
-                          {[
-                            "draft",
-                            "pending_review",
-                            "pending_payment",
-                            "rejected",
-                            "archived",
-                          ].map((status) => (
+                          {(tab === "Applications"
+                            ? [
+                                "draft",
+                                "pending_review",
+                                "pending_payment",
+                                "rejected",
+                                "archived",
+                              ]
+                            : ["active", "suspended", "withdrawn"]
+                          ).map((status) => (
                             <option key={status} value={status}>
                               {humanStatus(status)}
                             </option>
                           ))}
                         </select>
                       </label>
-                    )}
+                    }
                   </div>
                   <div className="learner-grid">
                     {visibleApps.map((a) => (
                       <article className="learner-card" key={a.id}>
                         <div className="learner-top">
                           <Avatar name={a.learner_name} />
-                          <Badge value={a.status} />
+                          <Badge value={learnerState(a)} />
                         </div>
                         <h2>{a.learner_name}</h2>
                         <p className="student-id">
@@ -1287,72 +1328,86 @@ export default function Admin() {
                       </div>
                     </div>
                   </section>
-                  <div className="finance-banner">
-                    <CalendarDays size={22} />
-                    <div>
-                      <strong>Due on the 1st · Reminders from the 3rd</strong>
-                      <p>
-                        First payment is required before activation. Scheduled
-                        collection is not enabled.
-                      </p>
-                    </div>
-                  </div>
-                  <section className="admin-card">
-                    <div className="card-heading">
+                  <FinanceWorkspace
+                    snapshot={data}
+                    changed={refresh}
+                    onPDF={openPDF}
+                    user={user}
+                  >
+                    <div className="finance-banner">
+                      <CalendarDays size={22} />
                       <div>
-                        <h2>Invoice register</h2>
+                        <strong>Due on the 1st · Reminders from the 3rd</strong>
                         <p>
-                          Open an invoice to view documents or record verified
-                          funds.
+                          First payment is required before activation. Manage
+                          scheduled billing and email dispatch in Finance
+                          Controls.
                         </p>
                       </div>
                     </div>
-                    <div className="admin-toolbar">
-                      <button
-                        disabled={busy || Number(data.today.slice(8)) < 25}
-                        onClick={() =>
-                          ask(
-                            "Generate next month’s invoices?",
-                            <p>
-                              This creates one invoice per eligible active
-                              learner for {nextMonth!.toISOString().slice(0, 7)}{" "}
-                              and queues the invoice emails. Existing invoices
-                              are retained.
-                            </p>,
-                            "Generate invoices",
-                            async () => {
-                              await mutate("generate_month", {
-                                month: nextMonth!.toISOString().slice(0, 10),
-                              });
-                            },
-                          )
-                        }
-                      >
-                        <FileText size={16} />
-                        Generate next month’s invoices
-                      </button>
-                      <button
-                        disabled={busy || Number(data.today.slice(8)) < 3}
-                        onClick={() =>
-                          ask(
-                            "Queue payment reminders?",
-                            <p>
-                              This queues one monthly notice per invoice with an
-                              unpaid balance. Review the queue before sending.
-                            </p>,
-                            "Queue reminders",
-                            async () => {
-                              await mutate("queue_reminders", {});
-                            },
-                          )
-                        }
-                      >
-                        <Bell size={16} />
-                        Queue unpaid-balance reminders
-                      </button>
-                    </div>
-                    {invoiceCards}
-                  </section>
+                    <section className="admin-card">
+                      <div className="card-heading">
+                        <div>
+                          <h2>Invoice register</h2>
+                          <p>
+                            Open an invoice to view documents or record verified
+                            funds.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="admin-toolbar">
+                        <button
+                          disabled={
+                            busy || readOnly || Number(data.today.slice(8)) < 25
+                          }
+                          onClick={() =>
+                            ask(
+                              "Generate next month’s invoices?",
+                              <p>
+                                This creates one invoice per eligible active
+                                learner for{" "}
+                                {nextMonth!.toISOString().slice(0, 7)} and
+                                queues the invoice emails. Existing invoices are
+                                retained.
+                              </p>,
+                              "Generate invoices",
+                              async () => {
+                                await mutate("generate_month", {
+                                  month: nextMonth!.toISOString().slice(0, 10),
+                                });
+                              },
+                            )
+                          }
+                        >
+                          <FileText size={16} />
+                          Generate next month’s invoices
+                        </button>
+                        <button
+                          disabled={
+                            busy || readOnly || Number(data.today.slice(8)) < 3
+                          }
+                          onClick={() =>
+                            ask(
+                              "Queue payment reminders?",
+                              <p>
+                                This queues one monthly notice per invoice with
+                                an unpaid balance. Review the queue before
+                                sending.
+                              </p>,
+                              "Queue reminders",
+                              async () => {
+                                await mutate("queue_reminders", {});
+                              },
+                            )
+                          }
+                        >
+                          <Bell size={16} />
+                          Queue unpaid-balance reminders
+                        </button>
+                      </div>
+                      {invoiceCards}
+                    </section>
+                  </FinanceWorkspace>
                 </>
               )}
               {tab === "Notifications" && (
@@ -1373,7 +1428,7 @@ export default function Admin() {
                     messages={data.messages}
                     invoices={invoices}
                     applications={apps}
-                    busy={busy}
+                    busy={busy || readOnly}
                     error={error}
                     truncated={data.messages_truncated}
                     onSend={sendNotification}
@@ -1492,7 +1547,7 @@ export default function Admin() {
           {!confirmation && !viewer && feedback}
           <section className="profile-hero">
             <Avatar name={selected.learner_name} />
-            <Badge value={selected.status} />
+            <Badge value={learnerState(selected)} />
             <h2>{selected.learner_name}</h2>
             <p>
               {selected.grade_level} · {selected.tutoring_mode}
@@ -1671,7 +1726,7 @@ export default function Admin() {
                 <div className="profile-actions">
                   <button
                     className="admin-primary"
-                    disabled={busy || !estimate}
+                    disabled={busy || readOnly || !estimate}
                     onClick={() =>
                       ask(
                         "Approve this application?",
@@ -1707,7 +1762,7 @@ export default function Admin() {
                   </button>
                   <button
                     className="admin-danger"
-                    disabled={busy || note.trim().length < 5}
+                    disabled={busy || readOnly || note.trim().length < 5}
                     onClick={() =>
                       ask(
                         "Reject this application?",
@@ -1749,8 +1804,10 @@ export default function Admin() {
                   className="admin-primary"
                   disabled={
                     busy ||
+                    readOnly ||
                     !firstInvoice ||
-                    firstInvoice.amount_cents > Number(firstInvoice.paid_cents)
+                    invoiceCharge(firstInvoice) <= 0 ||
+                    invoiceBalance(firstInvoice) > 0
                   }
                   onClick={() =>
                     ask(
@@ -1775,6 +1832,15 @@ export default function Admin() {
               </div>
             )}
           </details>
+          <LearnerAccountControls
+            application={selected}
+            today={data?.today || ""}
+            role={data?.finance_role}
+            changed={refresh}
+            onStatement={() =>
+              void openPDF("statement", selected.id, "Family account statement")
+            }
+          />
           <details className="profile-section" open>
             <summary>
               <Wallet size={18} />
@@ -1843,9 +1909,7 @@ export default function Admin() {
               </span>
               <span>
                 Outstanding
-                <strong>
-                  {rand(invoice.amount_cents - Number(invoice.paid_cents))}
-                </strong>
+                <strong>{rand(invoiceBalance(invoice))}</strong>
               </span>
             </div>
           </section>
@@ -1888,6 +1952,12 @@ export default function Admin() {
               <Eye size={19} />
             </button>
           </section>
+          <InvoiceAccountingControls
+            invoice={invoice}
+            role={data?.finance_role}
+            changed={refresh}
+            onPDF={openPDF}
+          />
           <details className="profile-section" open>
             <summary>
               <CheckCircle2 size={18} />
@@ -1900,12 +1970,25 @@ export default function Admin() {
                 <div className="payment-history" key={payment.id}>
                   <div>
                     <strong>{rand(payment.amount_cents)}</strong>
-                    <Badge value="paid" />
+                    <Badge
+                      value={
+                        payment.receipt_reversed_at
+                          ? "reversed"
+                          : payment.net_cents !== undefined &&
+                              payment.net_cents < payment.amount_cents
+                            ? "adjusted"
+                            : "paid"
+                      }
+                    />
                   </div>
                   <p>
                     {dateLabel(payment.paid_on)} · {payment.method}
                   </p>
                   <small>{payment.transaction_reference}</small>
+                  {payment.net_cents !== undefined &&
+                    payment.net_cents !== payment.amount_cents && (
+                      <p>Currently allocated: {rand(payment.net_cents)}</p>
+                    )}
                   <button
                     disabled={busy}
                     onClick={() =>
@@ -1927,7 +2010,7 @@ export default function Admin() {
               </p>
             )}
           </details>
-          {invoice.amount_cents > Number(invoice.paid_cents) && (
+          {invoiceBalance(invoice) > 0 && data?.finance_role !== "viewer" && (
             <section className="profile-section payment-section">
               <h3>Record verified payment</h3>
               <p className="admin-muted">
@@ -1948,7 +2031,7 @@ export default function Admin() {
                   const payload = {
                     invoiceId: invoice.id,
                     paymentId,
-                    amountCents: Math.round(Number(amount) * 100),
+                    amountCents: randToCents(amount),
                     paidOn: fields.get("paidOn"),
                     method: fields.get("method"),
                     reference: fields.get("reference"),
@@ -1998,9 +2081,7 @@ export default function Admin() {
                     inputMode="decimal"
                     step="0.01"
                     min="0.01"
-                    max={
-                      (invoice.amount_cents - Number(invoice.paid_cents)) / 100
-                    }
+                    max={invoiceBalance(invoice) / 100}
                     required
                   />
                 </label>
@@ -2018,7 +2099,7 @@ export default function Admin() {
                   <label>
                     Method
                     <select name="method">
-                      {["EFT", "Cash", "Card", "SnapScan"].map((m) => (
+                      {["EFT", "Cash"].map((m) => (
                         <option key={m}>{m}</option>
                       ))}
                     </select>

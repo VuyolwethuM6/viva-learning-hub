@@ -1,9 +1,10 @@
 # Viva Tutorials
 
-React/TypeScript website for Viva Tutorials, with Vercel API routes for enrollment, enquiries and paid PDF delivery. Documentation reviewed on 26 October 2026.
+React/TypeScript website for Viva Tutorials, with Vercel API routes for enrollment, enquiries and paid PDF delivery. Documentation reviewed on 27 October 2026.
 
 ## Development documentation
 
+- [Accounting setup and complete testing](docs/accounting-test-guide.md): combined migration, receipts/credits, expenses, reconciliation, reports, lifecycle controls and scheduled work.
 - [Admin workflow and tuition policies](docs/admin-workflow.md): account authorization, migrations, payment rules and end-to-end testing.
 - [Development and architecture](docs/development.md): installation, runtime commands, repository map and checks.
 - [Implementation status and next work](docs/implementation-status.md): current behavior, verification evidence, gaps and proposed priorities.
@@ -48,9 +49,9 @@ The enrollment form and pricing page use these monthly subject-based fees:
 | Grades 10–12   |        R500 |         R800 |         R1,100 |
 | Matric Rewrite |        R550 |         R900 |         R1,200 |
 
-First-month tuition is prorated using the learner's grade programme: Grades 8–11 include Monday–Saturday; Grade 12 includes Sunday feedback as well; Matric Rewrite counts all five weekdays. Configured closures are excluded. First payment is required before activation. Continuing invoices are issued on the 25th, due on the 1st, with unpaid-balance reminders from the 3rd. Billing/reminder actions are manual in this milestone; no scheduled collection is enabled.
+First-month tuition is prorated using the learner's grade programme: Grades 8–11 include Monday–Saturday; Grade 12 includes Sunday feedback as well; Matric Rewrite counts all five weekdays. Configured closures are excluded. First payment is required before activation. Continuing invoices are issued on the 25th, due on the 1st, with unpaid-balance reminders from the 3rd. Teaching and routine billing stop in December/January. Scheduled billing and message dispatch are available but start disabled; EFT/cash receipt is still verified manually.
 
-See [admin workflow and test setup](docs/admin-workflow.md) for the agreed policies, database migrations, admin account authorization and verification checklist. The branded, responsive `/admin` workspace provides application review, private report previews, invoice/receipt PDFs, verified manual payment recording, activation and readable audit history. Applications and activated Students have separate lists. Notifications separates waiting emails from completed history and supports audited cancellation while preserving financial and receipt records. Invoice/receipt emails retain the legacy branding and attach the corresponding PDF. New invoice numbers use the tuition month: November's first invoice is `VT-20261101`, even when issued in October. Teaching portals, automatic tuition payments and suspension/withdrawal controls remain future work.
+See [admin workflow and test setup](docs/admin-workflow.md) for the agreed policies, database migrations, admin account authorization and verification checklist. The branded, responsive `/admin` workspace provides application review, private report previews, invoice/receipt PDFs, verified manual payment recording, activation and readable audit history. Applications and activated Students have separate lists. Notifications separates waiting emails from completed history and supports audited cancellation while preserving financial and receipt records. Invoice/receipt emails retain the legacy branding and attach the corresponding PDF. New invoice numbers use the tuition month: November's first invoice is `VT-20261101`, even when issued in October. Finance now includes an immutable double-entry ledger, family credits, refunds and corrections, expenses, bank/cash reconciliation, financial reports, learner lifecycle controls and optional scheduled billing/dispatch. Teaching portals and online tuition collection remain future work.
 
 ## Study Materials
 

@@ -4,10 +4,16 @@
       "includeFiles": "private/materials/**"
     },
     "api/admin/documents.ts": {
-      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}"
+      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
+      "maxDuration": 60
     },
     "api/admin/messages.ts": {
-      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}"
+      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
+      "maxDuration": 60
+    },
+    "api/admin/accounting.ts": {
+      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
+      "maxDuration": 60
     }
   },
   "headers": [
@@ -126,6 +132,12 @@
     {
       "source": "/admin",
       "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/admin/accounting?task=scheduled",
+      "schedule": "5 6 * * *"
     }
   ]
 }

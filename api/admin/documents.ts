@@ -10,6 +10,12 @@ import {
 } from "../_lib/http.js";
 import { buildTuitionPDF, documentFilename } from "../_lib/tuition-document.js";
 import { loadTuitionDocument } from "../_lib/tuition-document-data.js";
+import {
+  accountingFilename,
+  buildAccountingPDF,
+  type AccountingDocument,
+} from "../_lib/accounting-document.js";
+import { validAccountingDate } from "../../src/lib/accounting-input.js";
 export default async function handler(
   request: ApiRequest,
   response: ServerResponse,
@@ -21,6 +27,43 @@ export default async function handler(
       throw new HttpError(405, "Method not allowed.");
     const url = new URL(request.url || "", "http://localhost");
     const kind = url.searchParams.get("kind");
+    if (
+      kind &&
+      [
+        "account_receipt",
+        "credit_note",
+        "refund",
+        "allocation",
+        "statement",
+        "financial_report",
+      ].includes(kind)
+    ) {
+      const from = url.searchParams.get("from"),
+        to = url.searchParams.get("to");
+      if (
+        (from && !validAccountingDate(from)) ||
+        (to && !validAccountingDate(to))
+      )
+        throw new HttpError(400, "Choose valid document dates.");
+      const document = await rpc<AccountingDocument>(
+        "accounting_document_data",
+        {
+          p_actor: actor.id,
+          p_kind: kind,
+          p_id: uuid(url.searchParams.get("id")),
+          p_from: from,
+          p_to: to,
+        },
+      );
+      const bytes = await buildAccountingPDF(document);
+      response.setHeader("Content-Type", "application/pdf");
+      response.setHeader("X-Content-Type-Options", "nosniff");
+      response.setHeader(
+        "Content-Disposition",
+        `inline; filename="${accountingFilename(document)}"`,
+      );
+      return response.end(Buffer.from(bytes));
+    }
     if (kind !== "invoice" && kind !== "receipt" && kind !== "report")
       throw new HttpError(400, "Choose invoice, receipt or report card.");
     const id = uuid(url.searchParams.get("id"));

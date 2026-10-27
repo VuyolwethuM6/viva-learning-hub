@@ -50,6 +50,7 @@ function authorizedFetch() {
     if (url.endsWith("/rest/v1/rpc/admin_snapshot"))
       return json({ applications: [], invoices: [] });
     if (url.endsWith("/rest/v1/rpc/admin_mutate")) return json({});
+    if (url.endsWith("/rest/v1/rpc/accounting_write_ready")) return json(null);
     throw new Error("Unexpected external operation");
   });
 }

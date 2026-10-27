@@ -50,11 +50,53 @@ export function AuditTrail({
     return { message, invoice, application, actor };
   };
   const groups: Record<string, string[]> = {
-    reviews: ["approve", "reject", "note", "activate"],
-    payments: ["payment"],
-    billing: ["generate_month", "queue_reminders"],
+    reviews: [
+      "approve",
+      "reject",
+      "note",
+      "activate",
+      "withdraw",
+      "suspend",
+      "reactivate",
+      "arrangement",
+    ],
+    payments: [
+      "payment",
+      "receipt",
+      "allocate",
+      "refund",
+      "reverse_receipt",
+      "reverse_refund",
+    ],
+    billing: [
+      "generate_month",
+      "queue_reminders",
+      "credit_note",
+      "recognise",
+      "accounting_run",
+    ],
+    accounting: [
+      "bill",
+      "pay_bill",
+      "reverse_bill",
+      "reverse_bill_payment",
+      "cash_deposit",
+      "cash_withdrawal",
+      "journal",
+      "reverse_journal",
+      "bank_import",
+      "bank_match",
+      "bank_unmatch",
+      "bank_timing",
+      "bank_timing_remove",
+      "close_period",
+      "reopen_period",
+      "settings",
+      "role",
+      "account",
+    ],
     notifications: ["send_message", "cancel_message"],
-    documents: ["view_document"],
+    documents: ["view_document", "accounting_document", "expense_document"],
   };
   const events = data.audit
     .filter((event) => {
@@ -96,6 +138,7 @@ export function AuditTrail({
               <option value="billing">Billing and reminders</option>
               <option value="notifications">Notifications</option>
               <option value="documents">Document access</option>
+              <option value="accounting">Accounting and bank</option>
             </select>
           </label>
         </div>
@@ -121,7 +164,17 @@ export function AuditTrail({
                   By {actor}
                   {event.actor_id === user.id ? " (you)" : ""}
                 </small>
-                {event.action === "payment" && (
+                {[
+                  "payment",
+                  "receipt",
+                  "refund",
+                  "pay_bill",
+                  "bill",
+                  "cash_deposit",
+                  "cash_withdrawal",
+                  "allocate",
+                  "credit_note",
+                ].includes(event.action) && (
                   <p className="audit-summary">
                     {typeof details.amountCents === "number"
                       ? rand(details.amountCents)
@@ -138,6 +191,12 @@ export function AuditTrail({
                       ? ` Transaction reference: ${details.reference}.`
                       : ""}
                   </p>
+                )}
+                {typeof details.number === "string" && (
+                  <p className="audit-context">{details.number}</p>
+                )}
+                {typeof details.description === "string" && (
+                  <p className="audit-summary">{details.description}</p>
                 )}
                 {event.action === "approve" && (
                   <p className="audit-summary">

@@ -76,6 +76,7 @@ export default async function handler(
     ];
     if (!actions.includes(String(body.action)))
       throw new HttpError(400, "Unknown admin action.");
+    await rpc("accounting_write_ready", { p_actor: actor.id });
     const result = await rpc("admin_mutate", {
       p_actor: actor.id,
       p_action: body.action,
