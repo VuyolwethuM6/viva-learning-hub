@@ -1,9 +1,9 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { AcademicStaff } from "@/components/AcademicStaff";
 import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import {
-  Loader2,
   LogOut,
   Mail,
   Home,
@@ -112,12 +112,9 @@ export default function Tutor() {
   );
   if (loading)
     return (
-      <div className="admin-shell tutor-login">
+      <div className="admin-shell viva-loading-screen">
         {meta}
-        <div className="tutor-login-card">
-          <Loader2 className="spin" />
-          <p>Opening your teaching workspace…</p>
-        </div>
+        <VivaLoader size="page" label="Opening your teaching workspace…" />
       </div>
     );
   if (!user)
@@ -154,7 +151,7 @@ export default function Tutor() {
               </label>
               <button className="admin-primary" disabled={busy}>
                 {busy ? (
-                  <Loader2 className="spin" size={18} />
+                  <VivaLoader size="button" decorative />
                 ) : (
                   <Mail size={18} />
                 )}

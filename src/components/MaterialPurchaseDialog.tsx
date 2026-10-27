@@ -1,5 +1,6 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { useRef, useState, type FormEvent } from 'react';
-import { ArrowRight, LoaderCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -103,7 +104,7 @@ export default function MaterialPurchaseDialog({ material, open, onOpenChange }:
             {error && <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>}
             <Button type="submit" disabled={submitting} aria-busy={submitting} className="mt-5 min-h-12 w-full rounded-lg bg-[#7949fe] font-bold text-white hover:bg-[#6237e8] disabled:cursor-wait disabled:opacity-70">
               {submitting ? 'Redirecting to PayFast...' : `Continue to PayFast · ${material.price}`}
-              {submitting ? <LoaderCircle className="ml-2 h-4 w-4 animate-spin" /> : <ArrowRight className="ml-2 h-4 w-4" />}
+              {submitting ? <VivaLoader size="button" decorative className="ml-2" /> : <ArrowRight className="ml-2 h-4 w-4" />}
             </Button>
           </form>
         )}

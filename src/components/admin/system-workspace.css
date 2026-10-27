@@ -1,0 +1,293 @@
+.oversight-workspace {
+  min-width: 0;
+}
+.oversight-grid {
+  display: grid;
+  gap: 18px;
+  margin: 18px 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+  align-items: start;
+}
+.oversight-grid > .admin-card {
+  margin: 0;
+  min-width: 0;
+}
+.oversight-workspace h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.oversight-workspace .admin-card > p {
+  margin: 12px 0;
+}
+.oversight-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid #dcd0f6;
+  border-radius: 22px;
+  background: linear-gradient(110deg, #f0e8ff, #fff);
+}
+.oversight-summary-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 17px;
+  background: #7a4af1;
+  color: #fff;
+  flex-shrink: 0;
+}
+.oversight-summary > div:nth-child(2) {
+  flex: 1;
+  min-width: min(100%, 220px);
+}
+.oversight-summary p {
+  font-size: 11px;
+  color: #74658f;
+  margin-top: 8px;
+}
+.oversight-summary-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #5428cc;
+}
+.oversight-summary-count strong {
+  font-size: 32px;
+}
+.oversight-summary-count span {
+  font-size: 11px;
+}
+.oversight-status {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  white-space: normal;
+  padding: 5px 9px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 800;
+  background: #f1eaff;
+  color: #655282;
+  text-transform: capitalize;
+}
+.oversight-status.ok {
+  background: #e6f7ed;
+  color: #14673c;
+}
+.oversight-status.attention {
+  background: #fff0e5;
+  color: #99451c;
+}
+.oversight-status.unavailable {
+  background: #ffebe9;
+  color: #a92f2b;
+}
+.oversight-check-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  color: #7a4af1;
+}
+.oversight-check p {
+  font-size: 12px;
+  color: #74658f;
+  line-height: 1.8;
+}
+.oversight-check > button {
+  margin-top: 4px;
+}
+.oversight-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+.oversight-actions > .viva-chips {
+  flex: 1;
+  margin: 0;
+}
+.oversight-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.oversight-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-weight: 700;
+}
+.oversight-form .admin-check {
+  flex-direction: row;
+  align-items: center;
+}
+.oversight-form .admin-check input {
+  width: auto;
+  min-height: auto;
+  flex-shrink: 0;
+}
+.oversight-form .admin-muted {
+  font-weight: 400;
+  font-size: 12px;
+}
+.oversight-review {
+  display: grid;
+  gap: 0;
+  margin: 18px 0;
+}
+.oversight-review > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee7f7;
+  padding: 12px 0;
+  min-width: 0;
+}
+.oversight-review dt {
+  font-size: 12px;
+  color: #74658f;
+}
+.oversight-review dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+.oversight-records {
+  display: grid;
+  gap: 0;
+  margin: 16px 0;
+}
+.oversight-records > article {
+  padding: 16px 0;
+  border-bottom: 1px solid #eee7f7;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.oversight-records > article > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.oversight-records p,
+.oversight-records small {
+  margin: 8px 0;
+  color: #74658f;
+  font-size: 12px;
+}
+.oversight-records strong {
+  font-size: 13px;
+}
+.oversight-access-counts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.oversight-access-counts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px;
+  background: #f8f5fd;
+  border-radius: 14px;
+}
+.oversight-access-counts strong {
+  font-size: 26px;
+  color: #5428cc;
+}
+.oversight-access-counts span {
+  font-size: 11px;
+  color: #74658f;
+  text-transform: capitalize;
+}
+.oversight-programme {
+  margin-top: 14px;
+  border-bottom: 1px solid #eee7f7;
+  padding-bottom: 12px;
+}
+.oversight-programme p {
+  font-size: 12px;
+  color: #74658f;
+  margin-top: 6px;
+}
+.oversight-empty {
+  padding: 20px;
+  border: 1px dashed #d7c9ee;
+  border-radius: 14px;
+  font-size: 12px;
+  color: #74658f;
+  margin: 16px 0;
+}
+.oversight-follow-up {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+.admin-shell .oversight-follow-up > button {
+  padding: 18px;
+  display: flex;
+  text-align: left;
+  justify-content: flex-start;
+  background: #faf8ff;
+  border-radius: 16px;
+}
+.oversight-follow-up strong {
+  font-size: 26px;
+}
+.oversight-follow-up span {
+  flex: 1;
+  font-size: 12px;
+}
+.oversight-footnote {
+  margin: 20px 0;
+  font-size: 11px;
+}
+.oversight-workspace details > summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 12px 0;
+}
+.oversight-workspace details p {
+  font-size: 12px;
+  margin: 12px 0;
+  color: #74658f;
+  overflow-wrap: anywhere;
+}
+.oversight-workspace a {
+  color: #5428cc;
+  text-decoration: underline;
+  font-size: 12px;
+}
+@media (max-width: 500px) {
+  .oversight-summary {
+    padding: 20px;
+    gap: 12px;
+  }
+  .oversight-summary > div:nth-child(2) {
+    min-width: 0;
+    flex-basis: calc(100% - 70px);
+  }
+  .oversight-summary-count {
+    margin-left: 66px;
+  }
+  .oversight-review dd {
+    text-align: left;
+  }
+  .oversight-review > div {
+    flex-direction: column;
+  }
+}

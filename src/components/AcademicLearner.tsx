@@ -1,3 +1,4 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { SubjectProgressCard } from "./SubjectProgressCard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw, ClipboardList, Clock, Target } from "lucide-react";
@@ -221,9 +222,11 @@ export function AcademicLearner({
     return (
       <section className="academic-panel">
         <h3>Assigned work & progress</h3>
-        <p role={error ? "alert" : "status"}>
-          {error || "Loading academic records…"}
-        </p>
+        {error ? (
+          <p role="alert">{error}</p>
+        ) : (
+          <VivaLoader label="Loading academic records…" />
+        )}
         {error && <button onClick={() => void load()}>Try again</button>}
       </section>
     );

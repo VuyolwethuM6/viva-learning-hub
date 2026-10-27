@@ -1,3 +1,4 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import {
   financeRequest,
   formChecked,
@@ -5,7 +6,7 @@ import {
   formText,
 } from "@/lib/accounting-client";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { FileDown, Loader2, Plus, RefreshCw } from "lucide-react";
+import { FileDown, Plus, RefreshCw } from "lucide-react";
 import type { Application, Snapshot } from "@/lib/admin-types";
 import { invoiceBalance, rand } from "@/lib/admin-types";
 import type {
@@ -527,19 +528,21 @@ function Evidence({
 }
 
 export function FinanceWorkspace({
+  initialSection = "Invoices",
   snapshot,
   children,
   changed,
   onPDF,
   user,
 }: {
+  initialSection?: string;
   snapshot: Snapshot;
   children: ReactNode;
   changed: () => Promise<unknown>;
   onPDF: PDFAction;
   user: { id: string; email: string };
 }) {
-  const [section, setSection] = useState("Invoices"),
+  const [section, setSection] = useState(initialSection),
     [data, setData] = useState<FinanceSnapshot | null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(false),
@@ -694,7 +697,11 @@ export function FinanceWorkspace({
       <div className="finance-service-bar">
         <span>ZAR · No VAT · EFT / Cash · February–November tuition</span>
         <button disabled={loading} onClick={() => void load().catch(() => {})}>
-          <RefreshCw size={16} className={loading ? "spin" : ""} />
+          {loading ? (
+            <VivaLoader size="button" decorative />
+          ) : (
+            <RefreshCw size={16} />
+          )}
           Refresh accounts
         </button>
       </div>
@@ -711,15 +718,13 @@ export function FinanceWorkspace({
       {section === "Invoices" && children}
       {section !== "Invoices" && !data && (
         <section className="admin-card">
-          <EmptyState
-            title={
-              loading
-                ? "Loading accounting records…"
-                : "Accounting is not available yet"
-            }
-          >
-            Apply the accounting migrations and refresh to use this workspace.
-          </EmptyState>
+          {loading ? (
+            <VivaLoader label="Loading accounting records…" />
+          ) : (
+            <EmptyState title="Accounting is not available yet">
+              Apply the accounting migrations and refresh to use this workspace.
+            </EmptyState>
+          )}
         </section>
       )}
       {data && section !== "Invoices" && (
@@ -2354,7 +2359,8 @@ function ExportLink({
 
 function RunSummary({ result }: { result: Record<string, unknown> }) {
   const billing = result.billing as
-    { count?: number; seasonalSkip?: boolean } | undefined;
+    | { count?: number; seasonalSkip?: boolean }
+    | undefined;
   const reminders = result.reminders as { count?: number } | undefined;
   return (
     <p>

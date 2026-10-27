@@ -1,3 +1,4 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { useEffect, useState } from "react";
 import { parentRequest } from "@/lib/parent-client";
 import type { ParentTeaching as Data } from "@/lib/teaching-types";
@@ -59,7 +60,7 @@ export function ParentTeaching({ applicationId }: { applicationId: string }) {
           <button onClick={() => setAttempt((a) => a + 1)}>Try again</button>
         </p>
       ) : !data ? (
-        <p role="status">Loading teaching records…</p>
+        <VivaLoader label="Loading teaching records…" />
       ) : (
         <>
           <WeeklyAttendance

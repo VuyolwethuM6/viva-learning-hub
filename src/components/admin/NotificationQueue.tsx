@@ -1,5 +1,6 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { useState } from "react";
-import { Ban, Loader2, Search, Send } from "lucide-react";
+import { Ban, Search, Send } from "lucide-react";
 import type { Application, Invoice, Message } from "@/lib/admin-types";
 import { invoiceBalance, rand } from "@/lib/admin-types";
 import { auditTime, notificationName } from "@/lib/admin-format";
@@ -324,7 +325,7 @@ export function NotificationQueue({
               <button className="admin-danger" disabled={busy}>
                 {busy ? (
                   <>
-                    <Loader2 className="spin" size={16} />
+                    <VivaLoader size="button" decorative />
                     Saving…
                   </>
                 ) : (

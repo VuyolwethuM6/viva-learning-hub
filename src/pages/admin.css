@@ -2076,9 +2076,11 @@
 }
 .viewer-loading {
   position: absolute;
-  top: 18px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  max-width: calc(100% - 32px);
   display: flex;
   align-items: center;
   gap: 8px;

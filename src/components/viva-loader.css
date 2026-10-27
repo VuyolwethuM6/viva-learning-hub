@@ -1,0 +1,187 @@
+.viva-progress-frame {
+  --viva-progress-size: 95px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 24px 12px;
+  text-align: center;
+  color: #74658f;
+  box-sizing: border-box;
+}
+.viva-progress-content {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 100%;
+}
+.viva-progress-visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  flex-shrink: 0;
+  width: var(--viva-progress-size);
+  height: var(--viva-progress-size);
+}
+.viva-progress-glow {
+  position: absolute;
+  inset: -12%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #f274354d 0%,
+    #f2743526 25%,
+    #7a4af122 48%,
+    transparent 78%
+  );
+  animation: viva-progress-glow 2.8s ease-in-out infinite;
+}
+.viva-progress-ring {
+  position: absolute;
+  inset: 4%;
+  border: 3px solid transparent;
+  border-top-color: #f27435;
+  border-bottom-color: #7a4af1;
+  border-radius: 50%;
+  animation: viva-progress-spin 3s linear infinite;
+}
+.viva-progress-inner {
+  position: absolute;
+  inset: 11%;
+  border: 1px solid #7a4af126;
+  border-radius: 50%;
+}
+.viva-progress-logo {
+  position: relative;
+  z-index: 1;
+  width: 64%;
+  height: 64%;
+  object-fit: contain;
+  animation: viva-progress-breathe 2.8s ease-in-out infinite;
+}
+.viva-progress-label {
+  max-width: 100%;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.65;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.viva-progress-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.viva-progress-dots > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7a4af1;
+  animation: viva-progress-dot 1.4s ease-in-out infinite;
+}
+.viva-progress-dots > span:nth-child(2) {
+  background: #f27435;
+  animation-delay: 0.2s;
+}
+.viva-progress-dots > span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.viva-progress-page {
+  --viva-progress-size: 150px;
+  min-height: 100svh;
+  padding: 32px 20px;
+}
+.viva-progress-inline {
+  --viva-progress-size: 52px;
+  padding: 12px;
+}
+.viva-progress-button {
+  --viva-progress-size: 20px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  vertical-align: middle;
+}
+.viva-progress-button .viva-progress-content {
+  display: contents;
+}
+.viva-progress-button .viva-progress-ring {
+  inset: 0;
+  border-width: 2px;
+  animation-duration: 1.1s;
+}
+.viva-progress-button .viva-progress-glow {
+  display: none;
+}
+@keyframes viva-progress-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes viva-progress-glow {
+  0%,
+  100% {
+    transform: scale(0.88);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.16);
+    opacity: 1;
+  }
+}
+@keyframes viva-progress-breathe {
+  0%,
+  100% {
+    transform: scale(0.98);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
+@keyframes viva-progress-dot {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  35% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+@media (max-width: 480px) {
+  .viva-progress-page {
+    --viva-progress-size: 120px;
+  }
+  .viva-progress-section {
+    --viva-progress-size: 80px;
+  }
+  .viva-progress-label {
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .viva-progress-frame *,
+  .viva-progress-frame *:before,
+  .viva-progress-frame *:after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.viva-loading-screen {
+  display: grid;
+  place-items: center;
+  min-height: 100svh;
+  padding: 0;
+}

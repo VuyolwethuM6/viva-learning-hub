@@ -1,3 +1,5 @@
+import { VivaLoader } from "@/components/VivaLoader";
+import { SystemWorkspace } from "@/components/admin/SystemWorkspace";
 import { AcademicStaff } from "@/components/AcademicStaff";
 import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
 import {
@@ -18,6 +20,8 @@ import {
   LogOut,
   RefreshCw,
   ShieldCheck,
+  Activity,
+  Settings2,
   Mail,
   X,
   Bell,
@@ -132,6 +136,8 @@ const tabs = [
   "Assessments",
   "Academics",
   "Tutors",
+  "System health",
+  "Settings",
 ];
 const icons = [LayoutDashboard, ClipboardCheck, Users, Wallet, Mail, History];
 const label = (value: string) => value.replaceAll("_", " ");
@@ -396,7 +402,9 @@ export default function Admin() {
     : null;
   nextMonth?.setUTCMonth(nextMonth.getUTCMonth() + 1);
 
-  function navigate(name: string) {
+  const [financeStart, setFinanceStart] = useState("Invoices");
+  function navigate(name: string, financeSection = "Invoices") {
+    setFinanceStart(financeSection);
     setTab(name);
     setMenu(false);
     setQuery("");
@@ -532,6 +540,8 @@ export default function Admin() {
       Assessments: FileText,
       Academics: TrendingUp,
       Tutors: GraduationCap,
+      "System health": Activity,
+      Settings: Settings2,
     })[name] || BookOpen;
   const navGroups = [
     { label: "Run the day", items: tabs.slice(0, 6) },
@@ -539,6 +549,7 @@ export default function Admin() {
       label: "Teaching",
       items: ["Classes", "Materials", "Assessments", "Academics", "Tutors"],
     },
+    { label: "Oversight", items: ["System health", "Settings"] },
   ];
   const navButton = (name: string) => {
     const Icon = iconFor(name);
@@ -661,13 +672,9 @@ export default function Admin() {
   }
   if (loading)
     return (
-      <main className="admin-shell admin-login">
+      <main className="admin-shell viva-loading-screen">
         {metadata}
-        <Brand />
-        <div className="login-loading" role="status">
-          <RefreshCw className="spin" size={25} />
-          Opening your workspace…
-        </div>
+        <VivaLoader size="page" label="Opening your workspace…" />
       </main>
     );
   if (!user)
@@ -775,7 +782,7 @@ export default function Admin() {
               <button className="admin-primary login-submit" disabled={busy}>
                 {busy ? (
                   <>
-                    <RefreshCw className="spin" size={18} />
+                    <VivaLoader size="button" decorative />
                     Signing in…
                   </>
                 ) : (
@@ -854,7 +861,11 @@ export default function Admin() {
                 })
               }
             >
-              <RefreshCw size={18} className={busy ? "spin" : ""} />
+              {busy ? (
+                <VivaLoader size="button" decorative />
+              ) : (
+                <RefreshCw size={18} />
+              )}
             </button>
             <button
               className="icon-button notification-bell"
@@ -889,7 +900,17 @@ export default function Admin() {
         </header>
         <main id="main-content" className="admin-main" aria-busy={busy}>
           {!selected && !invoice && !confirmation && feedback}
-          {!data ? (
+          {["System health", "Settings"].includes(tab) ? (
+            <SystemWorkspace
+              key={tab}
+              section={tab as "System health" | "Settings"}
+              user={user}
+              changed={refresh}
+              onNavigate={(target) =>
+                navigate(target, target === "Finance" ? "Controls" : "Invoices")
+              }
+            />
+          ) : !data ? (
             <section className="admin-card">
               <EmptyState title="Your records couldn’t load">
                 Refresh to try again. If the problem continues, check the admin
@@ -1322,6 +1343,7 @@ export default function Admin() {
                   </section>
                   <FinanceWorkspace
                     snapshot={data}
+                    initialSection={financeStart}
                     changed={refresh}
                     onPDF={openPDF}
                     user={user}
