@@ -9,7 +9,7 @@ type AuthSession = {
   refresh_token: string;
   expires_in: number;
 };
-export type PortalAudience = "parent" | "tutor";
+export type PortalAudience = "parent" | "tutor" | "student";
 const names = (audience: PortalAudience) => ({
   access: `viva_${audience}`,
   refresh: `viva_${audience}_refresh`,
@@ -98,7 +98,7 @@ export async function requireParent(
     if (error instanceof HttpError && error.status === 409)
       throw new HttpError(
         403,
-        `${audience === "tutor" ? "Tutor" : "Parent"} access is unavailable. Contact Viva Tutorials.`,
+        `${audience[0].toUpperCase() + audience.slice(1)} access is unavailable. Contact Viva Tutorials.`,
       );
     throw error;
   }
@@ -135,7 +135,7 @@ export async function completeParentSession(
     if (error instanceof HttpError && error.status === 409)
       throw new HttpError(
         403,
-        `${audience === "tutor" ? "Tutor" : "Parent"} access is unavailable. Contact Viva Tutorials.`,
+        `${audience[0].toUpperCase() + audience.slice(1)} access is unavailable. Contact Viva Tutorials.`,
       );
     throw error;
   }

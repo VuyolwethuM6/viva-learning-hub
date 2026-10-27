@@ -1,6 +1,6 @@
 # Teaching workflow: agreed requirements and proposed delivery
 
-Recorded 27 October 2026 (Africa/Johannesburg). This records the full design; the teaching foundation is now implemented as
+Recorded 27 October 2026 (Africa/Johannesburg). Release 2 now delivers day-specific scheduling, expanded tutor actions and the student portal foundation; see [connected-portals.md](connected-portals.md) for the implementation and tests. This records the full design; the teaching foundation is now implemented as
 described in teaching-test-guide.md. Learner submissions, assessments/averages,
 timed exams and public catalog editing remain planned. The owner reports the parent
 portal working; the new teaching foundation still needs its deployment acceptance
@@ -57,7 +57,7 @@ when a library resource is later replaced.
 Current code: `/study-materials` reads the static catalog in
 `src/lib/studyMaterials.ts`; PayFast checkout separately maintains product titles
 and prices in `api/payfast/checkout.ts`, with delivery handled by the notification
-route. The admin Materials section is currently a placeholder. Public catalog
+route. Admin Materials now manages the private teaching library; public catalog editing remains planned. Public catalog
 management therefore requires moving metadata, server pricing and delivery
 lookups together; changing only the visible cards would be incomplete.
 
@@ -116,7 +116,7 @@ payment details and private enrollment documents are outside their default
 teaching scope. Removing an assignment/account blocks subsequent access. Grades,
 memoranda and submissions require server-side authorization, including downloads.
 
-Confirmed attendance can appear to parents after tutor recording. Proposed
+Confirmed attendance appears to parents/students after session completion, with subsequent corrections retained. Proposed
 assessment flow: tutor draft → submitted for admin review → published to the
 correct learner/parent. Parent-facing feedback and internal staff notes are
 separate. Teaching actions do not silently change tuition or financial records.

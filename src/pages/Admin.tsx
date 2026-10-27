@@ -1,3 +1,4 @@
+import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
 import {
   useCallback,
   useEffect,
@@ -1497,40 +1498,46 @@ export default function Admin() {
                 )}
             </>
           )}
+          <div className="portal-support">
+            <WhatsAppButton
+              message={`Hello Viva, I need assistance with the admin ${tab.toLowerCase()} section.`}
+            />
+          </div>
         </main>
-        <footer className="workspace-footer">
-          <span>Viva Tutorials</span>
-          <span>Personal support. Purposeful learning.</span>
-        </footer>
+        <a className="portal-privacy" href="/privacy-policy">
+          Privacy
+        </a>
       </div>
-      <nav className="admin-bottom-nav" aria-label="Mobile navigation">
-        {["Overview", "Applications", "Students", "Finance"].map((name) => {
-          const Icon = iconFor(name);
-          return (
-            <button
-              key={name}
-              aria-label={`Mobile ${name}`}
-              aria-current={tab === name ? "page" : undefined}
-              onClick={() => navigate(name)}
-            >
-              <span>
-                <Icon size={20} />
-              </span>
-              {name === "Overview" ? "Home" : name}
-            </button>
-          );
-        })}
-        <button
-          aria-label="More sections"
-          aria-expanded={menu}
-          onClick={() => setMenu(true)}
-        >
-          <span>
-            <MoreHorizontal size={22} />
-          </span>
-          More
-        </button>
-      </nav>
+      <PortalDock>
+        <nav className="admin-bottom-nav" aria-label="Mobile navigation">
+          {["Overview", "Applications", "Students", "Finance"].map((name) => {
+            const Icon = iconFor(name);
+            return (
+              <button
+                key={name}
+                aria-label={`Mobile ${name}`}
+                aria-current={tab === name ? "page" : undefined}
+                onClick={() => navigate(name)}
+              >
+                <span>
+                  <Icon size={20} />
+                </span>
+                {name === "Overview" ? "Home" : name}
+              </button>
+            );
+          })}
+          <button
+            aria-label="More sections"
+            aria-expanded={menu}
+            onClick={() => setMenu(true)}
+          >
+            <span>
+              <MoreHorizontal size={22} />
+            </span>
+            More
+          </button>
+        </nav>
+      </PortalDock>
       {menu && (
         <Dialog
           title="Your workspace"

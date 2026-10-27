@@ -9,7 +9,7 @@ import {
   type ApiRequest,
 } from "./http.js";
 import { validAccountingDate } from "../../src/lib/accounting-input.js";
-type Audience = "admin" | "tutor";
+type Audience = "admin" | "tutor" | "student" | "parent";
 type StoredFile = {
   id: string;
   storage_path: string;
@@ -24,7 +24,42 @@ export async function teachingRead(
   audience: Audience,
 ) {
   const url = new URL(request.url || "", "http://localhost");
-  if (url.searchParams.has("history"))
+  const learning = audience === "student" || audience === "parent";
+  const application = url.searchParams.get("application");
+  const learnerArgs = {
+    p_user: actor,
+    p_audience: audience,
+    p_application: application ? uuid(application) : null,
+  };
+  if (!learning && url.searchParams.has("schedule")) {
+    const day = url.searchParams.get("day") || "";
+    const until = url.searchParams.get("until");
+    if (!validAccountingDate(day) || (until && !validAccountingDate(until)))
+      throw new HttpError(400, "Choose valid scheduling dates.");
+    const series = url.searchParams.get("series") === "1";
+    return sendJson(
+      response,
+      200,
+      await rpc(series ? "teaching_series_preview" : "teaching_schedule", {
+        p_actor: actor,
+        p_audience: audience,
+        p_day: day,
+        p_slot: url.searchParams.get("slot")
+          ? uuid(url.searchParams.get("slot"))
+          : null,
+        ...(series
+          ? { p_session: uuid(url.searchParams.get("exclude")) }
+          : {
+              p_class: uuid(url.searchParams.get("schedule")),
+              p_until: until || null,
+              p_exclude: url.searchParams.get("exclude")
+                ? uuid(url.searchParams.get("exclude"))
+                : null,
+            }),
+      }),
+    );
+  }
+  if (!learning && url.searchParams.has("history"))
     return sendJson(
       response,
       200,
@@ -38,13 +73,20 @@ export async function teachingRead(
     return sendJson(
       response,
       200,
-      await rpc("teaching_snapshot", { p_actor: actor, p_audience: audience }),
+      learning
+        ? await rpc("student_snapshot", learnerArgs)
+        : await rpc("teaching_snapshot", {
+            p_actor: actor,
+            p_audience: audience,
+          }),
     );
-  const file = await rpc<StoredFile>("teaching_file", {
-    p_actor: actor,
-    p_audience: audience,
-    p_id: uuid(url.searchParams.get("file")),
-  });
+  const file = await rpc<StoredFile>(
+    learning ? "student_file" : "teaching_file",
+    {
+      ...(learning ? learnerArgs : { p_actor: actor, p_audience: audience }),
+      p_id: uuid(url.searchParams.get("file")),
+    },
+  );
   const config = getSupabaseConfig()!;
   const upstream = await fetch(
     `${config.url}/storage/v1/object/authenticated/teaching-materials/${encodeStoragePath(file.storage_path)}`,
@@ -112,6 +154,7 @@ export async function teachingMutation(
     "applicationId",
     "versionId",
     "materialId",
+    "slotId",
   ])
     if (input[key]) uuid(input[key]);
   if (input.day && !validAccountingDate(String(input.day)))

@@ -550,3 +550,46 @@
 .tutor-intro .eyebrow {
   color: #e5d7ff;
 }
+.teaching-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.teaching-summary-grid strong {
+  font-size: 27px;
+  color: var(--purple-dark);
+}
+.teaching-summary-grid p {
+  font-size: 11px;
+  color: var(--muted);
+}
+.teaching-timetable {
+  margin: 20px 0;
+}
+.session-planner {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 15px;
+  margin-top: 16px;
+}
+.session-planner legend {
+  font-weight: 800;
+  font-size: 13px;
+}
+.session-planner p {
+  font-size: 12px;
+  margin-top: 10px;
+}
+.teaching-resource-row {
+  flex-wrap: wrap;
+}
+.portal-dock-scope .admin-bottom-nav button {
+  touch-action: manipulation;
+}
+.portal-dock-scope .parent-bottom-nav button {
+  min-height: 52px;
+}
+.student-shell .tutor-main {
+  max-width: 1250px;
+}

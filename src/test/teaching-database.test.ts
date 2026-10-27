@@ -156,7 +156,7 @@ describe("teaching foundation real PostgreSQL boundaries", () => {
     const files = readdirSync("supabase/migrations")
       .filter((n) => n.startsWith("2026102716"))
       .sort();
-    expect(files).toHaveLength(3);
+    expect(files).toHaveLength(4);
     const source = files
       .map((n) => readFileSync("supabase/migrations/" + n, "utf8"))
       .join("\n\n");
@@ -485,6 +485,387 @@ describe("teaching foundation real PostgreSQL boundaries", () => {
       ).rejects.toThrow("permission denied");
     } finally {
       await db.exec("reset role");
+    }
+  });
+});
+
+describe("connected student portals and day-specific scheduling", () => {
+  const student = "55555555-5555-4555-8555-555555555555";
+  async function bindStudent() {
+    await db.query(
+      "insert into auth.users values($1,'learner@example.test','2026-10-01') on conflict(id) do nothing",
+      [student],
+    );
+    await op("student_access", {
+      applicationId: app,
+      enabled: true,
+      reason: "Learner email verified",
+    });
+    await val("select public.student_bind($1) value", [student]);
+  }
+  async function studentSnapshot() {
+    return val<{
+      learner: { id: string };
+      sessions: { id: string; attendance: string | null }[];
+      materials: { id: string }[];
+      attendance: { percentage: number | null };
+    }>("select public.student_snapshot($1,'student') value", [student]);
+  }
+  it("allows an authorized tutor to plan within their class, but not manage student grants or other classes", async () => {
+    const topic = await op(
+      "topic_create",
+      {
+        classId: cid,
+        grade: "Grade 12",
+        subject: "Mathematics",
+        title: "Tutor topic",
+        goal: "Solve equations independently",
+      },
+      "tutor",
+      teacher,
+    );
+    const result = await op(
+      "session_create",
+      { classId: cid, topicId: topic.id, day: "2026-10-26" },
+      "tutor",
+      teacher,
+    );
+    expect(result.sessionId).toBeTruthy();
+    await expect(
+      op(
+        "student_access",
+        { applicationId: app, enabled: true, reason: "Not authorized" },
+        "tutor",
+        teacher,
+      ),
+    ).rejects.toThrow("administrators");
+    await expect(
+      op(
+        "topic_create",
+        {
+          classId: cid,
+          grade: "Grade 11",
+          subject: "Mathematics",
+          title: "Wrong grade",
+          goal: "Not in this class",
+        },
+        "tutor",
+        teacher,
+      ),
+    ).rejects.toThrow("class grade");
+  });
+  it("offers different Monday and Tuesday times and rejects selecting a Monday slot on Tuesday", async () => {
+    const snap = await val<{ slots: { id: string; weekday: number }[] }>(
+      "select public.teaching_snapshot($1,'admin') value",
+      [admin],
+    );
+    const monday = snap.slots.find((s) => s.weekday === 1)!,
+      tuesday = snap.slots.find((s) => s.weekday === 2)!;
+    await op("slot_save", {
+      classId: cid,
+      id: tuesday.id,
+      reason: "Teaching timetable updated",
+    });
+    await op("slot_save", {
+      classId: cid,
+      weekday: 2,
+      startTime: "17:00",
+      endTime: "18:00",
+      reason: "Teaching timetable updated",
+    });
+    const preview = await val<{ slots: { starts_at: string }[] }>(
+      "select public.teaching_schedule($1,'tutor',$2,'2026-10-27') value",
+      [teacher, cid],
+    );
+    expect(preview.slots.map((s) => s.starts_at)).toEqual(["17:00:00"]);
+    await expect(
+      op("session_create", {
+        classId: cid,
+        topicId,
+        day: "2026-10-27",
+        slotId: monday.id,
+      }),
+    ).rejects.toThrow("saved time slot");
+  });
+  it("creates a weekly series exactly once and rolls back the entire series on a conflict", async () => {
+    const requestId = randomUUID();
+    const args = {
+      requestId,
+      classId: cid,
+      topicId,
+      day: "2026-10-26",
+      until: "2026-11-09",
+    };
+    const result = await op("session_create", args);
+    expect((result.sessions as unknown[]).length).toBe(3);
+    expect(await op("session_create", args)).toEqual(result);
+    await expect(
+      op("session_create", {
+        classId: cid,
+        topicId,
+        day: "2026-11-02",
+        until: "2026-11-16",
+      }),
+    ).rejects.toThrow("overlaps");
+    expect(
+      await val<number>(
+        "select count(*)::integer value from public.teaching_sessions",
+      ),
+    ).toBe(3);
+    await expect(
+      op("session_create", {
+        classId: cid,
+        topicId,
+        day: "2026-10-26",
+        until: "2027-03-01",
+      }),
+    ).rejects.toThrow("twelve");
+  });
+  it("reschedules only a future unchanged session and keeps the original cancelled with its audit trail", async () => {
+    const sid = await session("2026-10-28");
+    const snap = await val<{ slots: { id: string; weekday: number }[] }>(
+      "select public.teaching_snapshot($1,'admin') value",
+      [admin],
+    );
+    const result = await op(
+      "session_reschedule",
+      {
+        classId: cid,
+        sessionId: sid,
+        revision: 0,
+        day: "2026-10-29",
+        slotId: snap.slots.find((s) => s.weekday === 4)!.id,
+        reason: "Class rescheduled",
+      },
+      "tutor",
+      teacher,
+    );
+    expect(result.replaces).toBe(sid);
+    expect(result.sessionId).not.toBe(sid);
+    expect(
+      await val<string>(
+        "select status value from public.teaching_sessions where id=$1",
+        [sid],
+      ),
+    ).toBe("cancelled");
+    const past = await session();
+    await expect(
+      op("session_reschedule", {
+        classId: cid,
+        sessionId: past,
+        revision: 0,
+        day: "2026-10-29",
+        slotId: snap.slots.find((s) => s.weekday === 4)!.id,
+        reason: "Class rescheduled",
+      }),
+    ).rejects.toThrow("future");
+  });
+  it("previews and atomically shifts remaining future weekly sessions while retaining originals", async () => {
+    const made = await op("session_create", {
+      classId: cid,
+      topicId,
+      day: "2026-11-02",
+      until: "2026-11-16",
+    });
+    const first = String(made.sessionId);
+    const snap = await val<{ slots: { id: string; weekday: number }[] }>(
+      "select public.teaching_snapshot($1,'admin') value",
+      [admin],
+    );
+    const slot = snap.slots.find((s) => s.weekday === 3)!.id;
+    const preview = await val<{
+      dates: { day: string; issue: string | null }[];
+    }>(
+      "select public.teaching_series_preview($1,'tutor',$2,'2026-11-04',$3) value",
+      [teacher, first, slot],
+    );
+    expect(preview.dates.map((d) => d.day)).toEqual([
+      "2026-11-04",
+      "2026-11-11",
+      "2026-11-18",
+    ]);
+    expect(preview.dates.every((d) => d.issue === null)).toBe(true);
+    const requestId = randomUUID(),
+      args = {
+        requestId,
+        classId: cid,
+        sessionId: first,
+        scope: "series",
+        revision: 0,
+        day: "2026-11-04",
+        slotId: slot,
+        reason: "Class rescheduled",
+      };
+    const result = await op("session_reschedule", args, "tutor", teacher);
+    expect((result.sessions as unknown[]).length).toBe(3);
+    expect(await op("session_reschedule", args, "tutor", teacher)).toEqual(
+      result,
+    );
+    expect(
+      await val<number>(
+        "select count(*)::integer value from public.teaching_sessions where status='cancelled'",
+      ),
+    ).toBe(3);
+    expect(
+      await val<number>(
+        "select count(distinct series_id)::integer value from public.teaching_sessions where status='scheduled'",
+      ),
+    ).toBe(1);
+  });
+  it("shows only the student's own sanitized records and publishes attendance after completion", async () => {
+    await bindStudent();
+    const sid = await session();
+    await mark(sid);
+    let snap = await studentSnapshot();
+    expect(snap.learner.id).toBe(app);
+    expect(snap.sessions[0].attendance).toBeNull();
+    await finish(sid);
+    snap = await studentSnapshot();
+    expect(snap.sessions[0].attendance).toBe("present");
+    expect(snap.attendance.percentage).toBe(100);
+    expect(JSON.stringify(snap)).not.toMatch(
+      /staff_note|guardian_email|monthly_fee|storage_path|Private tutor notes/,
+    );
+    await expect(
+      val("select public.student_snapshot($1,'student',$2) value", [
+        student,
+        randomUUID(),
+      ]),
+    ).rejects.toThrow("not available");
+    await op("student_access", {
+      applicationId: app,
+      enabled: false,
+      reason: "Access removed after review",
+    });
+    await expect(studentSnapshot()).rejects.toThrow("Student access");
+  });
+  it("keeps tutor uploads private until an explicit release and revokes learner file access when unshared", async () => {
+    await bindStudent();
+    const id = randomUUID();
+    const up = await op(
+      "material_prepare",
+      {
+        id,
+        classId: cid,
+        title: "Private memo",
+        kind: "Memorandum",
+        name: "memo.pdf",
+        mime: "application/pdf",
+        size: 5,
+      },
+      "tutor",
+      teacher,
+    );
+    await db.query(
+      "insert into storage.objects(bucket_id,name,metadata) values('teaching-materials',$1,$2)",
+      [
+        up.storage_path,
+        JSON.stringify({ size: 5, mimetype: "application/pdf" }),
+      ],
+    );
+    await op(
+      "material_finalize",
+      { classId: cid, versionId: id },
+      "tutor",
+      teacher,
+    );
+    await op(
+      "class_material",
+      { classId: cid, versionId: id },
+      "tutor",
+      teacher,
+    );
+    expect((await studentSnapshot()).materials).toHaveLength(0);
+    await expect(
+      val("select public.student_file($1,'student',$2) value", [student, id]),
+    ).rejects.toThrow("not released");
+    await op(
+      "material_release",
+      { classId: cid, versionId: id, visible: true },
+      "tutor",
+      teacher,
+    );
+    expect((await studentSnapshot()).materials[0].id).toBe(id);
+    expect(
+      (
+        await val("select public.student_file($1,'student',$2) value", [
+          student,
+          id,
+        ])
+      ).size_bytes,
+    ).toBe(5);
+    await op(
+      "material_release",
+      { classId: cid, versionId: id, visible: false },
+      "tutor",
+      teacher,
+    );
+    await expect(
+      val("select public.student_file($1,'student',$2) value", [student, id]),
+    ).rejects.toThrow("not released");
+  });
+  it("authorizes family-assisted reads through parent scope without granting a student identity", async () => {
+    await val(
+      "select public.admin_parent_access($1,$2,true,'Guardian verified for assisted learning') value",
+      [admin, app],
+    );
+    await val("select public.parent_bind($1) value", [parent]);
+    expect(
+      (
+        await val("select public.student_snapshot($1,'parent',$2) value", [
+          parent,
+          app,
+        ])
+      ).assisted,
+    ).toBe(true);
+    await expect(
+      val("select public.student_snapshot($1,'parent',$2) value", [
+        parent,
+        randomUUID(),
+      ]),
+    ).rejects.toThrow("family");
+    await db.query(
+      "update public.applications set learner_email=guardian_email where id=$1",
+      [app],
+    );
+    await expect(
+      op("student_access", {
+        applicationId: app,
+        enabled: true,
+        reason: "Shared email reviewed",
+      }),
+    ).rejects.toThrow("parent-assisted");
+  });
+  it("blocks browser roles from new tables and helpers and preserves retired slots on rerun", async () => {
+    const snap = await val<{ slots: { id: string }[] }>(
+      "select public.teaching_snapshot($1,'admin') value",
+      [admin],
+    );
+    await op("slot_save", {
+      classId: cid,
+      id: snap.slots[0].id,
+      reason: "Old slot retired",
+    });
+    await db.exec(readFileSync("docs/teaching-setup.sql", "utf8"));
+    expect(
+      await val<boolean>(
+        "select active value from public.teaching_slots where id=$1",
+        [snap.slots[0].id],
+      ),
+    ).toBe(false);
+    for (const role of ["anon", "authenticated"]) {
+      expect(
+        await val<boolean>(
+          "select has_table_privilege($1,'public.student_accounts','SELECT') value",
+          [role],
+        ),
+      ).toBe(false);
+      expect(
+        await val<boolean>(
+          "select has_function_privilege($1,'public.student_snapshot(uuid,text,uuid)','EXECUTE') value",
+          [role],
+        ),
+      ).toBe(false);
     }
   });
 });

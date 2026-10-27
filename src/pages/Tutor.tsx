@@ -1,6 +1,16 @@
+import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Helmet } from "react-helmet-async";
-import { Loader2, LogOut, Mail } from "lucide-react";
+import {
+  Loader2,
+  LogOut,
+  Mail,
+  Home,
+  CalendarDays,
+  BookOpen,
+  FileText,
+  MoreHorizontal,
+} from "lucide-react";
 import { tutorRequest, TutorError } from "@/lib/tutor-client";
 import { TeachingWorkspace } from "@/components/admin/TeachingWorkspace";
 import { Dialog } from "@/components/admin/AdminPrimitives";
@@ -23,6 +33,7 @@ export default function Tutor() {
     ),
     [cooldown, setCooldown] = useState(0),
     [logout, setLogout] = useState(false);
+  const [section, setSection] = useState("Home");
   const lock = useRef(false);
   useEffect(() => {
     let active = true;
@@ -181,7 +192,7 @@ export default function Tutor() {
           )}
           <small>
             Need access?{" "}
-            <a href="mailto:info@vivatutorials.co.za">Contact Viva Tutorials</a>
+            <WhatsAppButton message="Hello Viva, I need help accessing the tutor portal." />
             . Sign-in does not grant administrator access.
           </small>
         </main>
@@ -212,8 +223,80 @@ export default function Tutor() {
             attendance with parents.
           </p>
         </section>
-        <TeachingWorkspace audience="tutor" onSessionExpired={expired} />
+        <nav className="portal-desktop-tabs" aria-label="Tutor sections">
+          {["Home", "Schedule", "Classes", "Materials", "More"].map((name) => (
+            <button
+              key={name}
+              aria-current={section === name ? "page" : undefined}
+              onClick={() => setSection(name)}
+            >
+              {name}
+            </button>
+          ))}
+        </nav>
+        {section === "More" ? (
+          <section className="admin-card">
+            <h1>Your teaching account</h1>
+            <p>{user.email}</p>
+            <p>
+              You can plan sessions, manage attendance and share materials
+              within your assigned classes. Academic assessments and marking
+              arrive in the next teaching phase.
+            </p>
+            <WhatsAppButton message="Hello Viva, I need assistance with my tutor account or teaching schedule." />
+            <p>
+              <a href="/privacy-policy">Privacy</a>
+            </p>
+            <button onClick={() => setLogout(true)}>Sign out</button>
+          </section>
+        ) : (
+          <TeachingWorkspace
+            audience="tutor"
+            section={section}
+            onNavigate={setSection}
+            onSessionExpired={expired}
+          />
+        )}
+        {section !== "More" && (
+          <div className="portal-support">
+            <WhatsAppButton
+              message={`Hello Viva, I need help with ${section.toLowerCase()} in my tutor portal.`}
+            />
+            <a href="/privacy-policy">Privacy</a>
+          </div>
+        )}
       </main>
+      <PortalDock>
+        <nav
+          className="admin-bottom-nav tutor-bottom-nav"
+          aria-label="Mobile tutor sections"
+        >
+          {[
+            ["Home", Home],
+            ["Schedule", CalendarDays],
+            ["Classes", BookOpen],
+            ["Materials", FileText],
+            ["More", MoreHorizontal],
+          ].map(([name, Icon]) => {
+            const Label = Icon as typeof Home;
+            return (
+              <button
+                key={String(name)}
+                aria-current={section === name ? "page" : undefined}
+                onClick={() => {
+                  setSection(String(name));
+                  window.scrollTo({ top: 0 });
+                }}
+              >
+                <span>
+                  <Label size={21} />
+                </span>
+                {String(name)}
+              </button>
+            );
+          })}
+        </nav>
+      </PortalDock>
       {logout && (
         <Dialog
           title="Sign out of the tutor portal?"
