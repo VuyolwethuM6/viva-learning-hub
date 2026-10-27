@@ -1,5 +1,7 @@
 # Connected portals: release 2 setup and testing
 
+For the current screen layout and acceptance checklist, see [portal-interface.md](portal-interface.md). The interface redesign needs no additional SQL.
+
 The academic follow-on release is now implemented separately. After this setup, follow [academic-workflow.md](academic-workflow.md) to enable assigned work, submissions, marking/publication, timed assessments and progress/report PDFs.
 
 Recorded 27 October 2026, South African time. This guide describes implemented
@@ -14,14 +16,14 @@ policies are unchanged.
   navigation remains available. Dashboard footer branding removed; Privacy kept.
 - Portal support uses WhatsApp +27 73 391 3206, with editable contextual messages.
   Opening a link does not send a message or guarantee a response time.
-- Tutor Home, Schedule, Classes, Materials and More. Today/Upcoming/Needs
+- Tutor Today, Classes, Work and Account. Today/Upcoming/Needs
   completion/Past session views use stored records. Class-scoped topic creation,
   scheduling, upload/verification, resource assignment/release and attendance.
 - Day-specific saved timetable slots, availability previews, weekly repeats up
   to twelve dates, and rescheduling either one future session or remaining
   future sessions in its weekly series. Conflicts/closures are never silently
   skipped. Saving is atomic and stable request IDs prevent duplicate retries.
-- Student `/student`: Home, Classes, Learn, Progress and More, with real learner
+- Student `/student`: Home, Learning, Progress and Account, with real learner
   details, subject starting/target marks, timetable, online rooms, upcoming and
   past sessions, confirmed attendance and released versioned files.
 - Student email-link sign-in with separate HttpOnly cookies. Staff explicitly
@@ -179,10 +181,10 @@ stay unchanged (Rewrite proration still counts all five weekdays).
    goal → create a reusable topic; Schedule session selects saved day/time.
 2. Materials → select assigned class → Upload teaching material (PDF/JPEG/PNG,
    up to 10 MB) → review → confirm. Wait for upload verification.
-3. Back in Classes → Assign resource → select that version. It is **Staff-only**.
-4. Student → Learn: it must not appear yet. Trying a copied file ID must also
+3. Back in Classes → Materials → Assign resource → select that version. It is **Staff-only**.
+4. Student → Learning → Materials: it must not appear yet. Trying a copied file ID must also
    fail at the API, before Storage download.
-5. Tutor → Release to learners → review and confirm. Student → Learn or Refresh:
+5. Tutor → Release to learners → review and confirm. Student → Learning → Materials or Refresh:
    the resource appears and opens in the document viewer/download.
 6. Return the attachment to staff-only and refresh. New downloads must be
    denied unless another class/session attachment explicitly releases that same
@@ -201,7 +203,7 @@ Use a session that has already ended for completion testing (admin can schedule
 an historical test session within the allowed season/day/time). Do not change a
 production database clock to make a session end sooner.
 
-1. Tutor → Schedule → Today/Upcoming/Needs completion/Past. Open the session.
+1. Tutor → Today → Today/Upcoming/Needs completion/Past. Open the session.
 2. Record explicit attendance for every learner; no present/absent default.
 3. Before completion, parent/student attendance must remain unconfirmed.
 4. Complete the ended session, choose teaching outcome and optionally add a

@@ -7,10 +7,9 @@ import {
   LogOut,
   Mail,
   Home,
-  CalendarDays,
   BookOpen,
   FileText,
-  MoreHorizontal,
+  UserRound,
 } from "lucide-react";
 import { tutorRequest, TutorError } from "@/lib/tutor-client";
 import { TeachingWorkspace } from "@/components/admin/TeachingWorkspace";
@@ -194,7 +193,6 @@ export default function Tutor() {
           <small>
             Need access?{" "}
             <WhatsAppButton message="Hello Viva, I need help accessing the tutor portal." />
-            . Sign-in does not grant administrator access.
           </small>
         </main>
       </div>
@@ -213,40 +211,27 @@ export default function Tutor() {
         </button>
       </header>
       <main className="tutor-main" id="main-content">
-        <section className="tutor-intro">
-          <span className="eyebrow">
-            PERSONAL SUPPORT. PURPOSEFUL LEARNING.
-          </span>
-          <h1>Make every session count.</h1>
-          <p>
-            Your assigned classes, saved teaching materials and attendance
-            records. Use session completion to confirm teaching and share
-            attendance with parents.
-          </p>
-        </section>
-        <nav className="portal-desktop-tabs" aria-label="Tutor sections">
-          {["Home", "Schedule", "Classes", "Materials", "Work", "More"].map(
-            (name) => (
-              <button
-                key={name}
-                aria-current={section === name ? "page" : undefined}
-                onClick={() => setSection(name)}
-              >
-                {name}
-              </button>
-            ),
-          )}
+        <nav className="viva-role-nav" aria-label="Tutor sections">
+          {["Home", "Classes", "Work", "More"].map((name) => (
+            <button
+              key={name}
+              aria-current={
+                section === name ||
+                (name === "Classes" && section === "Materials")
+                  ? "page"
+                  : undefined
+              }
+              onClick={() => setSection(name)}
+            >
+              {name === "More" ? "Account" : name === "Home" ? "Today" : name}
+            </button>
+          ))}
         </nav>
         {section === "More" ? (
           <section className="admin-card">
             <h1>Your teaching account</h1>
             <p>{user.email}</p>
-            <p>
-              You can plan sessions, manage attendance and share materials
-              within your assigned classes. Open Work to assign activities,
-              diagnostics and assessments, review confirmed submissions and
-              submit marks for admin publication.
-            </p>
+            <p>Your assigned teaching account.</p>
             <WhatsAppButton message="Hello Viva, I need assistance with my tutor account or teaching schedule." />
             <p>
               <a href="/privacy-policy">Privacy</a>
@@ -279,17 +264,20 @@ export default function Tutor() {
         >
           {[
             ["Home", Home],
-            ["Schedule", CalendarDays],
             ["Classes", BookOpen],
-            ["Materials", FileText],
             ["Work", FileText],
-            ["More", MoreHorizontal],
+            ["More", UserRound],
           ].map(([name, Icon]) => {
             const Label = Icon as typeof Home;
             return (
               <button
                 key={String(name)}
-                aria-current={section === name ? "page" : undefined}
+                aria-current={
+                  section === name ||
+                  (name === "Classes" && section === "Materials")
+                    ? "page"
+                    : undefined
+                }
                 onClick={() => {
                   setSection(String(name));
                   window.scrollTo({ top: 0 });
@@ -298,7 +286,11 @@ export default function Tutor() {
                 <span>
                   <Label size={21} />
                 </span>
-                {String(name)}
+                {name === "More"
+                  ? "Account"
+                  : name === "Home"
+                    ? "Today"
+                    : String(name)}
               </button>
             );
           })}
@@ -311,7 +303,7 @@ export default function Tutor() {
           close={() => setLogout(false)}
           busy={busy}
         >
-          <p>Your other Viva role sessions are separate.</p>
+          <p>You can return using a new email sign-in link.</p>
           {error && (
             <p className="admin-error" role="alert">
               {error}

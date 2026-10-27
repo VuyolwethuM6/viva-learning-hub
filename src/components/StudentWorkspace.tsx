@@ -1,12 +1,13 @@
 import { AcademicLearner } from "./AcademicLearner";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   CalendarDays,
   RefreshCw,
   Target,
   FileText,
-  CheckCircle2,
+  ChevronLeft,
+  ArrowRight,
 } from "lucide-react";
 import { studentFetch } from "@/lib/student-client";
 import { parentFetch } from "@/lib/parent-client";
@@ -17,21 +18,26 @@ import {
   type ViewedDocument,
 } from "@/components/admin/AdminPrimitives";
 import { WhatsAppButton } from "./PortalChrome";
+import { WeeklyAttendance } from "./WeeklyAttendance";
 import "./student-workspace.css";
 export function StudentWorkspace({
   section = "Home",
   application,
   onExpired,
+  onNavigate,
 }: {
   section?: string;
   application?: string;
   onExpired?: () => void;
+  onNavigate?: (section: string) => void;
 }) {
   const [data, setData] = useState<StudentSnapshot | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [viewer, setViewer] = useState<ViewedDocument | null>(null),
-    [cid, setCid] = useState("");
+    [cid, setCid] = useState(""),
+    [tab, setTab] = useState("Sessions");
+  const generation = useRef(0);
   const read = useCallback(
     (extra = "") =>
       application
@@ -39,12 +45,19 @@ export function StudentWorkspace({
         : studentFetch(extra ? "?" + extra.slice(1) : ""),
     [application],
   );
+  const invalidate = useCallback(() => {
+    generation.current++;
+  }, []);
   const load = useCallback(async () => {
+    const gen = ++generation.current;
     setBusy(true);
     setError("");
     try {
-      setData(await (await read()).json());
+      const snapshot = await (await read()).json();
+      if (gen !== generation.current) return;
+      setData(snapshot);
     } catch (e) {
+      if (gen !== generation.current) return;
       setError(
         e instanceof Error
           ? e.message
@@ -58,14 +71,17 @@ export function StudentWorkspace({
       )
         onExpired?.();
     } finally {
-      setBusy(false);
+      if (gen === generation.current) setBusy(false);
     }
   }, [read, onExpired]);
   useEffect(() => {
     void load();
     window.addEventListener("focus", load);
-    return () => window.removeEventListener("focus", load);
-  }, [load, section]);
+    return () => {
+      invalidate();
+      window.removeEventListener("focus", load);
+    };
+  }, [load, section, invalidate]);
   useEffect(
     () => () => {
       if (viewer) URL.revokeObjectURL(viewer.url);
@@ -104,25 +120,38 @@ export function StudentWorkspace({
   const upcoming = data.sessions
     .filter((s) => s.status === "scheduled" && s.ends_at >= data.now)
     .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-  const history = data.sessions.filter((s) => s.status !== "scheduled");
+  const history = data.sessions
+    .filter((s) => s.status !== "scheduled")
+    .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const a = data.attendance;
+  const selectedClass = data.classes.find((c) => c.id === cid);
+  const learning = section === "Learning" || !!application;
+  const attendance = data.sessions.map((s) => ({
+    id: s.id,
+    subject: data.classes.find((c) => c.id === s.class_id)?.subject || "Class",
+    title: s.topic_title,
+    startsAt: s.starts_at,
+    status: s.status,
+    attendance: s.attendance,
+  }));
   const sessions = (items: StudentSnapshot["sessions"]) =>
     items.length ? (
       items.map((s) => (
         <article className="learning-card" key={s.id}>
-          <span className="learning-eyebrow">
-            {data.classes.find((c) => c.id === s.class_id)?.name}
+          <span className="viva-kicker">
+            {data.classes.find((c) => c.id === s.class_id)?.subject}
           </span>
           <h3>{s.topic_title}</h3>
-          <p>{s.learning_goal}</p>
           <p>
-            <CalendarDays size={16} /> {teachingDate(s.starts_at)}–
-            {teachingDate(s.ends_at)}
+            <CalendarDays size={16} /> {teachingDate(s.starts_at)}
           </p>
-          <span className={`teaching-status ${s.status}`}>
+          <span
+            className={`viva-pill ${s.attendance === "absent" ? "warning" : ""}`}
+          >
             {s.status}
             {s.attendance ? ` · ${s.attendance}` : ""}
           </span>
+          {s.learning_goal && <p>{s.learning_goal}</p>}
           {s.outcome && <p>{s.outcome}</p>}
           {s.room &&
             (s.mode === "Online" ? (
@@ -132,7 +161,7 @@ export function StudentWorkspace({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Open online room
+                Join online session <ArrowRight size={16} />
               </a>
             ) : (
               <p>
@@ -142,250 +171,343 @@ export function StudentWorkspace({
         </article>
       ))
     ) : (
-      <p className="learning-empty">No sessions in this view yet.</p>
+      <p className="learning-empty">No sessions in this view.</p>
     );
+  const targets = (
+    <div className="learning-grid">
+      {data.subjects.map((s) => (
+        <article className="learning-card" key={s.name}>
+          <Target size={22} />
+          <h3>{s.name}</h3>
+          <div className="viva-target-line">
+            <span>
+              Starting {s.startingMark === null ? "—" : `${s.startingMark}%`}
+            </span>
+            <strong>
+              Target {s.targetMark === null ? "—" : `${s.targetMark}%`}
+            </strong>
+          </div>
+          {s.startingMark !== null && (
+            <div
+              className="viva-target-bar"
+              role="img"
+              aria-label={`Starting mark ${s.startingMark} percent`}
+            >
+              <span
+                style={{
+                  width: `${Math.min(100, Math.max(0, s.startingMark))}%`,
+                }}
+              />
+            </div>
+          )}
+        </article>
+      ))}
+    </div>
+  );
   return (
     <div className="student-workspace">
-      <div className="learning-page-heading">
-        <div>
-          <span className="learning-eyebrow">
-            {data.assisted
-              ? "PARENT-ASSISTED LEARNING"
-              : "YOUR VIVA LEARNING SPACE"}
-          </span>
-          <h2>
-            {section === "Home"
-              ? `Hello, ${data.learner.name.split(" ")[0]}.`
-              : section}
-          </h2>
-          <p>
-            {data.learner.grade} · {data.learner.studentNumber} · All times
-            South African
-          </p>
+      {(section !== "Home" || application) && (
+        <div className="learning-page-heading">
+          <div>
+            <span className="viva-kicker">
+              {application ? "Parent-assisted view" : "Student portal"}
+            </span>
+            <h2>
+              {section === "Home"
+                ? "My dashboard"
+                : learning
+                  ? "My learning"
+                  : section === "More"
+                    ? "My account"
+                    : section}
+            </h2>
+          </div>
+          <button
+            disabled={busy}
+            aria-label="Refresh learning records"
+            onClick={() => void load()}
+          >
+            <RefreshCw size={19} />
+          </button>
         </div>
-        <button
-          disabled={busy}
-          aria-label="Refresh learning records"
-          onClick={() => void load()}
-        >
-          <RefreshCw size={19} />
-        </button>
-      </div>
+      )}
       {error && (
         <p role="alert" className="admin-error">
           {error}
         </p>
       )}
-      {data.limited && (
-        <p>
-          Showing your latest 1,000 sessions. Attendance totals include all
-          confirmed sessions.
-        </p>
-      )}
       {section === "Home" && !application && (
         <>
-          <section className="learning-hero">
-            <BookOpen size={30} />
-            <h1>Your next step starts here.</h1>
-            <p>
-              Find your classes, prepare for your next session and keep your
-              targets in sight.
-            </p>
-          </section>
-          <div className="learning-stats">
-            <article>
-              <strong>{upcoming.length}</strong>
-              <span>Scheduled sessions shown</span>
-            </article>
-            <article>
-              <strong>
-                {a.percentage === null ? "—" : `${a.percentage}%`}
-              </strong>
-              <span>Confirmed attendance</span>
-            </article>
-            <article>
-              <strong>{data.materials.length}</strong>
-              <span>Released resources</span>
-            </article>
-          </div>
-          <h3>Coming up next</h3>
-          <div className="learning-grid">{sessions(upcoming.slice(0, 3))}</div>
-          <h3>Your subject targets</h3>
-          <div className="learning-grid">
-            {data.subjects.map((s) => (
-              <article className="learning-card" key={s.name}>
-                <Target size={23} />
-                <h3>{s.name}</h3>
+          <section className="viva-profile viva-student-profile">
+            <button
+              className="viva-profile-refresh"
+              disabled={busy}
+              aria-label="Refresh learning records"
+              onClick={() => void load()}
+            >
+              <RefreshCw size={17} />
+            </button>
+            <div className="viva-profile-top">
+              <span className="viva-avatar" aria-hidden="true">
+                {data.learner.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join("")}
+              </span>
+              <div>
+                <span className="viva-kicker">Welcome back</span>
+                <h1>{data.learner.name}</h1>
                 <p>
-                  Enrollment starting mark:{" "}
-                  {s.startingMark === null
-                    ? "Not recorded"
-                    : `${s.startingMark}%`}
+                  {data.learner.grade} · {data.learner.studentNumber}
                 </p>
+              </div>
+            </div>
+            <div className="viva-profile-metrics">
+              <div>
                 <strong>
-                  Target:{" "}
-                  {s.targetMark === null ? "Not recorded" : `${s.targetMark}%`}
+                  {a.percentage === null ? "—" : `${a.percentage}%`}
                 </strong>
-              </article>
-            ))}
-          </div>
-        </>
-      )}
-      {(section === "Classes" || application) && (
-        <>
-          <h3>Your classrooms & timetable</h3>
-          <div className="learning-grid">
-            {data.classes.map((c) => (
-              <button
-                className={`learning-card learning-class ${cid === c.id ? "selected" : ""}`}
-                key={c.id}
-                onClick={() => setCid(cid === c.id ? "" : c.id)}
-              >
-                <BookOpen size={23} />
-                <strong>{c.name}</strong>
-                <span>
-                  {c.tutorName} · {c.mode}
-                  {c.archived ? " · Archived" : ""}
-                </span>
-                {data.slots
-                  .filter((s) => s.class_id === c.id)
-                  .map((s) => (
-                    <small key={s.id}>
-                      {
-                        [
-                          "",
-                          "Monday",
-                          "Tuesday",
-                          "Wednesday",
-                          "Thursday",
-                          "Friday",
-                          "Saturday",
-                          "Sunday",
-                        ][s.weekday]
-                      }{" "}
-                      {s.starts_at.slice(0, 5)}–{s.ends_at.slice(0, 5)}
-                    </small>
-                  ))}
-              </button>
-            ))}
-          </div>
-          {!data.classes.length && (
-            <p className="learning-empty">
-              No classes assigned yet. Viva will add your enrolled classes here.
-            </p>
-          )}
-          <h3>Upcoming sessions</h3>
-          <div className="learning-grid">
-            {sessions(upcoming.filter((s) => !cid || s.class_id === cid))}
-          </div>
-          <h3>Past sessions & confirmed attendance</h3>
-          <div className="learning-grid">
-            {sessions(history.filter((s) => !cid || s.class_id === cid))}
-          </div>
-        </>
-      )}
-      {(section === "Learn" || application) && (
-        <>
-          <h3>Materials for your learning</h3>
-          <div className="learning-grid">
-            {data.materials.map((m) => (
-              <article key={m.id} className="learning-card">
-                <FileText size={24} />
-                <h3>{m.title}</h3>
-                <p>
-                  {m.subject} · {m.kind} · Version {m.version}
-                </p>
-                <button disabled={busy} onClick={() => void file(m)}>
-                  Open resource
+                <span>Overall attendance</span>
+              </div>
+              <div>
+                <strong>{data.subjects.length}</strong>
+                <span>Subjects</span>
+              </div>
+              <div>
+                <strong>{a.attended}</strong>
+                <span>Sessions attended</span>
+              </div>
+            </div>
+          </section>
+          <div className="viva-student-home-grid">
+            <WeeklyAttendance
+              sessions={attendance}
+              today={data.today}
+              limited={data.limited}
+            />
+            <section className="viva-up-next">
+              <div className="viva-section-heading">
+                <h2>Next session</h2>
+                <button onClick={() => onNavigate?.("Learning")}>
+                  My learning <ArrowRight size={16} />
                 </button>
-              </article>
-            ))}
+              </div>
+              <div className="viva-session-list">
+                {sessions(upcoming.slice(0, 1))}
+              </div>
+              <AcademicLearner
+                summary
+                onProgress={() => onNavigate?.("Progress")}
+                onNavigate={() => {
+                  setTab("Work");
+                  setCid("");
+                  onNavigate?.("Learning");
+                }}
+              />
+            </section>
+            <div className="viva-targets">
+              <h2>My subject targets</h2>
+              {targets}
+            </div>
           </div>
-          {!data.materials.length && (
-            <p className="learning-empty">
-              No resources released yet. Your tutor will share materials here.
-            </p>
+        </>
+      )}
+      {learning && (
+        <>
+          {!selectedClass ? (
+            <>
+              <div className="learning-grid">
+                {data.classes.map((c) => (
+                  <button
+                    className="learning-card learning-class"
+                    key={c.id}
+                    onClick={() => {
+                      setCid(c.id);
+                      setTab("Sessions");
+                    }}
+                  >
+                    <BookOpen size={24} />
+                    <span className="viva-kicker">{c.subject}</span>
+                    <strong>{c.name}</strong>
+                    <span>
+                      {c.tutorName} · {c.mode}
+                      {c.archived ? " · Archived" : ""}
+                    </span>
+                    <span>Open classroom →</span>
+                  </button>
+                ))}
+              </div>
+              {!data.classes.length && (
+                <p className="learning-empty">No classes assigned yet.</p>
+              )}
+              <div className="viva-detail-tabs" aria-label="Learning views">
+                {["Sessions", "Work", "Materials"].map((t) => (
+                  <button
+                    key={t}
+                    aria-current={tab === t ? "page" : undefined}
+                    onClick={() => setTab(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <button className="viva-back" onClick={() => setCid("")}>
+                <ChevronLeft size={16} /> All classrooms
+              </button>
+              <section className="viva-profile">
+                <span className="viva-kicker">{selectedClass.subject}</span>
+                <h1>{selectedClass.name}</h1>
+                <p>
+                  {selectedClass.tutorName} · {selectedClass.mode}
+                </p>
+              </section>
+              <div className="viva-detail-tabs" aria-label="Classroom views">
+                {["Sessions", "Work", "Materials"].map((t) => (
+                  <button
+                    key={t}
+                    aria-current={tab === t ? "page" : undefined}
+                    onClick={() => setTab(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
-          {!application && (
-            <p className="learning-empty">
-              Curriculum lessons, topic practice and quizzes will be added in
-              the next teaching phase.
-            </p>
+          {tab === "Sessions" && (
+            <>
+              {selectedClass && (
+                <details className="learning-card">
+                  <summary>Weekly class times · South Africa</summary>
+                  {data.slots
+                    .filter((s) => s.class_id === cid)
+                    .map((s) => (
+                      <p key={s.id}>
+                        {
+                          [
+                            "",
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday",
+                            "Sunday",
+                          ][s.weekday]
+                        }{" "}
+                        {s.starts_at.slice(0, 5)}–{s.ends_at.slice(0, 5)}
+                      </p>
+                    ))}
+                </details>
+              )}
+              <h3>Upcoming sessions · South Africa</h3>
+              <div className="learning-grid">
+                {sessions(
+                  upcoming.filter((s) => !selectedClass || s.class_id === cid),
+                )}
+              </div>
+              <details className="learning-card">
+                <summary>Past sessions & attendance</summary>
+                <div className="learning-grid">
+                  {sessions(
+                    history.filter((s) => !selectedClass || s.class_id === cid),
+                  )}
+                </div>
+                {data.limited && (
+                  <p className="viva-caption">Recent history only.</p>
+                )}
+              </details>
+            </>
+          )}
+          {tab === "Work" && (
+            <AcademicLearner
+              key={cid || "all"}
+              application={application}
+              classId={selectedClass?.id}
+            />
+          )}
+          {tab === "Materials" && (
+            <>
+              <h3>Learning materials</h3>
+              {selectedClass &&
+                data.classes.filter((c) => c.subject === selectedClass.subject)
+                  .length > 1 && (
+                  <p className="viva-caption">
+                    Materials shared across your {selectedClass.subject}{" "}
+                    classes.
+                  </p>
+                )}
+              <div className="learning-grid">
+                {data.materials
+                  .filter(
+                    (m) =>
+                      !selectedClass || m.subject === selectedClass.subject,
+                  )
+                  .map((m) => (
+                    <article key={m.id} className="learning-card">
+                      <FileText size={24} />
+                      <h3>{m.title}</h3>
+                      <p>
+                        {m.subject} · {m.kind}
+                      </p>
+                      <button disabled={busy} onClick={() => void file(m)}>
+                        Open resource
+                      </button>
+                    </article>
+                  ))}
+              </div>
+              {!data.materials.some(
+                (m) => !selectedClass || m.subject === selectedClass.subject,
+              ) && <p className="learning-empty">No materials shared yet.</p>}
+            </>
           )}
         </>
       )}
       {section === "Progress" && (
         <>
-          <div className="learning-stats">
-            <article>
-              <CheckCircle2 />
-              <strong>{a.attended}</strong>
-              <span>Sessions attended</span>
-            </article>
-            <article>
-              <strong>{a.absent}</strong>
-              <span>Absent</span>
-            </article>
-            <article>
-              <strong>{a.excused}</strong>
-              <span>Excused</span>
-            </article>
-          </div>
-          <h3>Starting marks & targets</h3>
-          <div className="learning-grid">
-            {data.subjects.map((s) => (
-              <article key={s.name} className="learning-card">
-                <h3>{s.name}</h3>
-                <p>
-                  Starting:{" "}
-                  {s.startingMark === null
-                    ? "Not recorded"
-                    : `${s.startingMark}%`}{" "}
-                  · Target:{" "}
-                  {s.targetMark === null ? "Not recorded" : `${s.targetMark}%`}
-                </p>
-                <p>
-                  Enrollment marks are starting points. Your published
-                  assessment progress appears below.
-                </p>
-              </article>
-            ))}
-          </div>
-          <h3>Confirmed teaching history</h3>
-          <div className="learning-grid">{sessions(history)}</div>
+          <AcademicLearner progressOnly />
+          <details className="learning-card">
+            <summary>Starting marks & targets</summary>
+            {targets}
+          </details>
+          <details className="learning-card">
+            <summary>Attendance history</summary>
+            <p className="viva-caption">
+              {a.attended} attended · {a.absent} absent · {a.excused} excused.
+              Overall rate excludes excused, cancelled and unconfirmed sessions.
+            </p>
+            <div className="learning-grid">{sessions(history)}</div>
+          </details>
         </>
       )}
       {section === "More" && (
-        <>
-          <article className="learning-card">
-            <h3>Your profile</h3>
-            <p>{data.learner.name}</p>
-            <p>
-              {data.learner.grade} · {data.learner.studentNumber}
-            </p>
-            <p>
-              Your grade, enrolled subjects and official learning history are
-              maintained by Viva. Contact us if a detail needs correcting.
-            </p>
-          </article>
-          <article className="learning-card">
-            <h3>What is coming next?</h3>
-            <p>
-              Open Work for activities, submissions, timed assessments and
-              feedback. Progress shows published averages and reports. Practice,
-              study plans, badges and Ask Vito remain later releases.
-            </p>
-          </article>
-        </>
+        <article className="learning-card">
+          <span className="viva-avatar">
+            <BookOpen />
+          </span>
+          <h2>{data.learner.name}</h2>
+          <p>
+            {data.learner.grade} · {data.learner.studentNumber}
+          </p>
+          <h3>My subjects</h3>
+          <div className="viva-chips">
+            {data.subjects.map((s) => (
+              <span className="viva-pill" key={s.name}>
+                {s.name}
+              </span>
+            ))}
+          </div>
+          <p>Need a correction to your details? Send Viva a message.</p>
+        </article>
       )}
-      {!application && section === "Progress" && (
-        <AcademicLearner progressOnly />
-      )}
-      {!application && section === "Home" && <AcademicLearner summary />}
       {!application && (
         <div className="portal-support">
           <WhatsAppButton
-            message={`Hello Viva, I need ${section === "Learn" ? "help with learning materials" : section === "Classes" ? "help with my class schedule" : "student portal assistance"}. Learner reference: ${data.learner.studentNumber}.`}
+            message={`Hello Viva, I need help with ${section === "Learning" ? "my classes or learning materials" : section === "Progress" ? "my learning progress" : "my student account"}. Learner reference: ${data.learner.studentNumber}.`}
           />
           <a href="/privacy-policy">Privacy</a>
         </div>

@@ -99,7 +99,7 @@ describe("admin interface", () => {
   it("shows billing-period collection at the top of Finance and removes it from Home", async () => {
     network();
     view();
-    await screen.findByRole("heading", { name: "Your tuition operations" });
+    await screen.findByRole("heading", { name: "Your daily overview" });
     expect(
       screen.queryByRole("heading", {
         name: "Collection for this billing period",
@@ -127,9 +127,11 @@ describe("admin interface", () => {
     });
     network();
     view();
-    await screen.findByRole("heading", { name: "Your tuition operations" });
+    await screen.findByRole("heading", { name: "Your daily overview" });
     fireEvent.click(screen.getByRole("button", { name: "1 Active learners" }));
-    expect(screen.getByRole("heading", { name: "Students" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Students" }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Applications" }));
     expect(
       screen.getByRole("button", { name: "Open Test Learner" }),
@@ -149,7 +151,7 @@ describe("admin interface", () => {
     snapshot.applications[0].status = "active";
     network();
     view();
-    await screen.findByRole("heading", { name: "Your tuition operations" });
+    await screen.findByRole("heading", { name: "Your daily overview" });
     fireEvent.click(screen.getByRole("button", { name: "Applications" }));
     expect(
       screen.getByText("No applications at the moment"),
@@ -192,7 +194,7 @@ describe("admin interface", () => {
     ];
     const fetch = network();
     view();
-    await screen.findByRole("heading", { name: "Your tuition operations" });
+    await screen.findByRole("heading", { name: "Your daily overview" });
     fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
     expect(screen.getByText("parent@example.test")).toBeInTheDocument();
     expect(
@@ -258,7 +260,7 @@ describe("admin interface", () => {
     ];
     network();
     view();
-    await screen.findByRole("heading", { name: "Your tuition operations" });
+    await screen.findByRole("heading", { name: "Your daily overview" });
     fireEvent.click(screen.getByRole("button", { name: "Audit" }));
     expect(screen.getByText("Verified payment recorded")).toBeInTheDocument();
     expect(
@@ -282,18 +284,22 @@ describe("admin interface", () => {
     expect(screen.queryByText("Test Learner")).not.toBeInTheDocument();
     expect(fetch).toHaveBeenCalledOnce();
   });
-  it("loads real counts and makes future sections explicit placeholders", async () => {
+  it("loads real counts without advertising unavailable sections", async () => {
     network();
     view();
-    await screen.findByRole("heading", { name: "Your tuition operations" });
-    fireEvent.click(screen.getByRole("button", { name: "System health" }));
-    expect(screen.getByText("Not available yet.")).toBeInTheDocument();
+    await screen.findByRole("heading", { name: "Your daily overview" });
+    expect(
+      screen.queryByRole("button", { name: "System health" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Settings" }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("All systems healthy")).not.toBeInTheDocument();
   });
   it("sends an approval request with the selected start date and refreshes status", async () => {
     const fetch = network();
     view();
-    await screen.findByRole("heading", { name: "Your tuition operations" });
+    await screen.findByRole("heading", { name: "Your daily overview" });
     fireEvent.click(screen.getByRole("button", { name: "Applications" }));
     fireEvent.click(screen.getByRole("button", { name: "Open Test Learner" }));
     const dialog = screen.getByRole("dialog");
@@ -345,7 +351,7 @@ describe("admin interface", () => {
     ];
     network();
     view();
-    await screen.findByRole("heading", { name: "Your tuition operations" });
+    await screen.findByRole("heading", { name: "Your daily overview" });
     fireEvent.click(screen.getByRole("button", { name: "Applications" }));
     fireEvent.click(screen.getByRole("button", { name: "Open Test Learner" }));
     expect(
@@ -378,7 +384,7 @@ describe("admin interface", () => {
         : original(input, init),
     );
     view();
-    await screen.findByRole("heading", { name: "Your tuition operations" });
+    await screen.findByRole("heading", { name: "Your daily overview" });
     fireEvent.click(screen.getByRole("button", { name: "Finance" }));
     fireEvent.click(screen.getByRole("button", { name: "View VT-T-00000001" }));
     fireEvent.change(screen.getByLabelText("Amount allocated (rand)"), {
@@ -457,7 +463,7 @@ describe("admin interface", () => {
         : original(input, init),
     );
     view();
-    await screen.findByRole("heading", { name: "Your tuition operations" });
+    await screen.findByRole("heading", { name: "Your daily overview" });
     fireEvent.click(screen.getByRole("button", { name: "Applications" }));
     fireEvent.click(screen.getByRole("button", { name: "Open Test Learner" }));
     fireEvent.change(screen.getByLabelText("Review note"), {

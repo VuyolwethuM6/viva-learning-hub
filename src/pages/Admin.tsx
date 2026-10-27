@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   Mail,
   X,
-  Menu,
   Bell,
   ChevronRight,
   ArrowUpRight,
@@ -133,8 +132,6 @@ const tabs = [
   "Assessments",
   "Academics",
   "Tutors",
-  "System health",
-  "Settings",
 ];
 const icons = [LayoutDashboard, ClipboardCheck, Users, Wallet, Mail, History];
 const label = (value: string) => value.replaceAll("_", " ");
@@ -535,8 +532,6 @@ export default function Admin() {
       Assessments: FileText,
       Academics: TrendingUp,
       Tutors: GraduationCap,
-      "System health": ShieldCheck,
-      Settings: Menu,
     })[name] || BookOpen;
   const navGroups = [
     { label: "Run the day", items: tabs.slice(0, 6) },
@@ -544,7 +539,6 @@ export default function Admin() {
       label: "Teaching",
       items: ["Classes", "Materials", "Assessments", "Academics", "Tutors"],
     },
-    { label: "Oversight", items: ["System health", "Settings"] },
   ];
   const navButton = (name: string) => {
     const Icon = iconFor(name);
@@ -823,16 +817,6 @@ export default function Admin() {
             </nav>
           </section>
         ))}
-        <div className="sidebar-note">
-          <span className="sidebar-leaf">
-            <GraduationCap size={19} />
-          </span>
-          <strong>Growing with Viva</strong>
-          <p>
-            Learning and teaching tools will join this workspace as they become
-            available.
-          </p>
-        </div>
         <div className="sidebar-account">
           <span className="account-avatar">
             {user.email?.[0]?.toUpperCase() || "A"}
@@ -932,8 +916,11 @@ export default function Admin() {
                         <p className="hero-hello">
                           Welcome to your Viva workspace
                         </p>
-                        <h1>Your tuition operations</h1>
-                        <p>Small steps today. Stronger futures tomorrow.</p>
+                        <h1>Your daily overview</h1>
+                        <p>
+                          Applications, learners and accounts that need
+                          attention.
+                        </p>
                       </div>
                       <span className="hero-icon">
                         <GraduationCap size={45} />
@@ -1471,39 +1458,15 @@ export default function Admin() {
                   </section>
                 </>
               )}
-              {["Assessments", "Academics"].includes(tab) && <AcademicStaff />}
+              {["Assessments", "Academics"].includes(tab) && (
+                <AcademicStaff
+                  key={tab}
+                  view={tab === "Academics" ? "progress" : "work"}
+                />
+              )}
               {["Classes", "Materials", "Tutors"].includes(tab) && (
                 <TeachingWorkspace section={tab} />
               )}
-              {!tabs.slice(0, 6).includes(tab) &&
-                ![
-                  "Classes",
-                  "Materials",
-                  "Tutors",
-                  "Assessments",
-                  "Academics",
-                ].includes(tab) && (
-                  <section className="admin-card future-card">
-                    <span className="future-icon">
-                      <BookOpen size={32} />
-                    </span>
-                    <span className="eyebrow">GROWING WITH VIVA</span>
-                    <h1>{tab}</h1>
-                    <Badge value="coming_soon" />
-                    <h2>Not available yet.</h2>
-                    <p>
-                      This space is reserved for the next stage of your Viva
-                      system. Your current workspace supports application
-                      review, tuition invoices, payment recording and
-                      activation.
-                    </p>
-                    {tab === "System health" && (
-                      <p>
-                        Live monitoring and backup status are not connected.
-                      </p>
-                    )}
-                  </section>
-                )}
             </>
           )}
           <div className="portal-support">

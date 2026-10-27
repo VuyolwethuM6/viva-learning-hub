@@ -5,12 +5,14 @@ Updated 27 October 2026, South African time. This describes implemented code on
 Existing enrollment, tuition, accounting, class, attendance and access records
 are preserved. Do not clear your database.
 
+See [portal-interface.md](portal-interface.md) for the current portal navigation and UI acceptance checks. This UI update adds no migration.
+
 ## Delivered workflow and boundaries
 
 Admin **Assessments** and **Academics**, and tutor **Work**, share class-scoped
-academic records. Student **Work** provides assignments/submissions and published
+academic records. Student **Learning → Work** provides assignments/submissions and published
 feedback; **Progress** provides calculated period averages and published reports.
-Parent Home's **Assigned work, published results & reports** is read-only family
+Parent Home's **Results & assigned work** is read-only family
 access. It also works for an authorised family after a learner's tuition access
 is paused; it does not activate student sign-in or tuition service.
 
@@ -142,10 +144,10 @@ profile changes do not erase the assignment or its history.
 
 ## 5. Student submission and recovery
 
-1. Student → **Work** → open the assigned item → Start work. A timed assessment
+1. Student → **Learning → Work** → open the assigned item → Start work. A timed assessment
    explicitly confirms that starting begins the timer.
 2. Enter a written answer if configured. **Save draft** stores it on the server;
-   refresh, reopen Work and verify the saved answer is retained. Unsaved changes
+   refresh, reopen Learning → Work and verify the saved answer is retained. Unsaved changes
    are labelled; there is no claim of automatic/offline saving.
 3. Upload PDFs or JPEG/PNG photographs if required: maximum three active files,
    10 MB each. Wait for **Verified upload**. Only the owning learner can manage
@@ -177,7 +179,7 @@ confirmed submissions and stale overwrites.
    contain neither the mark nor the feedback/private note.
 4. Admin → Assessments → class → task → **Publish result**, or return the
    marking with a review reason.
-5. Student refreshes Work: the published score and feedback appear. Parent
+5. Student refreshes Learning → Work: the published score and feedback appear. Parent
    opens Home → Assigned work, published results & reports: same published
    record for their own child. Private staff notes must be absent.
 6. Student Progress and staff Current assessed progress show the relevant

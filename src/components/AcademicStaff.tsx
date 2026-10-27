@@ -77,7 +77,8 @@ function WorkFields({
   const periods = data.periods.filter((p) => p.class_id === cid);
   return (
     <>
-      <p>{c.name}</p>
+      <p className="viva-pill">{c.name}</p>
+      <h3 className="viva-form-section">1. Work & learning goal</h3>
       <label>
         Reporting period
         <select name="periodId" aria-label="Reporting period" required>
@@ -185,6 +186,7 @@ function WorkFields({
           defaultValue="Complete every question. Show your working clearly, then review and submit your answer before the closing time."
         />
       </label>
+      <h3 className="viva-form-section">2. Response & timing</h3>
       <Choice
         name="submissionMethod"
         label="Student response"
@@ -244,6 +246,7 @@ function WorkFields({
       ) : (
         <input type="hidden" name="durationMinutes" value="" />
       )}
+      <h3 className="viva-form-section">3. Marks & resources</h3>
       <label>
         Maximum marks
         <input
@@ -429,12 +432,16 @@ function AcademicAction({
 }
 export function AcademicStaff({
   audience = "admin",
+  view,
 }: {
   audience?: "admin" | "tutor";
+  view?: "work" | "progress";
 }) {
   const [data, setData] = useState<AcademicSnapshot | null>(null),
     [teaching, setTeaching] = useState<TeachingSnapshot | null>(null),
     [cid, setCid] = useState(""),
+    [queue, setQueue] = useState("All"),
+    [localView, setLocalView] = useState("work"),
     [tid, setTid] = useState(""),
     [spec, setSpec] = useState<Spec | null>(null),
     [error, setError] = useState(""),
@@ -529,6 +536,7 @@ export function AcademicStaff({
         )}
       </section>
     );
+  const currentView = view || localView;
   const ds = data,
     ts = teaching,
     c = ts.classes.find((c) => c.id === cid),
@@ -631,15 +639,57 @@ export function AcademicStaff({
       }),
     );
   }
+  const taskQueue = (t: AcademicSnapshot["tasks"][number]) => {
+    if (t.state === "draft") return "Drafts";
+    if (t.state === "cancelled") return "Cancelled";
+    const records = ds.recipients
+      .filter((r) => r.task_id === t.id)
+      .map((r) => {
+        const attempt = ds.attempts
+          .filter(
+            (a) => a.task_id === t.id && a.application_id === r.application_id,
+          )
+          .sort((a, b) => b.attempt - a.attempt)[0];
+        const grade = attempt
+          ? ds.grades
+              .filter((g) => g.attempt_id === attempt.id)
+              .sort((a, b) => b.revision - a.revision)[0]
+          : undefined;
+        return { attempt, grade };
+      });
+    if (records.some((r) => r.grade?.state === "review")) return "In review";
+    if (
+      records.some(
+        (r) =>
+          r.attempt?.state === "submitted" &&
+          !["published", "review"].includes(r.grade?.state || ""),
+      )
+    )
+      return "To mark";
+    if (
+      records.length &&
+      records.every(
+        (r) =>
+          r.attempt?.state === "submitted" && r.grade?.state === "published",
+      )
+    )
+      return "Published";
+    return "Assigned";
+  };
+  const shownTasks = ds.tasks.filter(
+    (t) => t.class_id === cid && (queue === "All" || taskQueue(t) === queue),
+  );
   return (
     <div className="academic-workspace">
       <div className="page-heading">
         <div>
-          <span className="eyebrow">LEARNING THAT CAN BE FOLLOWED</span>
-          <h1>Assignments & assessments</h1>
+          <h1>
+            {currentView === "progress" ? "Academic progress" : "Assigned work"}
+          </h1>
           <p>
-            Draft → assign → confirmed submission → mark → admin publication.
-            South African times.
+            {currentView === "progress"
+              ? "Subject results, targets and published reports."
+              : "Set work, review submissions and publish feedback."}
           </p>
         </div>
         <button
@@ -654,6 +704,25 @@ export function AcademicStaff({
         <p role="alert" className="admin-error">
           {error}
         </p>
+      )}
+      {!view && (
+        <div className="viva-detail-tabs" aria-label="Teaching work views">
+          {[
+            ["work", "Assigned work"],
+            ["progress", "Results & reports"],
+          ].map(([v, label]) => (
+            <button
+              key={v}
+              aria-current={currentView === v ? "page" : undefined}
+              onClick={() => {
+                setLocalView(v);
+                setTid("");
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       )}
       <div className="academic-toolbar">
         <label>
@@ -676,7 +745,7 @@ export function AcademicStaff({
             ))}
           </select>
         </label>
-        {c && !c.archived && (
+        {currentView === "work" && c && !c.archived && (
           <button
             className="admin-primary"
             disabled={busy || !ds.periods.some((p) => p.class_id === cid)}
@@ -753,559 +822,633 @@ export function AcademicStaff({
         </p>
       ) : (
         <>
-          <div className="academic-grid">
-            {ds.tasks
-              .filter((t) => t.class_id === cid)
-              .map((t) => (
-                <button
-                  key={t.id}
-                  className={`admin-card academic-task-card ${tid === t.id ? "selected" : ""}`}
-                  onClick={() => setTid(t.id)}
-                >
-                  <ClipboardList size={22} />
-                  <strong>{t.title}</strong>
-                  <small>
-                    {t.purpose} · {t.kind} · {t.state}
-                  </small>
-                  <span>Due {teachingDate(t.due_at)}</span>
-                </button>
-              ))}
-          </div>
-          {!ds.tasks.some((t) => t.class_id === cid) && (
-            <p className="academic-empty">
-              No assigned work in this class yet.
-            </p>
-          )}
-          {task && (
-            <section className="admin-card academic-task-detail">
-              <span className="eyebrow">
-                {task.state.toUpperCase()} · {task.purpose.toUpperCase()}
-              </span>
-              <h2>{task.title}</h2>
-              <p>{task.learning_goal}</p>
-              <p className="academic-instructions">{task.instructions}</p>
-              <p>
-                Opens {teachingDate(task.opens_at)} · Due{" "}
-                {teachingDate(task.due_at)} · Hard close{" "}
-                {teachingDate(task.closes_at)}
-              </p>
-              <p>
-                {task.max_marks} marks · {task.submission_method} response ·{" "}
-                {task.duration_minutes
-                  ? `${task.duration_minutes} minutes from start, capped by closing time`
-                  : "No timed duration"}{" "}
-                ·{" "}
-                {task.counts_average
-                  ? "Included in the period average"
-                  : "Separate from formal average"}
-              </p>
-              <div className="teaching-actions">
-                {task.state === "draft" && (
+          {currentView === "work" && (
+            <>
+              {!task && (
+                <>
+                  <div className="viva-chips" aria-label="Work queues">
+                    {[
+                      "All",
+                      "Drafts",
+                      "Assigned",
+                      "To mark",
+                      "In review",
+                      "Published",
+                      "Cancelled",
+                    ].map((q) => (
+                      <button
+                        key={q}
+                        aria-pressed={queue === q}
+                        onClick={() => setQueue(q)}
+                      >
+                        {q}{" "}
+                        <span>
+                          (
+                          {
+                            ds.tasks.filter(
+                              (t) =>
+                                t.class_id === cid &&
+                                (q === "All" || taskQueue(t) === q),
+                            ).length
+                          }
+                          )
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="academic-grid">
+                    {shownTasks.map((t) => (
+                      <button
+                        key={t.id}
+                        className={`admin-card academic-task-card ${tid === t.id ? "selected" : ""}`}
+                        onClick={() => setTid(t.id)}
+                      >
+                        <ClipboardList size={22} />
+                        <strong>{t.title}</strong>
+                        <small>
+                          {t.purpose} · {t.kind} · {t.state}
+                        </small>
+                        <span>Due {teachingDate(t.due_at)}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {!shownTasks.length && (
+                    <p className="academic-empty">No work in this view.</p>
+                  )}
+                </>
+              )}
+              {task && (
+                <section className="admin-card academic-task-detail">
                   <button
-                    className="admin-primary"
-                    onClick={() =>
-                      show(
-                        "Assign work to learners",
-                        "task_assign",
-                        <fieldset>
-                          <legend>
-                            Eligible class learners · select recipients
-                          </legend>
-                          {members
-                            .filter((m) => !m.left_on && m.state === "active")
-                            .map((m) => (
-                              <label key={m.id}>
-                                <input
-                                  type="checkbox"
-                                  name="learners"
-                                  value={m.application_id}
-                                />
-                                {m.name} · {m.studentNumber}
-                              </label>
-                            ))}
-                        </fieldset>,
-                        (f) => ({
-                          taskId: tid,
-                          revision: task.revision,
-                          learners: f.getAll("learners").map(String),
-                        }),
-                      )
-                    }
+                    className="viva-back"
+                    disabled={busy}
+                    onClick={() => setTid("")}
                   >
-                    Assign to learners
+                    ← All class work
                   </button>
-                )}
-                {task.state !== "cancelled" && (
-                  <button
-                    onClick={() =>
-                      show(
-                        "Cancel unused work",
-                        "task_cancel",
-                        <label>
-                          Reason
-                          <textarea name="reason" minLength={5} required />
-                        </label>,
-                        (f) => ({ taskId: tid, reason: text(f, "reason") }),
-                      )
-                    }
-                  >
-                    Cancel unused work
-                  </button>
-                )}
-                {audience === "admin" &&
-                  task.state === "assigned" &&
-                  !task.memo_released && (
-                    <button
-                      onClick={() =>
-                        show(
-                          "Release memorandum",
-                          "memo_release",
-                          <>
-                            <p>
-                              Every learner's closing time must have passed. A
-                              released memorandum prevents reopening this task.
-                            </p>
+                  <span className="eyebrow">
+                    {task.state.toUpperCase()} · {task.purpose.toUpperCase()}
+                  </span>
+                  <h2>{task.title}</h2>
+                  <p>{task.learning_goal}</p>
+                  <p className="academic-instructions">{task.instructions}</p>
+                  <p>
+                    Opens {teachingDate(task.opens_at)} · Due{" "}
+                    {teachingDate(task.due_at)} · Hard close{" "}
+                    {teachingDate(task.closes_at)}
+                  </p>
+                  <p>
+                    {task.max_marks} marks · {task.submission_method} response ·{" "}
+                    {task.duration_minutes
+                      ? `${task.duration_minutes} minutes from start, capped by closing time`
+                      : "No timed duration"}{" "}
+                    ·{" "}
+                    {task.counts_average
+                      ? "Included in the period average"
+                      : "Separate from formal average"}
+                  </p>
+                  <div className="teaching-actions">
+                    {task.state === "draft" && (
+                      <button
+                        className="admin-primary"
+                        onClick={() =>
+                          show(
+                            "Assign work to learners",
+                            "task_assign",
+                            <fieldset>
+                              <legend>
+                                Eligible class learners · select recipients
+                              </legend>
+                              {members
+                                .filter(
+                                  (m) => !m.left_on && m.state === "active",
+                                )
+                                .map((m) => (
+                                  <label key={m.id}>
+                                    <input
+                                      type="checkbox"
+                                      name="learners"
+                                      value={m.application_id}
+                                    />
+                                    {m.name} · {m.studentNumber}
+                                  </label>
+                                ))}
+                            </fieldset>,
+                            (f) => ({
+                              taskId: tid,
+                              revision: task.revision,
+                              learners: f.getAll("learners").map(String),
+                            }),
+                          )
+                        }
+                      >
+                        Assign to learners
+                      </button>
+                    )}
+                    {task.state !== "cancelled" && (
+                      <button
+                        onClick={() =>
+                          show(
+                            "Cancel unused work",
+                            "task_cancel",
                             <label>
                               Reason
                               <textarea name="reason" minLength={5} required />
-                            </label>
-                          </>,
-                          (f) => ({ taskId: tid, reason: text(f, "reason") }),
-                        )
-                      }
-                    >
-                      Release memorandum after close
-                    </button>
-                  )}
-              </div>
-              <h3>Saved task resources</h3>
-              {ds.resources
-                .filter((r) => r.task_id === tid)
-                .map((r) => (
-                  <div key={r.version_id} className="academic-row">
-                    <span>
-                      {r.name} · v{r.version} · {r.role}
-                    </span>
-                    <button
-                      disabled={busy}
-                      onClick={() =>
-                        void openFile(r.version_id, "resource", r.name, r.mime)
-                      }
-                    >
-                      Open resource
-                    </button>
-                  </div>
-                ))}
-              <h3>Learner submissions & marking</h3>
-              {ds.recipients
-                .filter((r) => r.task_id === tid)
-                .map((r) => {
-                  const attempts = ds.attempts.filter(
-                      (a) =>
-                        a.task_id === tid &&
-                        a.application_id === r.application_id,
-                    ),
-                    latest = attempts[0],
-                    grades = ds.grades.filter(
-                      (g) =>
-                        g.task_id === tid &&
-                        g.application_id === r.application_id,
-                    ),
-                    g = grades[0];
-                  return (
-                    <article
-                      key={r.application_id}
-                      className="academic-learner"
-                    >
-                      <h3>{r.learner_name}</h3>
-                      <p>
-                        {r.student_number} · Starting {r.starting_mark ?? "—"}%
-                        · Target {r.target_mark ?? "—"}%
-                      </p>
-                      <p>
-                        {latest
-                          ? `Attempt ${latest.attempt} · ${latest.state}${latest.late ? " · Late" : ""}`
-                          : "No confirmed submission"}
-                        {g
-                          ? ` · Mark ${g.score}/${task.max_marks} · ${g.state}`
-                          : ""}
-                      </p>
-                      {latest?.receipt && (
-                        <p className="academic-receipt">
-                          Receipt {latest.receipt} ·{" "}
-                          {teachingDate(latest.submitted_at!)}
-                        </p>
-                      )}
-                      {latest?.answer && (
-                        <pre className="academic-answer">{latest.answer}</pre>
-                      )}
-                      {latest &&
-                        ds.uploads
-                          .filter(
-                            (u) => u.attempt_id === latest.id && u.finalized_at,
+                            </label>,
+                            (f) => ({ taskId: tid, reason: text(f, "reason") }),
                           )
-                          .map((u) => (
-                            <button
-                              key={u.id}
-                              disabled={busy}
-                              onClick={() =>
-                                void openFile(
-                                  u.id,
-                                  "submission",
-                                  u.file_name,
-                                  u.mime,
-                                )
-                              }
-                            >
-                              Open {u.file_name}
-                            </button>
-                          ))}
-                      <div className="teaching-actions">
-                        {latest?.state === "submitted" && (
-                          <button
-                            className="admin-primary"
-                            onClick={() => mark(latest)}
-                          >
-                            Mark / revise feedback
-                          </button>
-                        )}
-                        {latest?.state === "submitted" &&
-                          !g &&
-                          task.kind !== "exam" &&
-                          latest.attempt < task.max_attempts && (
-                            <button
-                              onClick={() =>
-                                show(
-                                  "Return work for correction",
-                                  "attempt_return",
-                                  <label>
-                                    Reason
-                                    <textarea
-                                      name="reason"
-                                      minLength={5}
-                                      required
-                                    />
-                                  </label>,
-                                  (f) => ({
-                                    attemptId: latest.id,
-                                    reason: text(f, "reason"),
-                                  }),
-                                )
-                              }
-                            >
-                              Return for correction
-                            </button>
-                          )}
-                        {g?.state === "draft" && (
-                          <button
-                            onClick={() =>
-                              show(
-                                "Submit mark for admin review",
-                                "grade_review",
+                        }
+                      >
+                        Cancel unused work
+                      </button>
+                    )}
+                    {audience === "admin" &&
+                      task.state === "assigned" &&
+                      !task.memo_released && (
+                        <button
+                          onClick={() =>
+                            show(
+                              "Release memorandum",
+                              "memo_release",
+                              <>
                                 <p>
-                                  {r.learner_name} · {g.score}/{task.max_marks}.
-                                  Feedback remains private until publication.
-                                </p>,
-                                () => ({ taskId: tid, gradeId: g.id }),
+                                  Every learner's closing time must have passed.
+                                  A released memorandum prevents reopening this
+                                  task.
+                                </p>
+                                <label>
+                                  Reason
+                                  <textarea
+                                    name="reason"
+                                    minLength={5}
+                                    required
+                                  />
+                                </label>
+                              </>,
+                              (f) => ({
+                                taskId: tid,
+                                reason: text(f, "reason"),
+                              }),
+                            )
+                          }
+                        >
+                          Release memorandum after close
+                        </button>
+                      )}
+                  </div>
+                  <h3>Saved task resources</h3>
+                  {ds.resources
+                    .filter((r) => r.task_id === tid)
+                    .map((r) => (
+                      <div key={r.version_id} className="academic-row">
+                        <span>
+                          {r.name} · v{r.version} · {r.role}
+                        </span>
+                        <button
+                          disabled={busy}
+                          onClick={() =>
+                            void openFile(
+                              r.version_id,
+                              "resource",
+                              r.name,
+                              r.mime,
+                            )
+                          }
+                        >
+                          Open resource
+                        </button>
+                      </div>
+                    ))}
+                  <h3>Learner submissions & marking</h3>
+                  {ds.recipients
+                    .filter((r) => r.task_id === tid)
+                    .map((r) => {
+                      const attempts = ds.attempts.filter(
+                          (a) =>
+                            a.task_id === tid &&
+                            a.application_id === r.application_id,
+                        ),
+                        latest = attempts[0],
+                        grades = ds.grades.filter(
+                          (g) =>
+                            g.task_id === tid &&
+                            g.application_id === r.application_id,
+                        ),
+                        g = grades[0];
+                      return (
+                        <article
+                          key={r.application_id}
+                          className="academic-learner"
+                        >
+                          <h3>{r.learner_name}</h3>
+                          <p>
+                            {r.student_number} · Starting{" "}
+                            {r.starting_mark ?? "—"}% · Target{" "}
+                            {r.target_mark ?? "—"}%
+                          </p>
+                          <p>
+                            {latest
+                              ? `Attempt ${latest.attempt} · ${latest.state}${latest.late ? " · Late" : ""}`
+                              : "No confirmed submission"}
+                            {g
+                              ? ` · Mark ${g.score}/${task.max_marks} · ${g.state}`
+                              : ""}
+                          </p>
+                          {latest?.receipt && (
+                            <p className="academic-receipt">
+                              Receipt {latest.receipt} ·{" "}
+                              {teachingDate(latest.submitted_at!)}
+                            </p>
+                          )}
+                          {latest?.answer && (
+                            <pre className="academic-answer">
+                              {latest.answer}
+                            </pre>
+                          )}
+                          {latest &&
+                            ds.uploads
+                              .filter(
+                                (u) =>
+                                  u.attempt_id === latest.id && u.finalized_at,
                               )
-                            }
-                          >
-                            Submit mark for review
-                          </button>
-                        )}
-                        {audience === "admin" && g?.state === "review" && (
-                          <>
-                            <button
-                              className="admin-primary"
-                              onClick={() =>
-                                show(
-                                  "Publish reviewed result",
-                                  "grade_publish",
-                                  <>
+                              .map((u) => (
+                                <button
+                                  key={u.id}
+                                  disabled={busy}
+                                  onClick={() =>
+                                    void openFile(
+                                      u.id,
+                                      "submission",
+                                      u.file_name,
+                                      u.mime,
+                                    )
+                                  }
+                                >
+                                  Open {u.file_name}
+                                </button>
+                              ))}
+                          <div className="teaching-actions">
+                            {latest?.state === "submitted" && (
+                              <button
+                                className="admin-primary"
+                                onClick={() => mark(latest)}
+                              >
+                                Mark / revise feedback
+                              </button>
+                            )}
+                            {latest?.state === "submitted" &&
+                              !g &&
+                              task.kind !== "exam" &&
+                              latest.attempt < task.max_attempts && (
+                                <button
+                                  onClick={() =>
+                                    show(
+                                      "Return work for correction",
+                                      "attempt_return",
+                                      <label>
+                                        Reason
+                                        <textarea
+                                          name="reason"
+                                          minLength={5}
+                                          required
+                                        />
+                                      </label>,
+                                      (f) => ({
+                                        attemptId: latest.id,
+                                        reason: text(f, "reason"),
+                                      }),
+                                    )
+                                  }
+                                >
+                                  Return for correction
+                                </button>
+                              )}
+                            {g?.state === "draft" && (
+                              <button
+                                onClick={() =>
+                                  show(
+                                    "Submit mark for admin review",
+                                    "grade_review",
                                     <p>
                                       {r.learner_name} · {g.score}/
-                                      {task.max_marks}
-                                    </p>
-                                    <p>{g.feedback}</p>
-                                    <p>
-                                      The student and their parent will see this
-                                      revision. Earlier published marks remain
-                                      in history.
-                                    </p>
-                                  </>,
-                                  () => ({ taskId: tid, gradeId: g.id }),
-                                )
-                              }
-                            >
-                              Publish result
-                            </button>
-                            <button
-                              onClick={() =>
-                                show(
-                                  "Return marking to tutor",
-                                  "grade_reject",
-                                  <label>
-                                    Review reason
-                                    <textarea
-                                      name="reason"
-                                      minLength={5}
-                                      required
-                                    />
-                                  </label>,
-                                  (f) => ({
-                                    taskId: tid,
-                                    gradeId: g.id,
-                                    reason: text(f, "reason"),
-                                  }),
-                                )
-                              }
-                            >
-                              Return marking
-                            </button>
-                          </>
-                        )}
-                        {task.state === "assigned" && (
-                          <button
-                            onClick={() =>
-                              show(
-                                "Authorize learner extension",
-                                "extension",
-                                <>
-                                  <p>
-                                    Extend only this learner. Timed work also
-                                    needs additional minutes when its duration
-                                    has expired. Submitted attempts remain
-                                    final.
-                                  </p>
-                                  <label>
-                                    New hard close · South Africa
-                                    <input
-                                      type="datetime-local"
-                                      name="closesAt"
-                                      min={localAcademicTime(
-                                        r.extended_closes_at || task.closes_at,
-                                      )}
-                                      required
-                                    />
-                                  </label>
-                                  <Choice
-                                    name="extraMinutes"
-                                    label="Total extra duration minutes"
-                                    options={[
-                                      "0",
-                                      "15",
-                                      "30",
-                                      "45",
-                                      "60",
-                                      "90",
-                                      "120",
-                                      "180",
-                                      "240",
-                                      "360",
-                                    ]}
-                                    value={String(r.extra_minutes)}
-                                  />
-                                  <label>
-                                    Extension reason
-                                    <textarea
-                                      name="reason"
-                                      minLength={5}
-                                      required
-                                    />
-                                  </label>
-                                </>,
-                                (f) => ({
-                                  taskId: tid,
-                                  applicationId: r.application_id,
-                                  closesAt: text(f, "closesAt"),
-                                  extraMinutes: Number(text(f, "extraMinutes")),
-                                  reason: text(f, "reason"),
-                                }),
-                              )
-                            }
-                          >
-                            Authorize extension
-                          </button>
-                        )}
-                      </div>
-                      {g && (
-                        <details>
-                          <summary>Marking history & feedback</summary>
-                          {grades.map((g) => (
-                            <div key={g.id} className="academic-mark-history">
-                              <strong>
-                                Revision {g.revision} · {g.score}/
-                                {task.max_marks} · {g.state}
-                              </strong>
-                              <p>{g.feedback}</p>
-                              {g.staff_note && (
-                                <p>Private staff note: {g.staff_note}</p>
-                              )}
-                              {g.reason && <p>Reason: {g.reason}</p>}
-                            </div>
-                          ))}
-                        </details>
-                      )}
-                      {attempts.length > 1 && (
-                        <details>
-                          <summary>Earlier submission receipts</summary>
-                          {attempts.slice(1).map((a) => (
-                            <p key={a.id}>
-                              Attempt {a.attempt} · {a.state} · {a.receipt} ·{" "}
-                              {a.return_reason}
-                            </p>
-                          ))}
-                        </details>
-                      )}
-                    </article>
-                  );
-                })}
-            </section>
+                                      {task.max_marks}. Feedback remains private
+                                      until publication.
+                                    </p>,
+                                    () => ({ taskId: tid, gradeId: g.id }),
+                                  )
+                                }
+                              >
+                                Submit mark for review
+                              </button>
+                            )}
+                            {audience === "admin" && g?.state === "review" && (
+                              <>
+                                <button
+                                  className="admin-primary"
+                                  onClick={() =>
+                                    show(
+                                      "Publish reviewed result",
+                                      "grade_publish",
+                                      <>
+                                        <p>
+                                          {r.learner_name} · {g.score}/
+                                          {task.max_marks}
+                                        </p>
+                                        <p>{g.feedback}</p>
+                                        <p>
+                                          The student and their parent will see
+                                          this revision. Earlier published marks
+                                          remain in history.
+                                        </p>
+                                      </>,
+                                      () => ({ taskId: tid, gradeId: g.id }),
+                                    )
+                                  }
+                                >
+                                  Publish result
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    show(
+                                      "Return marking to tutor",
+                                      "grade_reject",
+                                      <label>
+                                        Review reason
+                                        <textarea
+                                          name="reason"
+                                          minLength={5}
+                                          required
+                                        />
+                                      </label>,
+                                      (f) => ({
+                                        taskId: tid,
+                                        gradeId: g.id,
+                                        reason: text(f, "reason"),
+                                      }),
+                                    )
+                                  }
+                                >
+                                  Return marking
+                                </button>
+                              </>
+                            )}
+                            {task.state === "assigned" && (
+                              <button
+                                onClick={() =>
+                                  show(
+                                    "Authorize learner extension",
+                                    "extension",
+                                    <>
+                                      <p>
+                                        Extend only this learner. Timed work
+                                        also needs additional minutes when its
+                                        duration has expired. Submitted attempts
+                                        remain final.
+                                      </p>
+                                      <label>
+                                        New hard close · South Africa
+                                        <input
+                                          type="datetime-local"
+                                          name="closesAt"
+                                          min={localAcademicTime(
+                                            r.extended_closes_at ||
+                                              task.closes_at,
+                                          )}
+                                          required
+                                        />
+                                      </label>
+                                      <Choice
+                                        name="extraMinutes"
+                                        label="Total extra duration minutes"
+                                        options={[
+                                          "0",
+                                          "15",
+                                          "30",
+                                          "45",
+                                          "60",
+                                          "90",
+                                          "120",
+                                          "180",
+                                          "240",
+                                          "360",
+                                        ]}
+                                        value={String(r.extra_minutes)}
+                                      />
+                                      <label>
+                                        Extension reason
+                                        <textarea
+                                          name="reason"
+                                          minLength={5}
+                                          required
+                                        />
+                                      </label>
+                                    </>,
+                                    (f) => ({
+                                      taskId: tid,
+                                      applicationId: r.application_id,
+                                      closesAt: text(f, "closesAt"),
+                                      extraMinutes: Number(
+                                        text(f, "extraMinutes"),
+                                      ),
+                                      reason: text(f, "reason"),
+                                    }),
+                                  )
+                                }
+                              >
+                                Authorize extension
+                              </button>
+                            )}
+                          </div>
+                          {g && (
+                            <details>
+                              <summary>Marking history & feedback</summary>
+                              {grades.map((g) => (
+                                <div
+                                  key={g.id}
+                                  className="academic-mark-history"
+                                >
+                                  <strong>
+                                    Revision {g.revision} · {g.score}/
+                                    {task.max_marks} · {g.state}
+                                  </strong>
+                                  <p>{g.feedback}</p>
+                                  {g.staff_note && (
+                                    <p>Private staff note: {g.staff_note}</p>
+                                  )}
+                                  {g.reason && <p>Reason: {g.reason}</p>}
+                                </div>
+                              ))}
+                            </details>
+                          )}
+                          {attempts.length > 1 && (
+                            <details>
+                              <summary>Earlier submission receipts</summary>
+                              {attempts.slice(1).map((a) => (
+                                <p key={a.id}>
+                                  Attempt {a.attempt} · {a.state} · {a.receipt}{" "}
+                                  · {a.return_reason}
+                                </p>
+                              ))}
+                            </details>
+                          )}
+                        </article>
+                      );
+                    })}
+                </section>
+              )}
+            </>
           )}
-          <section className="admin-card">
-            <h2>Current assessed progress</h2>
-            <div className="academic-grid">
-              {ds.progress
-                .filter((p) =>
+          {currentView === "progress" && (
+            <section className="admin-card">
+              <h2>Subject results & targets</h2>
+              <div className="academic-grid">
+                {ds.progress
+                  .filter((p) =>
+                    ds.periods.some(
+                      (period) =>
+                        period.id === p.periodId && period.class_id === cid,
+                    ),
+                  )
+                  .map((p) => (
+                    <article
+                      className="learning-card"
+                      key={`${p.periodId}/${p.applicationId}`}
+                    >
+                      <h3>{p.learnerName}</h3>
+                      <strong>
+                        {p.average === null
+                          ? "No eligible published average"
+                          : `${p.average}%`}
+                      </strong>
+                      <p>
+                        {p.startsOn}–{p.endsOn} · Target {p.targetMark ?? "—"}%
+                      </p>
+                      <p>
+                        {methodLabel[p.method]} · {p.assessmentCount} included ·{" "}
+                        {p.missingCount} awaiting result
+                      </p>
+                      <details>
+                        <summary>Results and diagnostic baseline</summary>
+                        {p.marks.map((m, i) => (
+                          <p key={i}>
+                            {m.title} · {m.percentage}% · {m.purpose} ·{" "}
+                            {m.countsAverage ? "Included" : "Separate"} · Weight{" "}
+                            {m.weight}
+                          </p>
+                        ))}
+                      </details>
+                    </article>
+                  ))}
+              </div>
+              <h2>Reporting periods & published reports</h2>
+              {ds.periods
+                .filter((p) => p.class_id === cid)
+                .map((p) => (
+                  <div className="academic-row" key={p.id}>
+                    <div>
+                      <strong>
+                        {p.starts_on}–{p.ends_on}
+                      </strong>
+                      <p>
+                        {methodLabel[p.method]} · Missing/unmarked excluded and
+                        counted separately
+                      </p>
+                    </div>
+                    {audience === "admin" && (
+                      <button
+                        onClick={() =>
+                          show(
+                            "Publish learner progress report",
+                            "report_publish",
+                            <>
+                              <label>
+                                Learner
+                                <select
+                                  name="applicationId"
+                                  aria-label="Learner"
+                                  required
+                                >
+                                  <option value="">Choose…</option>
+                                  {members
+                                    .filter(
+                                      (m, i, all) =>
+                                        all.findIndex(
+                                          (x) =>
+                                            x.application_id ===
+                                            m.application_id,
+                                        ) === i,
+                                    )
+                                    .map((m) => (
+                                      <option
+                                        key={m.application_id}
+                                        value={m.application_id}
+                                      >
+                                        {m.name} · {m.studentNumber}
+                                      </option>
+                                    ))}
+                                </select>
+                              </label>
+                              <label>
+                                Publication reason
+                                <textarea
+                                  name="reason"
+                                  required
+                                  minLength={5}
+                                  defaultValue="Period progress reviewed and published"
+                                />
+                              </label>
+                              <p>
+                                This saves a frozen report of published marks
+                                and the period calculation. Later corrections
+                                require a new report.
+                              </p>
+                            </>,
+                            (f) => ({
+                              classId: cid,
+                              periodId: p.id,
+                              applicationId: text(f, "applicationId"),
+                              fingerprint: ds.progress.find(
+                                (x) =>
+                                  x.periodId === p.id &&
+                                  x.applicationId === text(f, "applicationId"),
+                              )?.fingerprint,
+                              reason: text(f, "reason"),
+                            }),
+                          )
+                        }
+                      >
+                        Publish learner report
+                      </button>
+                    )}
+                  </div>
+                ))}
+              {ds.reports
+                .filter((r) =>
                   ds.periods.some(
-                    (period) =>
-                      period.id === p.periodId && period.class_id === cid,
+                    (p) => p.id === r.period_id && p.class_id === cid,
                   ),
                 )
-                .map((p) => (
-                  <article
-                    className="learning-card"
-                    key={`${p.periodId}/${p.applicationId}`}
-                  >
-                    <h3>{p.learnerName}</h3>
-                    <strong>
-                      {p.average === null
-                        ? "No eligible published average"
-                        : `${p.average}%`}
-                    </strong>
-                    <p>
-                      {p.startsOn}–{p.endsOn} · Target {p.targetMark ?? "—"}%
-                    </p>
-                    <p>
-                      {methodLabel[p.method]} · {p.assessmentCount} included ·{" "}
-                      {p.missingCount} awaiting result
-                    </p>
-                    <details>
-                      <summary>Results and diagnostic baseline</summary>
-                      {p.marks.map((m, i) => (
-                        <p key={i}>
-                          {m.title} · {m.percentage}% · {m.purpose} ·{" "}
-                          {m.countsAverage ? "Included" : "Separate"} · Weight{" "}
-                          {m.weight}
-                        </p>
-                      ))}
-                    </details>
-                  </article>
-                ))}
-            </div>
-            <h2>Reporting periods & frozen progress reports</h2>
-            {ds.periods
-              .filter((p) => p.class_id === cid)
-              .map((p) => (
-                <div className="academic-row" key={p.id}>
-                  <div>
-                    <strong>
-                      {p.starts_on}–{p.ends_on}
-                    </strong>
-                    <p>
-                      {methodLabel[p.method]} · Missing/unmarked excluded and
-                      counted separately
-                    </p>
-                  </div>
-                  {audience === "admin" && (
+                .map((r) => (
+                  <div className="academic-row" key={r.id}>
+                    <span>
+                      {r.content.learnerName} · {r.content.subject} ·{" "}
+                      {r.content.average ?? "—"}% · {teachingDate(r.created_at)}
+                    </span>
                     <button
                       onClick={() =>
-                        show(
-                          "Publish learner progress report",
-                          "report_publish",
-                          <>
-                            <label>
-                              Learner
-                              <select
-                                name="applicationId"
-                                aria-label="Learner"
-                                required
-                              >
-                                <option value="">Choose…</option>
-                                {members
-                                  .filter(
-                                    (m, i, all) =>
-                                      all.findIndex(
-                                        (x) =>
-                                          x.application_id === m.application_id,
-                                      ) === i,
-                                  )
-                                  .map((m) => (
-                                    <option
-                                      key={m.application_id}
-                                      value={m.application_id}
-                                    >
-                                      {m.name} · {m.studentNumber}
-                                    </option>
-                                  ))}
-                              </select>
-                            </label>
-                            <label>
-                              Publication reason
-                              <textarea
-                                name="reason"
-                                required
-                                minLength={5}
-                                defaultValue="Period progress reviewed and published"
-                              />
-                            </label>
-                            <p>
-                              This saves a frozen report of published marks and
-                              the period calculation. Later corrections require
-                              a new report.
-                            </p>
-                          </>,
-                          (f) => ({
-                            classId: cid,
-                            periodId: p.id,
-                            applicationId: text(f, "applicationId"),
-                            fingerprint: ds.progress.find(
-                              (x) =>
-                                x.periodId === p.id &&
-                                x.applicationId === text(f, "applicationId"),
-                            )?.fingerprint,
-                            reason: text(f, "reason"),
-                          }),
+                        void openFile(
+                          r.id,
+                          "report",
+                          "Viva-progress-report.pdf",
                         )
                       }
                     >
-                      Publish learner report
+                      View report PDF
                     </button>
-                  )}
-                </div>
-              ))}
-            {ds.reports
-              .filter((r) =>
-                ds.periods.some(
-                  (p) => p.id === r.period_id && p.class_id === cid,
-                ),
-              )
-              .map((r) => (
-                <div className="academic-row" key={r.id}>
-                  <span>
-                    {r.content.learnerName} · {r.content.subject} ·{" "}
-                    {r.content.average ?? "—"}% · {teachingDate(r.created_at)}
-                  </span>
-                  <button
-                    onClick={() =>
-                      void openFile(r.id, "report", "Viva-progress-report.pdf")
-                    }
-                  >
-                    View report PDF
-                  </button>
-                </div>
-              ))}
-          </section>
+                  </div>
+                ))}
+            </section>
+          )}
         </>
       )}
       {spec && (
