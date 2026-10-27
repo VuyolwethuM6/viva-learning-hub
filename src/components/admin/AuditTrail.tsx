@@ -96,6 +96,7 @@ export function AuditTrail({
       "account",
     ],
     notifications: ["send_message", "cancel_message"],
+    access: ["parent_access_enabled", "parent_access_disabled"],
     documents: ["view_document", "accounting_document", "expense_document"],
   };
   const events = data.audit
@@ -138,6 +139,7 @@ export function AuditTrail({
               <option value="billing">Billing and reminders</option>
               <option value="notifications">Notifications</option>
               <option value="documents">Document access</option>
+              <option value="access">Parent portal access</option>
               <option value="accounting">Accounting and bank</option>
             </select>
           </label>
@@ -273,7 +275,21 @@ export function AuditTrail({
                 )}
                 {typeof details.reason === "string" && (
                   <p className="audit-note">
-                    <b>Cancellation reason:</b> {details.reason}
+                    <b>
+                      {event.action === "cancel_message"
+                        ? "Cancellation reason"
+                        : "Reason"}
+                      :
+                    </b>{" "}
+                    {details.reason}
+                  </p>
+                )}
+                {["parent_access_enabled", "parent_access_disabled"].includes(
+                  event.action,
+                ) && (
+                  <p className="audit-summary">
+                    Guardian account: {String(details.guardianEmail || "")}.
+                    This change covers all reviewed learners sharing that email.
                   </p>
                 )}
                 {details.providerHistoryReviewed === true && (

@@ -153,6 +153,10 @@ Current operational limits:
 - API snapshots have explicit list limits; accounting reports aggregate the complete ledger, with bounded complete CSV exports. No family self-service portal or permanent private document links are provided.
 - Accounting automation starts disabled. Complete the [accounting test guide](accounting-test-guide.md) and service checks before enabling unattended work.
 
+## Parent access
+
+The `/parent` release adds explicit guardian access controls inside learner profiles. Apply [parent-setup.sql](parent-setup.sql) and configure Auth emails as described in [parent-portal.md](parent-portal.md). Verify the guardian email, then enable access with a reason. Parents use an email link; siblings sharing that email intentionally use one family account. Disabling access blocks existing parent sessions without changing financial records.
+
 ## Synthetic test cleanup
 
 Financial and audit records deliberately do not cascade away with an application. Use a disposable test project or a reviewed cleanup transaction in the SQL Editor: identify the exact synthetic application UUID, remove its tuition messages, payment allocations, invoices and audit entries, then remove the application and its private Storage object. Do not apply broad delete statements to production. Do not reset invoice or learner sequences to hide gaps.

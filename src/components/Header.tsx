@@ -56,7 +56,13 @@ export const TopBar = () => (
       </div>
 
       <div className="flex items-center gap-2 lg:gap-4">
-        <span className="hidden text-white/60 lg:inline">Follow Us:</span>
+        <a
+          href="/parent"
+          className="font-semibold text-white hover:text-[#ff7849]"
+        >
+          Parent Portal
+        </a>
+        <span className="hidden text-white/60 xl:inline">Follow Us:</span>
         <div className="flex items-center gap-3">
           {socialLinks.map(({ icon: Icon, url, label }) => (
             <a
@@ -150,7 +156,11 @@ export const StickyHeader = () => {
             type="button"
             className="p-2 text-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7949fe] lg:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-label={
+              isMobileMenuOpen
+                ? "Close navigation menu"
+                : "Open navigation menu"
+            }
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-navigation"
           >
@@ -234,7 +244,9 @@ export const StickyHeader = () => {
                 </div>
 
                 <div className="mt-8 border-t border-gray-200 pt-8">
-                  <p className="mb-4 text-sm font-semibold text-gray-500">Follow Us</p>
+                  <p className="mb-4 text-sm font-semibold text-gray-500">
+                    Follow Us
+                  </p>
                   <div className="flex gap-4">
                     {socialLinks.map(({ icon: Icon, url, label }) => (
                       <a

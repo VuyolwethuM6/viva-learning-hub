@@ -1,19 +1,31 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { initializeAnalytics, trackAnalyticsEvent, trackPageView } from "@/lib/analytics";
+import {
+  initializeAnalytics,
+  trackAnalyticsEvent,
+  trackPageView,
+} from "@/lib/analytics";
 
 export default function Analytics() {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname.startsWith("/admin")) return;
+    if (
+      location.pathname.startsWith("/admin") ||
+      location.pathname.startsWith("/parent")
+    )
+      return;
     initializeAnalytics();
     trackPageView(location.pathname, document.title);
   }, [location.pathname]);
 
   useEffect(() => {
     const trackLink = (event: MouseEvent) => {
-      if (window.location.pathname.startsWith("/admin")) return;
+      if (
+        window.location.pathname.startsWith("/admin") ||
+        window.location.pathname.startsWith("/parent")
+      )
+        return;
       const target = event.target;
       if (!(target instanceof Element)) return;
 
@@ -34,9 +46,13 @@ export default function Analytics() {
         if (/^\/(?:materials|download)\/.*\.pdf$/i.test(url.pathname)) {
           trackAnalyticsEvent("resource_download");
         } else if (url.origin === window.location.origin) {
-          trackAnalyticsEvent("navigation_click", { destination: url.pathname });
+          trackAnalyticsEvent("navigation_click", {
+            destination: url.pathname,
+          });
         } else {
-          trackAnalyticsEvent("outbound_link_click", { destination: url.hostname });
+          trackAnalyticsEvent("outbound_link_click", {
+            destination: url.hostname,
+          });
         }
       }
     };

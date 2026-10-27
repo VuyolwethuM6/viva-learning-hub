@@ -82,6 +82,8 @@ export const auditName = (action: string) =>
     close_period: "Accounting month closed",
     reopen_period: "Accounting period reopened",
     accounting_run: "Scheduled accounting run",
+    parent_access_enabled: "Parent portal access enabled",
+    parent_access_disabled: "Parent portal access disabled",
     accounting_document: "Financial document requested",
     expense_document: "Expense evidence accessed",
     approve: "Application approved",

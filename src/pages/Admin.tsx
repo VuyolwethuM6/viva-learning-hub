@@ -51,6 +51,7 @@ import {
   type Snapshot,
   type Message,
 } from "@/lib/admin-types";
+import { ParentAccessControls } from "@/components/admin/ParentAccessControls";
 import { FinanceWorkspace } from "@/components/admin/FinanceWorkspace";
 import {
   LearnerAccountControls,
@@ -1832,6 +1833,7 @@ export default function Admin() {
               </div>
             )}
           </details>
+          <ParentAccessControls application={selected} role={data?.finance_role} />
           <LearnerAccountControls
             application={selected}
             today={data?.today || ""}
