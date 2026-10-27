@@ -193,6 +193,9 @@ export default function Student() {
             Need access?{" "}
             <WhatsAppButton message="Hello Viva, I need help accessing the student portal." />
           </small>
+          <a className="portal-login-privacy" href="/privacy-policy">
+            Privacy
+          </a>
         </main>
       </div>
     );

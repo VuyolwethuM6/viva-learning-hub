@@ -511,6 +511,9 @@ export default function Parent() {
               Contact Viva Tutorials
             </WhatsAppButton>
           </p>
+          <a className="portal-login-privacy" href="/privacy-policy">
+            Privacy
+          </a>
         </main>
       </div>
     );
@@ -558,15 +561,7 @@ export default function Parent() {
             ))}
           </div>
           <p className="parent-select-help">
-            A learner missing? Contact{" "}
-            <WhatsAppButton
-              message={
-                "Hello Viva, I need help with parent portal access or a missing learner."
-              }
-            >
-              Viva on WhatsApp
-            </WhatsAppButton>{" "}
-            so we can check your guardian details.
+            A learner missing? Ask Viva to check your guardian details.
           </p>
         </main>
         {logout && (
@@ -620,7 +615,7 @@ export default function Parent() {
             [
               ["home", Home, "Learner home"],
               ["finance", Wallet, "Family finances"],
-              ["help", CircleHelp, "Help & contact"],
+              ["help", CircleHelp, "Help & account"],
             ] as const
           ).map(([key, Icon, title]) => (
             <button
@@ -661,7 +656,7 @@ export default function Parent() {
                 ? "Learner home"
                 : panel === "finance"
                   ? "Family finances"
-                  : "Help & contact"}
+                  : "Help & account"}
             </strong>
           </div>
           <div className="parent-header-actions">
@@ -869,16 +864,6 @@ export default function Parent() {
                   key={`academic-${child.id}`}
                   application={child.id}
                 />
-                <section className="parent-card parent-contact-card">
-                  <Mail size={25} />
-                  <h2>Need help?</h2>
-                  <p>Ask us about learning, attendance or tuition.</p>
-                  <WhatsAppButton
-                    message={`Hello Viva, I have a learning or tuition question. Learner reference: ${child.studentNumber}.`}
-                  >
-                    WhatsApp Viva
-                  </WhatsAppButton>
-                </section>
               </div>
             </>
           )}
@@ -1191,11 +1176,6 @@ export default function Parent() {
                         payment automatically.
                       </p>
                     </div>
-                    <WhatsAppButton
-                      message={`Hello Viva, I have a tuition payment question. Learner reference: ${child.studentNumber}.`}
-                    >
-                      Ask about a payment
-                    </WhatsAppButton>
                   </section>
                   <section className="parent-card parent-finance-note">
                     <CalendarDays size={22} />
@@ -1217,27 +1197,14 @@ export default function Parent() {
           {panel === "help" && (
             <>
               <section className="parent-page-heading">
-                <p className="parent-eyebrow">We’re here for your family</p>
-                <h1>Let’s stay in touch.</h1>
+                <p className="parent-eyebrow">Your parent portal</p>
+                <h1>Help & account</h1>
                 <p>
                   Quote {child.studentNumber} when contacting us about{" "}
                   {child.name}.
                 </p>
               </section>
               <div className="parent-help-grid">
-                <section className="parent-card">
-                  <Mail size={26} />
-                  <h2>Talk to Viva</h2>
-                  <p>
-                    For learning support, class times, tuition questions and
-                    changes to your contact details.
-                  </p>
-                  <WhatsAppButton
-                    message={`Hello Viva, I have a learning or tuition question. Learner reference: ${child.studentNumber}.`}
-                  >
-                    WhatsApp Viva Tutorials
-                  </WhatsAppButton>
-                </section>
                 <section className="parent-card">
                   <ShieldCheck size={26} />
                   <h2>Your account, protected</h2>
@@ -1297,14 +1264,6 @@ export default function Parent() {
               <StudentWorkspace key={child.id} application={child.id} />
             </details>
           )}
-          <div className="portal-support">
-            <WhatsAppButton
-              message={`Hello Viva, I need help from the parent portal. Learner reference: ${child.studentNumber}.`}
-            />
-          </div>
-          <footer className="parent-footer">
-            <a href="/privacy-policy">Privacy</a>
-          </footer>
         </main>
       </div>
       <PortalDock scope="parent-app">

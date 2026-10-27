@@ -17,7 +17,6 @@ import {
   DocumentViewer,
   type ViewedDocument,
 } from "@/components/admin/AdminPrimitives";
-import { WhatsAppButton } from "./PortalChrome";
 import { WeeklyAttendance } from "./WeeklyAttendance";
 import "./student-workspace.css";
 export function StudentWorkspace({
@@ -503,14 +502,6 @@ export function StudentWorkspace({
           </div>
           <p>Need a correction to your details? Send Viva a message.</p>
         </article>
-      )}
-      {!application && (
-        <div className="portal-support">
-          <WhatsAppButton
-            message={`Hello Viva, I need help with ${section === "Learning" ? "my classes or learning materials" : section === "Progress" ? "my learning progress" : "my student account"}. Learner reference: ${data.learner.studentNumber}.`}
-          />
-          <a href="/privacy-policy">Privacy</a>
-        </div>
       )}
       {viewer && (
         <DocumentViewer document={viewer} close={() => setViewer(null)} />

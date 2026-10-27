@@ -1,5 +1,4 @@
 import { SubjectProgressCard } from "./SubjectProgressCard";
-import { WhatsAppButton } from "./PortalChrome";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw, ClipboardList, Clock, Target } from "lucide-react";
 import {
@@ -808,14 +807,6 @@ export function AcademicLearner({
             </>
           )}
         </>
-      )}
-      {!application && !progressOnly && !summary && (
-        <div className="portal-support">
-          <WhatsAppButton
-            message={`Hello Viva, I need help with ${task ? task.title : "my assigned work or an assessment"}.`}
-          />
-          <a href="/privacy-policy">Privacy</a>
-        </div>
       )}
       {intent && (
         <Dialog

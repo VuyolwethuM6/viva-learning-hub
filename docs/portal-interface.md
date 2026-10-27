@@ -1,6 +1,6 @@
 # Viva portal interface and acceptance checks
 
-Updated 27 October 2026. This interface update uses the existing APIs, access
+Updated 28 October 2026. This interface update uses the existing APIs, access
 rules and stored records. It adds no database migration. Existing portal setup
 and academic setup still apply if they have not already been installed.
 
@@ -9,14 +9,14 @@ and academic setup still apply if they have not already been installed.
 | Portal | Main destinations | Main purpose |
 | --- | --- | --- |
 | Student `/student` | Home, Learning, Progress, Account | See the week, join sessions, open materials, submit work, read feedback and reports. |
-| Parent `/parent` | Home, Finances, Help | Switch children, follow attendance and learning, view family invoices, receipts and statements, contact Viva. |
+| Parent `/parent` | Home, Finances, Help | Switch children, follow attendance and learning, view family invoices, receipts and statements, review account help. |
 | Tutor `/tutor` | Today, Classes, Work, Account | Find sessions needing attention, manage an assigned classroom, record attendance and complete sessions, assign and mark work. |
 | Admin `/admin` | Overview, Applications, Students, Finance; more teaching and oversight tools | Review applications, manage learners and accounts, organise teaching and publish academic results. |
 
 Mobile destinations stay fixed at the bottom, with clearance below page content.
 Desktop navigation exposes the same destinations. Sign out opens a confirmation
 and can be cancelled. Viva's logo, Jakarta font, purple/orange colours, email-link
-sign-in and contextual WhatsApp support remain in use.
+sign-in remain in use. WhatsApp support and Privacy links appear only on the login screens, not inside signed-in portals.
 
 ## Learning and attendance
 
@@ -117,7 +117,7 @@ Use existing test accounts and test records. Each role signs in separately.
 11. In parent Finances and admin Finance, spot-check existing balances and open an
     invoice and receipt. Review an application/report card through admin as usual.
 12. On each portal, test portrait and landscape, scroll past the last card, open
-    and cancel Sign out, and open WhatsApp. On admin mobile, test More and its
+    and cancel Sign out. Verify WhatsApp and Privacy appear on login screens only. On admin mobile, test More and its
     close button. Check at 320px width and on desktop, including keyboard focus
     and a real phone with its on-screen keyboard open.
 
