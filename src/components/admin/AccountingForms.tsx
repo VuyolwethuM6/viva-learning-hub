@@ -1,5 +1,5 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { useRef, useState, type ReactNode } from "react";
-import { Loader2 } from "lucide-react";
 import { Dialog } from "./AdminPrimitives";
 import { rand } from "@/lib/admin-types";
 import { financeRequest } from "@/lib/accounting-client";
@@ -229,7 +229,7 @@ export function AccountingDialog({
             >
               {busy ? (
                 <>
-                  <Loader2 size={17} className="spin" />
+                  <VivaLoader size="button" decorative />
                   Saving…
                 </>
               ) : (

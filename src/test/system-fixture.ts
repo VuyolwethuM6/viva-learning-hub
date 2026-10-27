@@ -1,0 +1,81 @@
+import type { SystemSettings } from "@/lib/system-types";
+export const systemActor = "11111111-1111-4111-8111-111111111111";
+export const systemStaff = "33333333-3333-4333-8333-333333333333";
+export const systemFixture = (): SystemSettings => ({
+  now: "2026-10-28T09:00:00+02:00",
+  today: "2026-10-28",
+  role: "owner",
+  revision: 2,
+  accounting: {
+    books_start: "2026-01-01",
+    closed_through: null,
+    automation_enabled: false,
+    auto_send: false,
+    scheduler_valid: false,
+  },
+  programmes: [
+    {
+      grade: "Grade 12",
+      label: "Grade 12 programme",
+      weekdays: [1, 2, 3, 4, 5, 6, 7],
+    },
+  ],
+  closures: [],
+  admins: [
+    {
+      id: systemActor,
+      email: "owner@example.test",
+      enabled: true,
+      role: "owner",
+    },
+  ],
+  candidates: [{ id: systemStaff, email: "staff@example.test" }],
+  candidatesLimited: false,
+  backups: [],
+  jobs: [],
+  scheduledJob: null,
+  emailTests: [],
+  issues: [],
+  health: {
+    modules: {
+      Enrollment: true,
+      Admin: true,
+      Parents: true,
+      Students: true,
+      Teaching: true,
+      Academics: true,
+    },
+    integrity: {
+      receivableDifference: 0,
+      creditDifference: 0,
+      deferredDifference: 0,
+      payableDifference: 0,
+      trialBalance: 0,
+    },
+    queuedMessages: 2,
+    failedMessages: 1,
+    ambiguousMessages: 0,
+    enrollmentEmailErrors: 0,
+    missingReportRecords: 0,
+    missingStoredFiles: 0,
+    unfinishedUploads: 0,
+    unfinishedSessions: 2,
+    marksInReview: 1,
+    pendingApplications: 3,
+    access: { admins: 1, parents: 1, tutors: 1, students: 1 },
+  },
+  configuration: {
+    email: true,
+    scheduler: true,
+    bankConfirmed: true,
+    environment: "preview",
+    commit: "a".repeat(40),
+  },
+  bank: {
+    bank: "Capitec",
+    accountName: "Viva Tutorials",
+    accountNumber: "2488806516",
+    accountType: "Savings",
+    branchCode: "470010",
+  },
+});

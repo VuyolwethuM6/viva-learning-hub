@@ -1,3 +1,4 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -61,7 +62,7 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
         </a>
         <RouteMetadata />
         <Analytics />
-        <Suspense fallback={<div className="min-h-[50vh]" role="status" aria-label="Loading page" />}>
+        <Suspense fallback={<VivaLoader size="page" label="Loading page…" />}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />

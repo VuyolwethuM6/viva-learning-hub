@@ -95,6 +95,13 @@ export function AuditTrail({
       "role",
       "account",
     ],
+    system: [
+      "system_admin_access",
+      "system_closure_add",
+      "system_closure_remove",
+      "system_backup_review",
+      "system_email_test",
+    ],
     notifications: ["send_message", "cancel_message"],
     access: ["parent_access_enabled", "parent_access_disabled"],
     documents: ["view_document", "accounting_document", "expense_document"],
@@ -140,6 +147,7 @@ export function AuditTrail({
               <option value="notifications">Notifications</option>
               <option value="documents">Document access</option>
               <option value="access">Parent portal access</option>
+              <option value="system">System settings and access</option>
               <option value="accounting">Accounting and bank</option>
             </select>
           </label>
@@ -155,7 +163,10 @@ export function AuditTrail({
               <div className="audit-event-body">
                 <strong>{auditName(event.action)}</strong>
                 <p className="audit-context">
-                  {application?.learner_name || "Tuition administration"}
+                  {application?.learner_name ||
+                    (event.action.startsWith("system_")
+                      ? "System administration"
+                      : "Tuition administration")}
                   {invoice ? ` · ${invoice.number}` : ""}
                 </p>
                 <small>
@@ -199,6 +210,25 @@ export function AuditTrail({
                 )}
                 {typeof details.description === "string" && (
                   <p className="audit-summary">{details.description}</p>
+                )}
+                {event.action === "system_admin_access" && (
+                  <p className="audit-summary">
+                    {String(details.targetEmail || "Staff account")} ·{" "}
+                    {details.enabled ? "Enabled" : "Disabled"} · Finance role:{" "}
+                    {String(details.role || "")}
+                  </p>
+                )}
+                {event.action.startsWith("system_closure_") && (
+                  <p className="audit-summary">
+                    Closure date: {String(details.day || "")}
+                  </p>
+                )}
+                {event.action === "system_backup_review" && (
+                  <p className="audit-summary">
+                    Owner-reported{" "}
+                    {String(details.method || "review").replaceAll("_", " ")} ·
+                    Checked {String(details.day || "")}
+                  </p>
                 )}
                 {event.action === "approve" && (
                   <p className="audit-summary">

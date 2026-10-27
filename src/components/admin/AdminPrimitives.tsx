@@ -1,10 +1,10 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { humanStatus } from "@/lib/admin-format";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   AlertCircle,
   ArrowDownToLine,
   ExternalLink,
-  Loader2,
   RefreshCw,
   X,
 } from "lucide-react";
@@ -172,7 +172,7 @@ export function ConfirmAction({
         >
           {busy ? (
             <>
-              <Loader2 className="spin" size={18} />
+              <VivaLoader size="button" decorative />
               Saving…
             </>
           ) : (
@@ -266,7 +266,11 @@ export function DocumentViewer({
               }
             }}
           >
-            <RefreshCw size={16} className={refreshing ? "spin" : ""} />
+            {refreshing ? (
+              <VivaLoader size="button" decorative />
+            ) : (
+              <RefreshCw size={16} />
+            )}
             Refresh private link
           </button>
         )}
@@ -279,10 +283,9 @@ export function DocumentViewer({
       )}
       <div className="document-canvas">
         {loading && (
-          <p className="viewer-loading" role="status">
-            <Loader2 className="spin" size={20} />
-            Loading document…
-          </p>
+          <div className="viewer-loading">
+            <VivaLoader label="Loading document…" />
+          </div>
         )}
         {isImage ? (
           <img

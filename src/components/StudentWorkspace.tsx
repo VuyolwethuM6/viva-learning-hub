@@ -1,3 +1,4 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { AcademicLearner } from "./AcademicLearner";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -110,9 +111,11 @@ export function StudentWorkspace({
     return (
       <section className="learning-card">
         <h2>Your learning space</h2>
-        <p role={error ? "alert" : "status"}>
-          {error || "Loading your learning records…"}
-        </p>
+        {error ? (
+          <p role="alert">{error}</p>
+        ) : (
+          <VivaLoader label="Loading your learning records…" />
+        )}
         {error && <button onClick={() => void load()}>Try again</button>}
       </section>
     );

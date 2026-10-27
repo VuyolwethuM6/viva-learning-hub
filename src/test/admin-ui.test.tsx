@@ -284,16 +284,21 @@ describe("admin interface", () => {
     expect(screen.queryByText("Test Learner")).not.toBeInTheDocument();
     expect(fetch).toHaveBeenCalledOnce();
   });
-  it("loads real counts without advertising unavailable sections", async () => {
+  it("opens System Health even when the normal records snapshot cannot load",async()=>{
+    const fetch=network(),original=fetch.getMockImplementation()!;
+    fetch.mockImplementation((url,init)=>String(url)==="/api/admin/records"?Promise.resolve(json({error:"Snapshot unavailable"},502)):String(url).includes("?system=health")?Promise.resolve(json({role:"owner",checkedAt:"2026-10-28T09:00:00Z",configuration:{email:false,scheduler:false,bankConfirmed:false,environment:"preview",commit:null},checks:[{id:"database",title:"Database & oversight setup",status:"unavailable",detail:"System checks could not load."}],overviewAvailable:false,health:null,issues:[],jobs:[],emailTests:[],backups:[]})):original(url,init));
+    view();await screen.findByText("Your records couldn’t load");fireEvent.click(screen.getByRole("button",{name:"System health"}));await screen.findByRole("heading",{name:"Database & oversight setup"});expect(screen.getByText(/Only service checks ran/)).toBeInTheDocument();expect(screen.queryByRole("heading",{name:"Operational follow-up"})).not.toBeInTheDocument();
+  });
+  it("loads real counts and exposes functional oversight modules", async () => {
     network();
     view();
     await screen.findByRole("heading", { name: "Your daily overview" });
     expect(
       screen.queryByRole("button", { name: "System health" }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Settings" }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
     expect(screen.queryByText("All systems healthy")).not.toBeInTheDocument();
   });
   it("sends an approval request with the selected start date and refreshes status", async () => {

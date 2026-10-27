@@ -73,8 +73,9 @@ and marks/resources; the review-and-confirm step remains mandatory.
 Admin **Assessments** manages assigned work, marking and publication. Admin
 **Academics** manages period progress and report publication. These now have
 different views of the same academic records. Reporting-period configuration is
-still available when selecting a class. Unimplemented Settings and System health
-placeholder destinations have been removed from navigation.
+still available when selecting a class. System Health and Settings now provide real
+oversight and owner controls; follow [their setup guide](system-health-and-settings.md)
+and apply the additional system migration.
 
 Parent learning access remains read-only. Student submission receipts, timed
 attempts, hard closing times, file verification, staff-only notes, admin result
@@ -131,3 +132,27 @@ publication, parent read-only visibility, timed expiry and report PDFs. Mobile
 and desktop browser checks cover navigation, dialogs, fixed docks and overflow.
 These checks do not sign in to or change the deployed Supabase project; the
 steps above remain the deployment acceptance checklist.
+
+### Branded loading feedback
+
+The shared `VivaLoader` adapts the supplied purple/orange ring, local Viva logo,
+soft glow and dots. Portal opening and route loading use a loader centred in the
+viewport. Initial record loads use a smaller loader centred in their panel;
+private document previews centre it over the document canvas. Saves, sign-in,
+refresh, contact and purchase requests use a compact ring inside the action
+button. Refreshing existing records keeps their content visible. Enrollment
+retains its blurred submission overlay and real application/upload stages.
+
+Progress labels describe the actual pending request; there are no artificial
+waits or invented percentages. Status messages are available to screen readers,
+button graphics are decorative alongside their existing action labels, and all
+loader animations stop for `prefers-reduced-motion`. The loader uses the local
+brand image rather than depending on an external favicon.
+
+To check alignment, throttle the network in browser developer tools and open
+Admin, Parent, Tutor and Student on a phone-sized viewport. Opening loaders
+should sit at the screen centre. Navigate into a records section, refresh it,
+and open a private document: initial loaders should be centred in their own
+area and refreshes must retain existing records. Use reduced-motion emulation to
+check the static version. Failed requests must leave an error/retry state, not a
+permanent loader. Removing throttling must let requests finish normally.

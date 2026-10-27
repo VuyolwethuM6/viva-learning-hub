@@ -14,8 +14,8 @@ import {
   prepareBankImport,
   runScheduledAccounting,
   validateAccountingInput,
+  validateAutomationReadiness,
 } from "../_lib/accounting-api.js";
-import { getEmailConfig } from "../_lib/email.js";
 import {
   encodeStoragePath,
   getSupabaseConfig,
@@ -71,6 +71,7 @@ export default async function handler(
       const result = await runScheduledAccounting(
         config.actor,
         config.autoSend,
+        "scheduled",
       );
       return sendJson(response, result.success === false ? 503 : 200, result);
     }
@@ -233,25 +234,7 @@ export default async function handler(
       return sendJson(response, result.success === false ? 503 : 200, result);
     }
     validateAccountingInput(body);
-    if (
-      action === "settings" &&
-      body.automationEnabled === true &&
-      !process.env.CRON_SECRET
-    )
-      throw new HttpError(
-        503,
-        "Configure CRON_SECRET on the server before enabling scheduled accounting.",
-      );
-    if (
-      action === "settings" &&
-      body.autoSend === true &&
-      (!getEmailConfig() ||
-        process.env.TUITION_BANK_DETAILS_CONFIRMED !== "true")
-    )
-      throw new HttpError(
-        503,
-        "Configure the email sender and confirm bank details before enabling automatic email dispatch.",
-      );
+    if (action === "settings") validateAutomationReadiness(body);
     const data = action === "bank_import" ? prepareBankImport(body) : body;
     const result = await rpc("accounting_mutate", {
       p_actor: actor.id,

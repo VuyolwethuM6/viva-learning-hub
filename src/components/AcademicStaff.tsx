@@ -1,3 +1,4 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import {
   useCallback,
   useEffect,
@@ -414,6 +415,7 @@ function AcademicAction({
               disabled={busy}
               onClick={() => void confirm()}
             >
+              {busy && <VivaLoader size="button" decorative />}
               {busy ? "Saving…" : "Confirm and save"}
             </button>
             <button disabled={busy} onClick={() => setReview(null)}>
@@ -525,9 +527,11 @@ export function AcademicStaff({
     return (
       <section className="admin-card">
         <h1>Assignments & assessments</h1>
-        <p role={error ? "alert" : "status"}>
-          {error || "Loading academic records…"}
-        </p>
+        {error ? (
+          <p role="alert">{error}</p>
+        ) : (
+          <VivaLoader label="Loading academic records…" />
+        )}
         {error && (
           <>
             <p>Run the academic setup migration before using this module.</p>

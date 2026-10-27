@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { db, rpc, uuid } from "./admin.js";
 import { getEmailConfig } from "./email.js";
 import { HttpError } from "./http.js";
@@ -211,7 +211,7 @@ export function financialCSV(data: FinanceSnapshot, kind: string): string {
     );
   return "\uFEFF" + rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
 }
-export async function runScheduledAccounting(actor: string, send: boolean) {
+async function executeScheduledAccounting(actor: string, send: boolean) {
   const result = await rpc<{ success?: boolean; error?: string }>(
     "accounting_run_schedule",
     { p_actor: actor },
@@ -262,4 +262,59 @@ export async function runScheduledAccounting(actor: string, send: boolean) {
     }
   }
   return { ...result, sent, stale, failed };
+}
+
+export async function runScheduledAccounting(
+  actor: string,
+  send: boolean,
+  source: "manual" | "scheduled" = "manual",
+) {
+  const id = randomUUID();
+  let tracked = false;
+  async function record(state: string, result: object = {}) {
+    try {
+      await rpc("system_job_record", {
+        p_actor: actor,
+        p_id: id,
+        p_source: source,
+        p_state: state,
+        p_result: result,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  tracked = await record("running");
+  try {
+    const result = await executeScheduledAccounting(actor, send);
+    if (tracked)
+      await record(result.success === false ? "failed" : "completed", {
+        success: result.success !== false,
+        sent: result.sent || 0,
+        ...("stale" in result ? { stale: result.stale } : {}),
+        ...("failed" in result ? { failed: result.failed } : {}),
+        ...("dispatch" in result ? { dispatch: result.dispatch } : {}),
+      });
+    return result;
+  } catch (error) {
+    if (tracked) await record("failed", { success: false });
+    throw error;
+  }
+}
+
+export function validateAutomationReadiness(data: Record<string, unknown>) {
+  if (data.automationEnabled === true && !process.env.CRON_SECRET)
+    throw new HttpError(
+      503,
+      "Configure CRON_SECRET on the server before enabling scheduled accounting.",
+    );
+  if (
+    data.autoSend === true &&
+    (!getEmailConfig() || process.env.TUITION_BANK_DETAILS_CONFIRMED !== "true")
+  )
+    throw new HttpError(
+      503,
+      "Configure the email sender and confirm bank details before enabling automatic email dispatch.",
+    );
 }

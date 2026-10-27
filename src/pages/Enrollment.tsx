@@ -1,5 +1,6 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Loader2, Mail, ShieldCheck, FileText, GraduationCap, Upload, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Mail, ShieldCheck, FileText, GraduationCap, Upload, X } from "lucide-react";
 import programmes from "@/lib/tuition-programme.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1050,7 +1051,7 @@ export default function Enrollment() {
     {isSubmitting && (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/30 px-5 backdrop-blur-sm" onKeyDown={event => { if (event.key === 'Tab') event.preventDefault(); }}>
         <div ref={statusRef} tabIndex={-1} role="status" aria-live="polite" aria-atomic="true" className="w-full max-w-sm rounded-3xl border border-white/70 bg-white p-8 text-center shadow-2xl outline-none">
-          <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#7949fe] motion-reduce:animate-none" aria-hidden="true" />
+          <VivaLoader decorative />
           <p className="mt-5 text-lg font-bold text-slate-900">{submissionStage}</p>
           <p className="mt-2 text-sm leading-6 text-slate-600">Please keep this page open. We’ll confirm receipt once your application and report card are saved.</p>
         </div>

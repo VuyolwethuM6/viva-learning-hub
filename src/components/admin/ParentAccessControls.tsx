@@ -1,5 +1,6 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { useEffect, useState } from "react";
-import { KeyRound, Loader2 } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import type { Application } from "@/lib/admin-types";
 type Access = {
   email: string;
@@ -150,7 +151,7 @@ export function ParentAccessControls({
                     }
                     disabled={busy}
                   >
-                    {busy ? <Loader2 size={17} className="spin" /> : null}{" "}
+                    {busy ? <VivaLoader size="button" decorative /> : null}{" "}
                     Confirm {access.enabled ? "disable" : "enable"}
                   </button>
                   <button

@@ -1,6 +1,6 @@
 # Implementation status and next work
 
-Updated: 27 October 2026. This describes the academic workflow release on `work` and its accounting prerequisites. “Implemented” means code exists; “verified locally” means the stated checks ran. Neither establishes production readiness or a deployed database migration.
+Updated: 28 October 2026. This describes the academic workflow and system oversight releases on `work` and their accounting prerequisites. See [System Health and Settings setup](system-health-and-settings.md) for the additional migration and acceptance checks. “Implemented” means code exists; “verified locally” means the stated checks ran. Neither establishes production readiness or a deployed database migration.
 
 ## Working scope
 
@@ -22,7 +22,7 @@ Updated: 27 October 2026. This describes the academic workflow release on `work`
 | Public pricing              | Grade/subject fees aligned with enrollment                                                                                                                   | Replaces conflicting legacy session-package cards                                                   |
 | PDF commerce                | Existing server-signed live PayFast checkout and notification validation; paid PDF emails                                                                    | Separate from tuition; no new live payment test                                                     |
 | Enquiries/analytics         | Existing Resend enquiry routes and optional GA; admin route skips app analytics                                                                              | Existing implementation; no full enquiry integration test                                           |
-| Teaching/portals/monitoring | Classes, tutor/student access, private materials, explicit learner release and confirmed attendance implemented; assigned work, submissions, marking/publication, timed assessments, calculated progress and frozen report PDFs implemented; advanced monitoring remains planned                                                                                                                                  | No fake academic data or “healthy” claims                                                           |
+| Teaching/portals/monitoring | Classes, tutor/student access, private materials, explicit learner release and confirmed attendance implemented; assigned work, submissions, marking/publication, timed assessments, calculated progress and frozen report PDFs implemented; System Health checks and owner-controlled Settings are implemented; continuous uptime and provider backup telemetry are not connected                                                                                                                                  | No fake academic data or “healthy” claims                                                           |
 
 ## Policies and operational guidance
 
@@ -46,9 +46,9 @@ Implemented: zero-opening ZAR/no-VAT ledger; EFT/cash receipts and multi-invoice
 
 The owner reported the accounting release working before requesting the parent portal. The parent upgrade is `20261027150000_parent_portal.sql`, consolidated in [parent-setup.sql](parent-setup.sql). The owner reported successfully applying this setup on 27 October 2026. This coding task did not independently query the live database or configure Auth emails.
 
-Implemented at `/parent`: prototype-inspired responsive orange/purple design; email-only sign-in via a one-use email link; explicit staff enable/disable controls for reviewed guardian accounts; verified Auth identity binding; sibling switching; real learner/programme information; complete family balances and bounded financial history; private invoice/receipt/credit/refund/statement PDFs; EFT/cash guidance and contact links. Sign-in and refresh tokens use separate HttpOnly parent cookies. No attendance or results are invented, and enrollment does not add an email challenge or prohibit siblings sharing a guardian email.
+Implemented at `/parent`: prototype-inspired responsive orange/purple design; email-only sign-in via a one-use email link; explicit staff enable/disable controls for reviewed guardian accounts; verified Auth identity binding; sibling switching; real learner/programme information; complete family balances and bounded financial history; private invoice/receipt/credit/refund/statement PDFs; EFT/cash guidance. WhatsApp/Privacy links remain on login screens only. Sign-in and refresh tokens use separate HttpOnly parent cookies. No attendance or results are invented, and enrollment does not add an email challenge or prohibit siblings sharing a guardian email.
 
-[Parent setup and testing](parent-portal.md) includes the SQL, Supabase SMTP/redirect/template settings and full controlled-inbox checklist. Existing tuition email templates are separate from the Supabase Auth templates. Parent academic publishing, proof uploads, second-guardian invitations and financial account transfers after a guardian change remain future work.
+[Parent setup and testing](parent-portal.md) includes the SQL, Supabase SMTP/redirect/template settings and full controlled-inbox checklist. Existing tuition email templates are separate from the Supabase Auth templates. Parents can read published academic results and reports through the connected academic module. Proof uploads, second-guardian invitations and financial account transfers after a guardian change remain future work.
 
 ## Teaching foundation release
 

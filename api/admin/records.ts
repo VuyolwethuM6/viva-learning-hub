@@ -1,3 +1,4 @@
+import { systemRead, systemMutation } from "../_lib/system-service.js";
 import { academicRead, academicMutation } from "../_lib/academic-service.js";
 import { teachingRead, teachingMutation } from "../_lib/teaching-service.js";
 import type { ServerResponse } from "node:http";
@@ -25,6 +26,12 @@ export default async function handler(
   privateResponse(response);
   try {
     const actor = await requireAdmin(request);
+    const system = new URL(
+      request.url || "",
+      "http://localhost",
+    ).searchParams.get("system");
+    if (request.method === "GET" && system)
+      return await systemRead(response, actor.id, system);
     if (
       request.method === "GET" &&
       new URL(request.url || "", "http://localhost").searchParams.get(
@@ -49,6 +56,8 @@ export default async function handler(
       throw new HttpError(405, "Method not allowed.");
     sameOrigin(request);
     const body = await readJsonBody(request, 32_768, "Admin records");
+    if (body.action === "system")
+      return await systemMutation(response, actor.id, body);
     if (body.action === "academic")
       return await academicMutation(response, actor.id, "admin", body);
     if (body.action === "teaching")

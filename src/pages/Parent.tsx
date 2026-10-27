@@ -1,3 +1,4 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { ParentAcademics } from "@/components/AcademicLearner";
 import { PortalDock, WhatsAppButton } from "@/components/PortalChrome";
 import { StudentWorkspace } from "@/components/StudentWorkspace";
@@ -28,7 +29,6 @@ import {
   GraduationCap,
   Home,
   Landmark,
-  Loader2,
   LogOut,
   Mail,
   RefreshCw,
@@ -377,11 +377,9 @@ export default function Parent() {
   );
   if (loading)
     return (
-      <div className="parent-app parent-loading">
+      <div className="parent-app viva-loading-screen">
         {metadata}
-        <Logo />
-        <Loader2 className="parent-spin" size={30} />
-        <p>Opening your parent portal…</p>
+        <VivaLoader size="page" label="Opening your parent portal…" />
       </div>
     );
   if (!data)
@@ -468,7 +466,7 @@ export default function Parent() {
             )}
             {!linkSent && (
               <button className="parent-primary" disabled={busy}>
-                {busy ? <Loader2 className="parent-spin" size={18} /> : null}
+                {busy ? <VivaLoader size="button" decorative /> : null}
                 Email me a sign-in link
                 <ArrowRight size={18} />
               </button>
@@ -670,7 +668,11 @@ export default function Parent() {
                 void refresh().finally(() => setBusy(false));
               }}
             >
-              <RefreshCw size={18} className={busy ? "parent-spin" : ""} />
+              {busy ? (
+                <VivaLoader size="button" decorative />
+              ) : (
+                <RefreshCw size={18} />
+              )}
             </button>
             {data.children.length > 1 && (
               <button

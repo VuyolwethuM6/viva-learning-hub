@@ -1,6 +1,6 @@
 # Development and architecture
 
-Updated: 27 October 2026. See [implementation status](implementation-status.md) and [admin workflow](admin-workflow.md).
+Updated: 28 October 2026. See [implementation status](implementation-status.md) and [admin workflow](admin-workflow.md).
 
 ## Stack and map
 
@@ -108,3 +108,7 @@ See [connected-portals.md](connected-portals.md). Canonical migration `202610271
 ## Academic workflow release
 
 Canonical migration: `20261027164000_academic_workflow.sql`. Run `node scripts/sync-teaching-setup.mjs` after SQL edits to regenerate the fresh schema, combined setup and `docs/academic-setup.sql`. See [academic-workflow.md](academic-workflow.md) for capabilities and live acceptance. Academic handlers share the existing admin/session functions, use their established authentication and same-origin write checks, and pass trusted actor/audience to service-only RPCs. API body limits permit bounded written answers; files use private signed uploads and verified metadata with final deadline checks. Report PDFs use the existing bundled local fonts/logo; Vercel records/session function packaging includes these assets. All test identities/uploads are synthetic. Any isolated browser harness/test-clock endpoint is outside the checkout, never a deployed authentication bypass.
+
+## Admin system oversight
+
+`api/_lib/system-service.ts` serves authenticated `?system=health|settings` reads and same-origin system actions through the existing records route. `SystemWorkspace.tsx` renders both admin destinations. New system tables/functions are defined by `20261028010000_system_oversight.sql` and the complete SQL Editor file `docs/system-setup.sql`; neither is applied to a connected database by this coding session. New functions are service-role only and independently assert the verified admin/owner. Accounting observers record source and outcome without blocking established accounting if the optional observation migration is absent. See [setup and acceptance checks](system-health-and-settings.md).

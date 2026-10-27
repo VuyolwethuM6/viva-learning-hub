@@ -1,3 +1,4 @@
+import { VivaLoader } from "@/components/VivaLoader";
 import { WeeklyAttendance } from "../WeeklyAttendance";
 import { southAfricanDay } from "@/lib/portal-attendance";
 import { ClassProgrammeFields } from "./ClassProgrammeFields";
@@ -15,7 +16,6 @@ import {
   CheckCircle2,
   FileText,
   GraduationCap,
-  Loader2,
   Plus,
   RefreshCw,
   Users,
@@ -304,7 +304,7 @@ function TeachingForm({
               disabled={busy}
               onClick={() => void save()}
             >
-              {busy ? <Loader2 className="spin" size={17} /> : null}Confirm and
+              {busy ? <VivaLoader size="button" decorative /> : null}Confirm and
               save
             </button>
             <button disabled={busy} onClick={() => setReview(null)}>
@@ -358,7 +358,9 @@ function SessionHistory({
           <button onClick={() => void read()}>Retry history</button>
         </p>
       )}
-      {!events && !error && <p>Loading saved changes…</p>}
+      {!events && !error && (
+        <VivaLoader size="inline" label="Loading saved changes…" />
+      )}
       {events?.map((e) => {
         const before = e.details.before as Record<string, unknown> | null,
           after = e.details.after as Record<string, unknown> | null;
@@ -487,7 +489,7 @@ export function TeachingWorkspace({
       <section className="admin-card teaching-workspace">
         <h1>Teaching workspace</h1>
         {loading ? (
-          <p role="status">Loading teaching records…</p>
+          <VivaLoader label="Loading teaching records…" />
         ) : (
           <>
             <p role="alert" className="admin-error">
@@ -1102,7 +1104,11 @@ export function TeachingWorkspace({
           onClick={() => void load()}
           aria-label="Refresh teaching records"
         >
-          <RefreshCw size={18} className={loading ? "spin" : ""} />
+          {loading ? (
+            <VivaLoader size="button" decorative />
+          ) : (
+            <RefreshCw size={18} />
+          )}
         </button>
       </div>
       {error && (
