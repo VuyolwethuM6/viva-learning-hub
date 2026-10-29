@@ -1,3 +1,4 @@
+import { FinancialRecoveryControls } from "./FinancialRecoveryControls";
 import { VivaLoader } from "@/components/VivaLoader";
 import {
   financeRequest,
@@ -1890,6 +1891,14 @@ export function FinanceWorkspace({
           )}
           {section === "Controls" && (
             <>
+              <FinancialRecoveryControls
+                today={snapshot.today}
+                booksStart={data.settings.books_start}
+                changed={async () => {
+                  await load();
+                  await changed();
+                }}
+              />
               <section className="admin-card">
                 <h2>Accounting controls</h2>
                 <p>

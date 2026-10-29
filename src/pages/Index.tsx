@@ -75,6 +75,7 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
   const [checkoutError, setCheckoutError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submissionStarted = useRef(false);
+  const checkoutAttempt = useRef<{key:string;id:string}>();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -101,10 +102,12 @@ const PurchaseModal = ({ material, open, onOpenChange }) => {
     try {
       const controller = new AbortController();
       timeout = window.setTimeout(() => controller.abort(), 15000);
+      const key=JSON.stringify({...customer,material:material.title});
+      if(checkoutAttempt.current?.key!==key)checkoutAttempt.current={key,id:crypto.randomUUID()};
       const response = await fetch('/api/payfast/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ ...customer, material: material.title }),
+        body: JSON.stringify({ ...customer, material: material.title, requestId: checkoutAttempt.current!.id }),
         signal: controller.signal,
       });
       window.clearTimeout(timeout);

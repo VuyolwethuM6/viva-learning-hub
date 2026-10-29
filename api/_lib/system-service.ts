@@ -56,21 +56,32 @@ export async function systemRead(
     });
   }
   const checks: SystemCheck[] = [];
-  const [snapshotResult, bucketsResult, authResult, assetsResult] =
-    await Promise.allSettled([
-      rpc<SystemSnapshot>("system_snapshot", { p_actor: actor }),
-      db<{ id: string; public: boolean; file_size_limit: number | null }[]>(
-        "/storage/v1/bucket",
-      ),
-      db<{ external?: { email?: boolean } }>("/auth/v1/settings"),
-      Promise.all(
-        [
-          "public/viva-tutorials-logo.png",
-          "private/fonts/PlusJakartaSans-Regular.ttf",
-          "private/fonts/PlusJakartaSans-Bold.ttf",
-        ].map((path) => access(resolve(process.cwd(), path))),
-      ),
-    ]);
+  const [
+    snapshotResult,
+    bucketsResult,
+    authResult,
+    assetsResult,
+    safetyResult,
+  ] = await Promise.allSettled([
+    rpc<SystemSnapshot>("system_snapshot", { p_actor: actor }),
+    db<{ id: string; public: boolean; file_size_limit: number | null }[]>(
+      "/storage/v1/bucket",
+    ),
+    db<{ external?: { email?: boolean } }>("/auth/v1/settings"),
+    Promise.all(
+      [
+        "public/viva-tutorials-logo.png",
+        "private/fonts/PlusJakartaSans-Regular.ttf",
+        "private/fonts/PlusJakartaSans-Bold.ttf",
+      ].map((path) => access(resolve(process.cwd(), path))),
+    ),
+    rpc<{
+      missingCurrentInvoices: number | null;
+      unpostedPurchases: number;
+      pendingDeliveries: number;
+      deliveryAttention: number;
+    }>("accounting_safety_health", { p_actor: actor }),
+  ]);
   const snapshot =
     snapshotResult.status === "fulfilled" ? snapshotResult.value : null;
   checks.push({
@@ -135,6 +146,34 @@ export async function systemRead(
         ? "The logo and both PDF font files are available to this server function."
         : "A required logo or font file is missing from the deployment. Invoice and report generation may fail.",
   });
+  if (
+    safetyResult.status === "fulfilled" &&
+    typeof safetyResult.value.missingCurrentInvoices === "number"
+  ) {
+    const h = safetyResult.value;
+    checks.push({
+      id: "billing-coverage",
+      title: "Invoice coverage & PDF purchases",
+      status:
+        (h.missingCurrentInvoices ?? 0) +
+          h.unpostedPurchases +
+          h.pendingDeliveries +
+          h.deliveryAttention >
+        0
+          ? "attention"
+          : "ok",
+      detail: `${h.missingCurrentInvoices} missing current-month invoices · ${h.unpostedPurchases} PDF payments awaiting posting · ${h.pendingDeliveries} pending PDF emails · ${h.deliveryAttention} PDF emails needing provider review.`,
+      target: "Finance",
+    });
+  } else
+    checks.push({
+      id: "billing-coverage",
+      title: "Invoice coverage & PDF purchases",
+      status: "unavailable",
+      detail:
+        "Recovery checks are unavailable. Apply the high-priority recovery setup if needed, then review Finance Controls.",
+      target: "Finance",
+    });
   const lastTest = snapshot?.emailTests[0];
   checks.push({
     id: "email",
