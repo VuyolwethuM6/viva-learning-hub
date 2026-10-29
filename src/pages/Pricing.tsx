@@ -21,12 +21,12 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Topbar + Sticky Header */}
+       
       <TopBar />
       <StickyHeader />
       <main id="main-content">
 
-      {/* Hero Section */}
+       
       <section className="relative pt-[10.5rem] md:pt-44 pb-20 px-6 bg-gradient-to-b from-white to-[#7949fe]/5 overflow-hidden">
         {/* Pattern blobs */}
         <motion.div
