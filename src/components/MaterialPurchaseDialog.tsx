@@ -17,6 +17,7 @@ export default function MaterialPurchaseDialog({ material, open, onOpenChange }:
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const submissionStarted = useRef(false);
+  const checkoutAttempt = useRef<{key:string;id:string}>();
 
   const submitCheckout = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -29,10 +30,12 @@ export default function MaterialPurchaseDialog({ material, open, onOpenChange }:
     let redirecting = false;
 
     try {
+      const key=JSON.stringify({...customer,material:material.title});
+      if(checkoutAttempt.current?.key!==key)checkoutAttempt.current={key,id:crypto.randomUUID()};
       const response = await fetch('/api/payfast/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ ...customer, material: material.title }),
+        body: JSON.stringify({ ...customer, material: material.title, requestId: checkoutAttempt.current!.id }),
         signal: timeoutController.signal,
       });
       const checkout = await response.json().catch(() => ({}));

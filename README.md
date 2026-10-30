@@ -93,3 +93,5 @@ The app tracks page views, external link clicks, phone/email clicks, resource do
 - Phone: [+27 73 391 3206](tel:+27733913206)
 - Email: [info@vivatutorials.co.za](mailto:info@vivatutorials.co.za)
 - Website: [vivatutorials.co.za](https://vivatutorials.co.za)
+
+High-priority audit remediation: [setup and acceptance guide](docs/high-priority-recovery.md). Apply its complete SQL update before using the new billing/PDF recovery controls.

@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/payfast/notify.ts": {
-      "includeFiles": "private/materials/**"
+      "includeFiles": "private/materials/**",
+      "maxDuration": 60
     },
     "api/admin/documents.ts": {
       "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
@@ -12,7 +13,7 @@
       "maxDuration": 60
     },
     "api/admin/accounting.ts": {
-      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
+      "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf,private/materials/**}",
       "maxDuration": 60
     },
     "api/admin/session.ts": {

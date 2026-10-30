@@ -1,97 +1,101 @@
-import crypto from 'node:crypto';
-import type { IncomingMessage, ServerResponse } from 'node:http';
-
-const products: Record<string, { title: string; amount: string }> = {
-  'Analytical Geometry Practice': { title: 'Analytical Geometry Practice', amount: '299.00' },
-  'Finance Practice Questions': { title: 'Finance Practice Questions', amount: '399.00' },
-};
-const payfastEndpoint = 'https://www.payfast.co.za/eng/process';
-
-type CheckoutPayload = {
-  material?: unknown;
-  firstName?: unknown;
-  lastName?: unknown;
-  email?: unknown;
-  phone?: unknown;
-};
-
-function payfastSignature(fields: Record<string, string>, passphrase?: string) {
-  const payload = Object.entries(fields)
-    .filter(([, value]) => value !== '')
-    .map(([key, value]) => `${key}=${encodeURIComponent(value.trim()).replace(/%20/g, '+')}`)
-    .join('&');
-  const withPassphrase = passphrase ? `${payload}&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, '+')}` : payload;
-  return crypto.createHash('md5').update(withPassphrase).digest('hex');
-}
-
-function sendJson(response: ServerResponse, status: number, body: Record<string, unknown>) {
-  response.statusCode = status;
-  response.setHeader('Content-Type', 'application/json');
-  response.end(JSON.stringify(body));
-}
-
-async function readBody(request: IncomingMessage) {
-  const chunks: Buffer[] = [];
-  let size = 0;
-  for await (const chunk of request) {
-    const buffer = Buffer.from(chunk);
-    size += buffer.length;
-    if (size > 16 * 1024) throw new Error('Request body too large');
-    chunks.push(buffer);
-  }
-  return JSON.parse(Buffer.concat(chunks).toString('utf8')) as CheckoutPayload;
-}
-
-export default async function handler(request: IncomingMessage, response: ServerResponse) {
-  console.info('[PayFast API] checkout request', { method: request.method });
-  if (request.method !== 'POST') return sendJson(response, 405, { error: 'Method not allowed' });
-
+import { getEmailConfig } from "../_lib/email.js";
+import { randomUUID } from "node:crypto";
+import type { ServerResponse } from "node:http";
+import { rpc, uuid } from "../_lib/admin.js";
+import {
+  paidProducts,
+  payfastSignature,
+  payfastOrigin,
+} from "../_lib/payfast-protocol.js";
+import {
+  readJsonBody,
+  sendJson,
+  handleError,
+  HttpError,
+  type ApiRequest,
+} from "../_lib/http.js";
+export default async function handler(
+  request: ApiRequest,
+  response: ServerResponse,
+) {
+  response.setHeader("Cache-Control", "no-store");
   try {
-    const body = await readBody(request);
-    const product = products[String(body.material || '')];
-    const firstName = String(body.firstName || '').trim();
-    const lastName = String(body.lastName || '').trim();
-    const email = String(body.email || '').trim();
-    const phone = String(body.phone || '').trim();
-
-    if (!product || !firstName || !lastName || !email || !phone || !/^\S+@\S+\.\S+$/.test(email)) {
-      console.warn('[PayFast API] invalid checkout details', { product: Boolean(product), email: Boolean(email) });
-      return sendJson(response, 400, { error: 'Complete customer and product details are required.' });
-    }
-
-    const origin = process.env.PUBLIC_SITE_URL?.replace(/\/$/, '');
-    if (!origin) {
-      console.error('[PayFast API] PUBLIC_SITE_URL is not configured');
-      return sendJson(response, 503, { error: 'Public site configuration is incomplete.' });
-    }
+    if (request.method !== "POST")
+      throw new HttpError(405, "Method not allowed.");
+    const body = await readJsonBody(request, 16384, "PDF checkout");
+    const product = paidProducts[String(body.material || "")];
+    const firstName = String(body.firstName || "").trim(),
+      lastName = String(body.lastName || "").trim(),
+      email = String(body.email || "")
+        .trim()
+        .toLowerCase(),
+      phone = String(body.phone || "").trim();
+    if (
+      !product ||
+      firstName.length < 1 ||
+      firstName.length > 100 ||
+      lastName.length < 1 ||
+      lastName.length > 100 ||
+      email.length > 254 ||
+      !/^\S+@\S+\.\S+$/.test(email) ||
+      phone.length < 3 ||
+      phone.length > 40
+    )
+      throw new HttpError(
+        400,
+        "Complete customer and product details are required.",
+      );
+    const origin = process.env.PUBLIC_SITE_URL?.replace(/\/$/, "");
+    if (
+      !origin ||
+      !process.env.PAYFAST_MERCHANT_ID ||
+      !process.env.PAYFAST_MERCHANT_KEY
+    )
+      throw new HttpError(503, "PayFast server configuration is incomplete.");
+    if (!getEmailConfig())
+      throw new HttpError(
+        503,
+        "PDF delivery is temporarily unavailable. Please try again later.",
+      );
+    const providerOrigin = payfastOrigin();
+    const order = await rpc<{ id: string; amount_cents: number }>(
+      "payfast_order_create",
+      {
+        p_id: body.requestId ? uuid(body.requestId) : randomUUID(),
+        p_product: product.title,
+        p_first: firstName,
+        p_last: lastName,
+        p_email: email,
+        p_phone: phone,
+      },
+    );
     const fields: Record<string, string> = {
-      merchant_id: process.env.PAYFAST_MERCHANT_ID || '',
-      merchant_key: process.env.PAYFAST_MERCHANT_KEY || '',
+      merchant_id: process.env.PAYFAST_MERCHANT_ID,
+      merchant_key: process.env.PAYFAST_MERCHANT_KEY,
       return_url: `${origin}/payment-success`,
       cancel_url: `${origin}/payment-cancelled`,
-      notify_url: process.env.PAYFAST_NOTIFY_URL || `${origin}/api/payfast/notify`,
+      notify_url:
+        process.env.PAYFAST_NOTIFY_URL || `${origin}/api/payfast/notify`,
       name_first: firstName,
       name_last: lastName,
       email_address: email,
       cell_number: phone,
-      amount: product.amount,
+      m_payment_id: order.id,
+      amount: (order.amount_cents / 100).toFixed(2),
       item_name: product.title,
       custom_str1: product.title,
       custom_str2: email,
     };
-
-    if (!fields.merchant_id || !process.env.PAYFAST_MERCHANT_KEY) {
-      console.error('[PayFast API] missing checkout configuration');
-      return sendJson(response, 503, { error: 'PayFast server configuration is incomplete.' });
-    }
-
-    console.info('[PayFast API] checkout payload signed', { product: product.title, amount: product.amount });
     return sendJson(response, 200, {
-      endpoint: payfastEndpoint,
-      fields: { ...fields, signature: payfastSignature(fields, process.env.PAYFAST_PASSPHRASE) },
+      endpoint: providerOrigin + "/eng/process",
+      fields: { ...fields, signature: payfastSignature(fields) },
     });
-  } catch (error) {
-    console.error('[PayFast API] checkout failed', error instanceof Error ? error.message : 'unknown error');
-    return sendJson(response, 400, { error: 'Unable to create checkout.' });
+  } catch (e) {
+    return handleError(
+      response,
+      e,
+      "PDF checkout",
+      "Checkout could not be prepared. Please retry with the same checkout request.",
+    );
   }
 }

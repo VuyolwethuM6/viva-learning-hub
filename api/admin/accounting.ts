@@ -1,3 +1,4 @@
+import { dispatchPDFOrder } from "../_lib/payfast-delivery.js";
 import { timingSafeEqual } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import {
@@ -77,6 +78,26 @@ export default async function handler(
     }
     const actor = await requireAdmin(request);
     if (request.method === "GET") {
+      if (url.searchParams.get("safety") === "1") {
+        const month =
+          url.searchParams.get("month") ||
+          new Date()
+            .toLocaleDateString("en-CA", { timeZone: "Africa/Johannesburg" })
+            .slice(0, 7) + "-01";
+        if (!validAccountingDate(month) || !month.endsWith("-01"))
+          throw new HttpError(400, "Choose a billing month.");
+        const sales = await rpc<{ role: string }>("payfast_snapshot", {
+          p_actor: actor.id,
+        });
+        const billing =
+          sales.role === "owner"
+            ? await rpc<{ candidates: unknown[]; fingerprint: string }>(
+                "accounting_billing_preview",
+                { p_actor: actor.id, p_month: month },
+              )
+            : { candidates: [], fingerprint: null };
+        return sendJson(response, 200, { ...billing, month, sales });
+      }
       if (url.searchParams.has("file")) {
         const file = await rpc<Attachment>("accounting_attachment", {
           p_actor: actor.id,
@@ -180,6 +201,48 @@ export default async function handler(
     sameOrigin(request);
     const body = await readJsonBody(request, 1200000, "Accounting");
     const action = String(body.action || "");
+    if (action === "recover_billing") {
+      uuid(body.requestId);
+      if (!validAccountingDate(String(body.month || "")))
+        throw new HttpError(400, "Choose a valid billing month.");
+      const result = await rpc("accounting_recover_billing", {
+        p_actor: actor.id,
+        p_month: body.month,
+        p_data: {
+          requestId: body.requestId,
+          fingerprint: body.fingerprint,
+          applications: body.applications,
+          reviewed: body.reviewed,
+          reason: body.reason,
+        },
+      });
+      return sendJson(response, 200, { success: true, result });
+    }
+    if (action.startsWith("payfast_")) {
+      uuid(body.requestId);
+      const operation = action.slice(8);
+      if (body.id !== undefined) uuid(body.id);
+      if (body.orderId !== undefined) uuid(body.orderId);
+      if (
+        ![
+          "authorize",
+          "post",
+          "dispatch",
+          "delivery_review",
+          "settlement",
+          "settlement_reverse",
+        ].includes(operation)
+      )
+        throw new HttpError(400, "Unknown purchase action.");
+      const result = await rpc<{ orderId?: string }>("payfast_admin", {
+        p_actor: actor.id,
+        p_operation: operation,
+        p_data: body,
+      });
+      if (operation === "dispatch" && result.orderId)
+        await dispatchPDFOrder(result.orderId);
+      return sendJson(response, 200, { success: true, result });
+    }
     if (action.startsWith("attachment_")) {
       const operation = action.slice("attachment_".length);
       if (!["prepare", "finalize", "view"].includes(operation))
