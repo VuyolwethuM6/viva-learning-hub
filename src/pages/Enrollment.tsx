@@ -1,3 +1,4 @@
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { VivaLoader } from "@/components/VivaLoader";
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Mail, ShieldCheck, FileText, GraduationCap, Upload, X } from "lucide-react";
@@ -992,7 +993,7 @@ export default function Enrollment() {
                     </p>
                   )}
                   {submitError && (
-                    <div ref={errorRef} tabIndex={-1} role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{submitError}<a href="/contact" className="mt-2 block underline">Contact us for help</a></div>
+                    <div ref={errorRef} tabIndex={-1} role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{submitError}<WhatsAppButton message="Hello Viva Tutorials, I need help with an enrollment application." className="mt-2">Get help on WhatsApp</WhatsAppButton></div>
                   )}
                 </form>
 
@@ -1035,7 +1036,7 @@ export default function Enrollment() {
                 <p className="mt-5 text-xs leading-5 text-slate-500">Save or print this confirmation for your records. It contains personal information, so keep it private. This page is not a learner portal and is not saved after you leave or refresh.</p>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row print:hidden">
                   <Button type="button" onClick={() => window.print()} variant="secondary" className="min-h-12 rounded-xl">Print confirmation</Button>
-                  <a href="/contact" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#7949fe] px-5 text-sm font-bold text-white hover:bg-[#5a4ecf]">Contact Viva Tutorials</a>
+                  <WhatsAppButton message="Hello Viva Tutorials, I need help with an enrollment application.">WhatsApp Viva</WhatsAppButton>
                   <a href="/" className="inline-flex min-h-12 items-center justify-center px-3 text-sm font-semibold text-violet-700 underline">Back to home</a>
                 </div>
               </section>

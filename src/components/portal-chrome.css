@@ -14,28 +14,6 @@
   transform: none;
   z-index: 40;
 }
-.viva-whatsapp {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  min-height: 44px;
-  padding: 11px 16px;
-  border-radius: 13px;
-  background: #16843f !important;
-  color: white !important;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  border: 1px solid #16843f;
-}
-.viva-whatsapp svg {
-  flex-shrink: 0;
-}
-.viva-whatsapp:focus-visible {
-  outline: 3px solid #f27435;
-  outline-offset: 3px;
-}
 .portal-dock-scope .tutor-bottom-nav {
   display: flex;
 }

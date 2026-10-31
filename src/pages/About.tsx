@@ -1,7 +1,7 @@
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { useState, useEffect } from "react";
 import { motion } from 'framer-motion';
 import { CheckCircle, Target, Heart, Zap } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import TopBar from '@/components/TopBar';
 import StickyHeader from '@/components/StickyHeader';
 import Footer from '@/components/Footer';
@@ -81,16 +81,7 @@ export default function About() {
             </motion.div>
 
             {/* CTA */}
-            <motion.a
-              href="/contact"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-block mt-6"
-            >
-              <Button className="bg-[#7949fe] text-white hover:bg-[#5a4ecf] py-4 px-8 rounded-full text-lg font-bold shadow-lg">
-                Get Started Today
-              </Button>
-            </motion.a>
+            <WhatsAppButton message="Hello Viva Tutorials, I would like to know more about your tutoring programmes." className="mt-6">Get Started Today</WhatsAppButton>
           </div>
         </section>
 
@@ -224,11 +215,7 @@ export default function About() {
             <p className="text-white/60 text-lg mb-8 max-w-2xl mx-auto">
               Join hundreds of students achieving their goals with Viva Tutorials.
             </p>
-            <a href="/contact">
-              <Button className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">
-                Get Started Today
-              </Button>
-            </a>
+            <WhatsAppButton message="Hello Viva Tutorials, I would like to know more about your tutoring programmes.">Get Started Today</WhatsAppButton>
           </div>
         </section>
 

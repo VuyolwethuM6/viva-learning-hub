@@ -77,7 +77,7 @@ Viva Tutorials is based in Mfuleni, Cape Town. In-person options are available i
 - [Book a session](https://calendar.app.google/k1hbyKuD97U5g1Vf7)
 - [Browse study materials](https://vivatutorials.co.za/study-materials)
 
-The contact page also accepts tutoring questions and subject requests. The website says the team aims to respond to enquiries within one business day.
+Use the green WhatsApp buttons to ask about tutoring, resources or enrollment at +27 73 391 3206. The Contact page and its form API have been removed; old `/contact` links redirect to WhatsApp. The separate subject-resource request API remains available.
 
 ## Analytics setup
 

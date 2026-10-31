@@ -126,7 +126,7 @@ Historical preview uses the stored fee/programme, initial activation date and **
 
 ## 5. Test public forms and paid PDF recovery
 
-1. In a test environment, submit a contact enquiry and subject request to a controlled admin inbox. Check success and actual arrival. Oversized/malformed requests must fail without a send.
+1. In a test environment, submit a subject-resource request to a controlled admin inbox. Check success and actual arrival. Oversized/malformed requests must fail without a send. The former Contact page and `/api/contact` form handler were removed on 31 October 2026; public contact now uses WhatsApp.
 2. Set sandbox credentials/passphrase/URLs, deploy the work preview/test project, and confirm the notify endpoint is reachable by PayFast.
 3. Start one paid PDF checkout. Retrying a timed-out checkout with the same unchanged form should reserve the same order; editing details starts a different checkout request.
 4. Complete the sandbox payment. Confirm the order/payment appears in Finance and both expected branded emails contain the original PDF attachment. Check provider message IDs and the actual inboxes.

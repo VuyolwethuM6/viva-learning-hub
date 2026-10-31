@@ -14,7 +14,6 @@ import {
   expect,
   vi,
 } from "vitest";
-import contact from "../../api/contact";
 import subject from "../../api/subject-request";
 import checkout from "../../api/payfast/checkout";
 import notify from "../../api/payfast/notify";
@@ -207,24 +206,9 @@ afterAll(async () => {
 });
 describe("public runtime parsing and durable PDF purchases", () => {
   it.each([true, false])(
-    "accepts contact and subject JSON with parsed=%s",
+    "accepts subject JSON with parsed=%s",
     async (parsed) => {
-      let r = res();
-      await contact(
-        req(
-          {
-            name: "Tester",
-            email: "test@example.test",
-            subject: "Test enquiry",
-            message: "Synthetic enquiry",
-          },
-          parsed,
-          "/api/contact",
-        ),
-        r,
-      );
-      expect(r.statusCode).toBe(200);
-      r = res();
+      const r = res();
       await subject(
         req(
           { email: "test@example.test", subject: "Mathematics" },
@@ -234,7 +218,7 @@ describe("public runtime parsing and durable PDF purchases", () => {
         r,
       );
       expect(r.statusCode).toBe(200);
-      expect(deliveries).toHaveLength(2);
+      expect(deliveries).toHaveLength(1);
     },
   );
   it.each([true, false])(
@@ -257,7 +241,7 @@ describe("public runtime parsing and durable PDF purchases", () => {
     "enforces size limits for parsed=%s before provider/DB side effects",
     async (parsed) => {
       const r = res();
-      await contact(
+      await subject(
         req(
           {
             name: "Test",
@@ -275,7 +259,7 @@ describe("public runtime parsing and durable PDF purchases", () => {
   );
   it("rejects malformed JSON, structured/repeated notification fields and wrong content types", async () => {
     let r = res();
-    await contact(req("{broken", false), r);
+    await subject(req("{broken", false), r);
     expect(r.statusCode).toBe(400);
     r = res();
     await notify(

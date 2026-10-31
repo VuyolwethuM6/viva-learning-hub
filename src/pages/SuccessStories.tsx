@@ -1,6 +1,6 @@
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { motion } from 'framer-motion';
 import { Star, TrendingUp, Award } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TopBar, StickyHeader } from "@/components/Header";
@@ -220,11 +220,7 @@ export default function SuccessStories() {
           <p className="text-white/60 text-lg mb-8 max-w-2xl mx-auto">
             Join hundreds of students who have transformed their academics with Viva Tutorials.
           </p>
-          <a href="/contact">
-            <Button className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">
-              Start Your Journey
-            </Button>
-          </a>
+          <WhatsAppButton message="Hello Viva Tutorials, I would like to discuss tutoring for my learner.">Start Your Journey</WhatsAppButton>
         </div>
       </section>
 

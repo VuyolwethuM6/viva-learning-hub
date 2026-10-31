@@ -1,5 +1,5 @@
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { TopBar, StickyHeader } from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -315,9 +315,7 @@ export default function PrivacyPolicy() {
                   Terms of Service
                 </a>
                 . For questions about our services or personal information, please{" "}
-                <a href="/contact" className="font-semibold text-[#5a4ecf] underline-offset-2 hover:underline">
-                  contact our team
-                </a>
+                <WhatsAppButton message="Hello Viva Tutorials, I have a privacy or personal information enquiry.">WhatsApp Viva</WhatsAppButton>
                 .
               </p>
             </aside>
@@ -332,12 +330,7 @@ export default function PrivacyPolicy() {
             <p className="mx-auto mb-7 max-w-2xl text-base leading-7 text-white/70 sm:text-lg">
               Contact Viva Tutorials about privacy requests, learner records, consent or how personal information is used.
             </p>
-            <Button
-              asChild
-              className="rounded-full bg-white px-8 py-6 text-base font-bold text-[#7949fe] hover:bg-gray-100"
-            >
-              <a href="/contact">Contact Us</a>
-            </Button>
+            <WhatsAppButton message="Hello Viva Tutorials, I have a privacy or personal information enquiry.">WhatsApp Viva</WhatsAppButton>
           </div>
         </section>
       </main>
