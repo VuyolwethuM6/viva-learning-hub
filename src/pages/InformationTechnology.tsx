@@ -1,3 +1,4 @@
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { motion } from 'framer-motion';
 import { CheckCircle, Target, Award, Users, BookOpen, Clock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -95,9 +96,7 @@ export default function InformationTechnology() {
       <section className="py-20 px-6 bg-[#1a0b2e] rounded-[3rem] mx-6 md:mx-24">
         <div className="text-center">
           <h2 className="text-4xl font-bold text-white mb-6">Master Information Technology</h2>
-          <a href="/contact">
-            <Button className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">Book Your Tutor</Button>
-          </a>
+          <WhatsAppButton message="Hello Viva Tutorials, I would like to enquire about Information Technology tutoring.">Book Your Tutor</WhatsAppButton>
         </div>
       </section>
 

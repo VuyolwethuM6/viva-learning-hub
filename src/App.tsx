@@ -9,6 +9,7 @@ import { lazy, Suspense } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import RouteMetadata from "./components/RouteMetadata";
 import Analytics from "./components/Analytics";
+import { WhatsAppRedirect } from "./components/WhatsAppRedirect";
 
 const Student = lazy(() => import("./pages/Student"));
 const Tutor = lazy(() => import("./pages/Tutor"));
@@ -19,7 +20,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/About"));
 const Services = lazy(() => import("./pages/Services"));
 const Pricing = lazy(() => import("./pages/Pricing"));
-const Contact = lazy(() => import("./pages/Contact"));
+
 const Enrollment = lazy(() => import("./pages/Enrollment"));
 const OurTutors = lazy(() => import("./pages/OurTutors"));
 const SuccessStories = lazy(() => import("./pages/SuccessStories"));
@@ -68,7 +69,7 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/pricing" element={<Pricing />} />
-          <Route path="/contact" element={<Contact />} />
+          <Route path="/contact" element={<WhatsAppRedirect />} />
           <Route path="/enroll" element={<Enrollment />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/parent" element={<Parent />} />

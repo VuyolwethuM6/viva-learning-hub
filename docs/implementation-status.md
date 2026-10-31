@@ -1,6 +1,6 @@
 # Implementation status and next work
 
-Updated: 28 October 2026. This describes the academic workflow and system oversight releases on `work` and their accounting prerequisites. See [System Health and Settings setup](system-health-and-settings.md) for the additional migration and acceptance checks. “Implemented” means code exists; “verified locally” means the stated checks ran. Neither establishes production readiness or a deployed database migration.
+Updated: 31 October 2026. This describes the academic workflow and system oversight releases on `work` and their accounting prerequisites. See [System Health and Settings setup](system-health-and-settings.md) for the additional migration and acceptance checks. “Implemented” means code exists; “verified locally” means the stated checks ran. Neither establishes production readiness or a deployed database migration.
 
 ## Working scope
 
@@ -21,7 +21,7 @@ Updated: 28 October 2026. This describes the academic workflow and system oversi
 | Notifications               | Durable tuition/financial document queue with leases, idempotency keys and opt-in dispatch                                                                    | Provider mocked; sender configuration and live tests still needed                                   |
 | Public pricing              | Grade/subject fees aligned with enrollment                                                                                                                   | Replaces conflicting legacy session-package cards                                                   |
 | PDF commerce                | Existing server-signed live PayFast checkout and notification validation; paid PDF emails                                                                    | Separate from tuition; no new live payment test                                                     |
-| Enquiries/analytics         | Existing Resend enquiry routes and optional GA; admin route skips app analytics                                                                              | Existing implementation; no full enquiry integration test                                           |
+| Enquiries/analytics         | Public Contact page and its form API removed. Former Contact links use the shared WhatsApp button (+27 73 391 3206) with contextual messages; old `/contact` URLs redirect to WhatsApp. Subject-resource requests retain their own Resend API; optional GA remains. | Public build, type/lint checks and browser navigation checks; authenticated portal support stays on login screens only. |
 | Teaching/portals/monitoring | Classes, tutor/student access, private materials, explicit learner release and confirmed attendance implemented; assigned work, submissions, marking/publication, timed assessments, calculated progress and frozen report PDFs implemented; System Health checks and owner-controlled Settings are implemented; continuous uptime and provider backup telemetry are not connected                                                                                                                                  | No fake academic data or “healthy” claims                                                           |
 
 ## Policies and operational guidance

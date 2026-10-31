@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Mail, MapPin, Menu, Phone, X } from "lucide-react";
 import { FaFacebook, FaTiktok, FaYoutube } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 const navItems = [
   { label: "Home", path: "/" },
@@ -10,7 +11,6 @@ const navItems = [
   { label: "Study Materials", path: "/study-materials" },
   { label: "Services", path: "/services" },
   { label: "Pricing", path: "/pricing" },
-  { label: "Contact", path: "/contact" },
 ];
 
 const socialLinks = [
@@ -115,7 +115,7 @@ export const StickyHeader = () => {
             : "border-transparent bg-white py-5"
         }`}
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6">
           <a href="/" className="flex items-center gap-2">
             <img
               src="/viva-tutorials-logo.png"
@@ -124,7 +124,7 @@ export const StickyHeader = () => {
             />
           </a>
 
-          <nav className="hidden items-center gap-8 text-sm font-medium text-gray-600 lg:flex">
+          <nav className="hidden items-center gap-4 text-sm font-medium text-gray-600 lg:flex xl:gap-8">
             {navItems.map((item) => (
               <a
                 key={item.label}
@@ -135,12 +135,13 @@ export const StickyHeader = () => {
                 <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#7949fe] transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
+            <WhatsAppButton />
           </nav>
 
           <div className="hidden items-center gap-4 lg:flex">
             <a
               href="https://calendar.app.google/k1hbyKuD97U5g1Vf7"
-              className="text-sm font-semibold text-[#7949fe] hover:underline"
+              className="hidden text-sm font-semibold text-[#7949fe] hover:underline xl:inline"
             >
               Book A Session
             </a>
@@ -220,6 +221,7 @@ export const StickyHeader = () => {
                       {item.label}
                     </a>
                   ))}
+                  <WhatsAppButton onClick={() => setIsMobileMenuOpen(false)} />
                 </nav>
 
                 <div className="mt-8 space-y-4 border-t border-gray-200 pt-8">

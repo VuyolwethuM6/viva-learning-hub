@@ -1,3 +1,4 @@
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { motion } from 'framer-motion';
 import { CheckCircle, Target, Award, Users, BookOpen, Clock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -248,11 +249,7 @@ export default function Mathematics() {
             Start with expert tutoring or explore our comprehensive learning resources.
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <a href="/contact">
-              <Button className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">
-                Book a Tutor
-              </Button>
-            </a>
+            <WhatsAppButton message="Hello Viva Tutorials, I would like to enquire about Mathematics tutoring.">Book a Tutor</WhatsAppButton>
           </div>
         </div>
       </section>

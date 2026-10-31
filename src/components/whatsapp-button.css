@@ -1,0 +1,27 @@
+.viva-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 11px 16px;
+  border-radius: 13px;
+  background: #16843f !important;
+  color: white !important;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid #16843f;
+}
+.viva-whatsapp:hover {
+  background: #116b32 !important;
+  border-color: #116b32;
+}
+.viva-whatsapp svg {
+  flex-shrink: 0;
+}
+.viva-whatsapp:focus-visible {
+  outline: 3px solid #f27435;
+  outline-offset: 3px;
+}

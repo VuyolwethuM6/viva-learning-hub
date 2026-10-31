@@ -1,3 +1,4 @@
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { VivaLoader } from "@/components/VivaLoader";
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
@@ -316,13 +317,7 @@ export default function Home() {
 
 
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center lg:justify-start">
-                <Button
-                  asChild
-                  size="lg"
-                  className="h-14 px-8 text-base bg-[#7949fe] hover:bg-[#5a4ecf] text-white rounded-full shadow-xl shadow-[#7949fe]/30 hover:shadow-2xl hover:scale-105 transition-all duration-300"
-                >
-                  <a href="/contact">Enquire About Tutoring</a>
-                </Button>
+                <WhatsAppButton message="Hello Viva Tutorials, I would like to enquire about tutoring, fees and availability.">Enquire About Tutoring</WhatsAppButton>
 
                 <Button
                   asChild
@@ -369,14 +364,14 @@ export default function Home() {
                 icon: Laptop,
                 title: 'Online Tutoring',
                 description: 'Learn from home with scheduled online lessons designed to help you understand difficult concepts, work through examples and practise relevant questions. Online tutoring gives learners access to academic support without needing to travel to the classroom.',
-                href: '/contact?subject=Online%20tutoring',
+                message: 'Hello Viva Tutorials, I would like to enquire about online tutoring.',
                 cta: 'Enquire About Online Lessons',
               },
               {
                 icon: MapPin,
                 title: 'In-Person Tutoring in Mfuleni',
                 description: 'Join face-to-face tutoring in Mfuleni, Cape Town. Work through challenging topics, ask questions, practise problem-solving methods and strengthen your understanding with guided academic support.',
-                href: '/contact?subject=In-person%20tutoring%20in%20Mfuleni',
+                message: 'Hello Viva Tutorials, I would like to enquire about in-person tutoring in Mfuleni.',
                 cta: 'Enquire About In-Person Lessons',
               },
               {
@@ -386,14 +381,14 @@ export default function Home() {
                 href: '/services',
                 cta: 'Explore Our Subjects',
               },
-            ].map(({ icon: Icon, title, description, href, cta }) => (
+            ].map(({ icon: Icon, title, description, href, message, cta }) => (
               <article key={title} className="rounded-3xl border-2 border-[#7949fe]/30 bg-white p-7 shadow-sm">
                 <Icon className="mb-5 h-9 w-9 text-[#7949fe]" aria-hidden="true" />
                 <h3 className="mb-3 text-xl font-bold text-gray-900">{title}</h3>
                 <p className="mb-6 leading-7 text-gray-600">{description}</p>
-                <a className="font-bold text-[#7949fe] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7949fe]" href={href}>
+                {message ? <WhatsAppButton message={message}>{cta}</WhatsAppButton> : <a className="font-bold text-[#7949fe] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7949fe]" href={href}>
                   {cta} <ArrowRight className="ml-1 inline h-4 w-4" aria-hidden="true" />
-                </a>
+                </a>}
               </article>
             ))}
           </div>
@@ -862,9 +857,7 @@ export default function Home() {
             ))}
           </ol>
           <div className="mt-10 text-center">
-            <a href="/contact" className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#7949fe] px-7 py-3 font-bold text-white transition-colors hover:bg-[#5a4ecf] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#7949fe]">
-              Discuss Your Learning Goals
-            </a>
+            <WhatsAppButton message="Hello Viva Tutorials, I would like to enquire about tutoring, fees and availability.">Discuss Your Learning Goals</WhatsAppButton>
           </div>
         </div>
       </section>
@@ -1210,18 +1203,14 @@ export default function Home() {
               Tell us the learner&apos;s grade, subjects and goals. We can then discuss suitable support options and the currently available timetable.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button asChild className="bg-white text-[#7949fe] hover:bg-gray-100 py-6 px-10 rounded-full text-lg font-bold">
-                <a href="/contact">Enquire About Tutoring</a>
-              </Button>
+              <WhatsAppButton message="Hello Viva Tutorials, I would like to enquire about tutoring, fees and availability.">Enquire About Tutoring</WhatsAppButton>
               <Button asChild variant="outline" className="border-white/20 text-white hover:bg-white/10 py-6 px-10 rounded-full text-lg font-bold">
                 <a href="/study-materials">Explore Study Materials</a>
               </Button>
             </div>
             <p className="mt-8 text-sm text-white/75">
               Questions about subjects, fees or lesson availability?{' '}
-              <a href="/contact" className="font-bold text-white underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
-                Contact Viva Tutorials using the details on our contact page.
-              </a>
+              <WhatsAppButton message="Hello Viva Tutorials, I would like to enquire about tutoring, fees and availability.">Chat with Viva Tutorials on WhatsApp.</WhatsAppButton>
             </p>
           </div>
         </div>
