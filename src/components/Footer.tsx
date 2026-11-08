@@ -1,4 +1,5 @@
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { whatsappHref } from "@/lib/whatsapp";
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Facebook, Twitter, Linkedin, Youtube, ArrowUp } from 'lucide-react';
@@ -106,9 +107,14 @@ export default function Footer() {
             <ul className="space-y-3">
               {footerLinks.services.map((link, index) => (
                 <li key={index}>
-                  {link.message ? <WhatsAppButton message={link.message}>{link.name}</WhatsAppButton> : <a href={link.href} className="text-slate-400 hover:text-violet-400 transition-colors">
+                  <a
+                    href={link.message ? whatsappHref(link.message) : link.href}
+                    target={link.message ? "_blank" : undefined}
+                    rel={link.message ? "noopener noreferrer" : undefined}
+                    className="text-slate-400 hover:text-violet-400 transition-colors"
+                  >
                     {link.name}
-                  </a>}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -119,9 +125,14 @@ export default function Footer() {
             <ul className="space-y-3">
               {footerLinks.subjects.map((link, index) => (
                 <li key={index}>
-                  {link.message ? <WhatsAppButton message={link.message}>{link.name}</WhatsAppButton> : <a href={link.href} className="text-slate-400 hover:text-violet-400 transition-colors">
+                  <a
+                    href={link.message ? whatsappHref(link.message) : link.href}
+                    target={link.message ? "_blank" : undefined}
+                    rel={link.message ? "noopener noreferrer" : undefined}
+                    className="text-slate-400 hover:text-violet-400 transition-colors"
+                  >
                     {link.name}
-                  </a>}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -132,9 +143,14 @@ export default function Footer() {
             <ul className="space-y-3">
               {footerLinks.company.map((link, index) => (
                 <li key={index}>
-                  {link.message ? <WhatsAppButton message={link.message}>{link.name}</WhatsAppButton> : <a href={link.href} className="text-slate-400 hover:text-violet-400 transition-colors">
+                  <a
+                    href={link.message ? whatsappHref(link.message) : link.href}
+                    target={link.message ? "_blank" : undefined}
+                    rel={link.message ? "noopener noreferrer" : undefined}
+                    className="text-slate-400 hover:text-violet-400 transition-colors"
+                  >
                     {link.name}
-                  </a>}
+                  </a>
                 </li>
               ))}
             </ul>
