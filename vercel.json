@@ -158,6 +158,10 @@
       "destination": "/about/index.html"
     },
     {
+      "source": "/careers",
+      "destination": "/careers/index.html"
+    },
+    {
       "source": "/services",
       "destination": "/services/index.html"
     },
