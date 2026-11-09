@@ -1,0 +1,202 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { recruitmentRequest } from "@/lib/recruitment-client";
+import type { RecruitmentSnapshot } from "@/lib/recruitment-types";
+import { RecruitmentSecurityWorkspace } from "@/components/admin/recruitment/RecruitmentSecurityWorkspace";
+import { Button } from "@/components/ui/button";
+import { VivaLoader } from "@/components/VivaLoader";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import "./recruitment-admin.css";
+
+export default function RecruitmentAdmin() {
+  const [snapshot, setSnapshot] = useState<RecruitmentSnapshot | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [logout, setLogout] = useState(false);
+  const logoutTrigger = useRef<HTMLButtonElement>(null);
+  const reload = useCallback(async () => {
+    setSnapshot(await recruitmentRequest<RecruitmentSnapshot>("snapshot"));
+  }, []);
+  useEffect(() => {
+    let active = true;
+    recruitmentRequest<RecruitmentSnapshot>("snapshot")
+      .then((s) => {
+        if (active) setSnapshot(s);
+      })
+      .catch(() => {
+        /* No broad Admin fallback. */
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  async function login(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await recruitmentRequest("session", { email, password });
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Sign-in failed.");
+    } finally {
+      setPassword("");
+      setBusy(false);
+    }
+  }
+  async function signOut() {
+    setBusy(true);
+    setError("");
+    try {
+      await recruitmentRequest("session", undefined, "DELETE");
+      setSnapshot(null);
+      setLogout(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Sign-out failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  if (loading) return <VivaLoader size="page" label="Opening recruitment…" />;
+  return (
+    <div className="recruitment-shell">
+      <header>
+        <a href="/">
+          <img
+            src="/viva-tutorials-logo.png"
+            alt="Viva Tutorials"
+            width="112"
+            height="56"
+          />
+        </a>
+        <span>Recruitment</span>
+        {snapshot && (
+          <Button
+            ref={logoutTrigger}
+            variant="outline"
+            onClick={() => setLogout(true)}
+          >
+            Sign out
+          </Button>
+        )}
+      </header>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className={snapshot ? "recruitment-main" : "recruitment-login"}
+      >
+        {!snapshot ? (
+          <section className="recruitment-card">
+            <p className="recruitment-eyebrow">Authorized staff only</p>
+            <h1>Recruitment staff sign-in</h1>
+            <p>
+              Use your verified staff email and password. Recruitment
+              permissions are separate from general Admin and teaching access.
+            </p>
+            <form onSubmit={login}>
+              <label>
+                Staff email
+                <input
+                  type="email"
+                  autoComplete="username"
+                  required
+                  maxLength={254}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={busy}
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  maxLength={1024}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={busy}
+                />
+              </label>
+              {error && <p role="alert">{error}</p>}
+              <Button type="submit" disabled={busy}>
+                {busy ? <VivaLoader size="button" decorative /> : "Sign in"}
+              </Button>
+            </form>
+            <p className="recruitment-note">
+              Access must be explicitly granted. This screen does not create
+              accounts or send invitations.
+            </p>
+            <a href="/privacy-policy">Privacy</a>
+          </section>
+        ) : (
+          <>
+            <div className="recruitment-title">
+              <div>
+                <p className="recruitment-eyebrow">
+                  Secure foundations · Milestone 1
+                </p>
+                <h1>Recruitment security</h1>
+                <p>
+                  {snapshot.user.email} · {snapshot.user.role}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                disabled={busy}
+                onClick={() => {
+                  setError("");
+                  void reload().catch((e) => setError(e.message));
+                }}
+              >
+                Refresh
+              </Button>
+            </div>
+            {error && <p role="alert">{error}</p>}
+            <RecruitmentSecurityWorkspace snapshot={snapshot} reload={reload} />
+            <Dialog
+              open={logout}
+              onOpenChange={(open) => {
+                if (!busy) setLogout(open);
+              }}
+            >
+              <DialogContent
+                onCloseAutoFocus={(event) => {
+                  event.preventDefault();
+                  logoutTrigger.current?.focus();
+                }}
+              >
+                <DialogTitle>Sign out of recruitment?</DialogTitle>
+                <DialogDescription>
+                  Your other portal sessions are separate.
+                </DialogDescription>
+                {error && <p role="alert">{error}</p>}
+                <Button disabled={busy} onClick={() => void signOut()}>
+                  Confirm sign out
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => setLogout(false)}
+                >
+                  Cancel
+                </Button>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
+      </main>
+    </div>
+  );
+}

@@ -96,6 +96,16 @@ function network() {
     });
 }
 describe("admin interface", () => {
+  it("links both desktop and mobile Admin navigation to the isolated recruitment entry", async () => {
+    const fetch = network();
+    view();
+    await screen.findByRole("heading", { name: "Your daily overview" });
+    expect(screen.getByRole("link", { name: "Recruitment" })).toHaveAttribute("href", "/admin/recruitment");
+    fireEvent.click(screen.getByRole("button", { name: "More sections" }));
+    const drawer = await screen.findByRole("dialog", { name: "Your workspace" });
+    expect(within(drawer).getByRole("link", { name: "Recruitment" })).toHaveAttribute("href", "/admin/recruitment");
+    expect(fetch.mock.calls.some(([url]) => String(url).includes("/api/admin/recruitment"))).toBe(false);
+  });
   it("shows billing-period collection at the top of Finance and removes it from Home", async () => {
     network();
     view();

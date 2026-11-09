@@ -549,9 +549,10 @@ export default function Admin() {
       label: "Teaching",
       items: ["Classes", "Materials", "Assessments", "Academics", "Tutors"],
     },
-    { label: "Oversight", items: ["System health", "Settings"] },
+    { label: "Oversight", items: ["System health", "Settings", "Recruitment"] },
   ];
   const navButton = (name: string) => {
+    if (name === "Recruitment") return <a key={name} href="/admin/recruitment" className="admin-button recruitment-nav-link"><Users size={19} /><span>Recruitment</span></a>;
     const Icon = iconFor(name);
     const count =
       name === "Applications"
@@ -1531,7 +1532,7 @@ export default function Admin() {
           close={() => setMenu(false)}
           variant="sheet"
         >
-          <div className="more-sections">{tabs.slice(4).map(navButton)}</div>
+          <div className="more-sections">{[...tabs.slice(4), "Recruitment"].map(navButton)}</div>
         </Dialog>
       )}
       {selected && (

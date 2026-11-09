@@ -54,9 +54,9 @@ export default function RouteMetadata() {
           title: "Parent Portal | Viva Tutorials",
           description: "Your secure Viva Tutorials family account.",
         }
-      : path === "/admin"
+      : path === "/admin" || path === "/admin/recruitment"
         ? {
-            title: "Admin | Viva Tutorials",
+            title: path === "/admin/recruitment" ? "Recruitment | Viva Tutorials" : "Admin | Viva Tutorials",
             description: "Authorized Viva Tutorials administration.",
           }
         : (page ?? {
@@ -71,7 +71,7 @@ export default function RouteMetadata() {
     updateMeta(
       "name",
       "robots",
-      ["/admin", "/parent", "/tutor", "/student"].includes(path)
+      ["/admin", "/admin/recruitment", "/parent", "/tutor", "/student"].includes(path)
         ? "noindex,nofollow"
         : isIndexable
           ? "index,follow"

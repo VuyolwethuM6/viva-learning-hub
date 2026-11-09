@@ -1237,7 +1237,7 @@ export function TeachingWorkspace({
               className="admin-primary"
               onClick={() =>
                 show(
-                  "Authorize a tutor",
+                  "Create a tutor record",
                   "tutor_save",
                   <>
                     <label>
@@ -1260,7 +1260,7 @@ export function TeachingWorkspace({
                     </label>
                     <p>
                       Verify this tutor email. They use an email link at /tutor;
-                      authorization does not send an invitation automatically.
+                      creating a record does not send an invitation. With recruitment safeguards enabled, new records remain disabled until owner activation is released.
                     </p>
                   </>,
                   (f) => ({ name: text(f, "name"), email: text(f, "email") }),
@@ -1268,7 +1268,7 @@ export function TeachingWorkspace({
               }
             >
               <Plus size={17} />
-              Add tutor
+              Add tutor record
             </button>
             <a
               className="admin-button"

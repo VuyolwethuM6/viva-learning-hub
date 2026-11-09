@@ -91,3 +91,7 @@ Implemented: class-scoped reporting periods with explicit immutable calculation 
 ## High-priority audit recovery — 29 October 2026
 
 The recovery release addresses F01–F04: current-month invoice gap recovery plus reviewed older billing, compatible bounded public-body parsing, durable verified PDF orders/payments/per-recipient delivery with owner-authorized accounting and clearing settlements, and restored development-file protection. [Setup and exact acceptance boundaries](high-priority-recovery.md) cover the two migrations, authorization, sandbox configuration and controlled tests. Existing prices, programmes, EFT/cash tuition and teaching behavior are preserved. Live SQL/provider changes are not executed by this coding task. Remaining medium audit findings, withdrawal effective-access policy, dynamic public catalogue management and automated provider refunds/chargebacks remain separate.
+
+## Recruitment Milestone 1
+
+Implemented on `work`: isolated recruitment staff authentication, explicit recruitment ownership, scoped delegation, action-specific reauthentication, audit/idempotency, disabled rollout controls and opt-in legacy access fences. No public intake, recruitment documents, hiring decisions, onboarding, activation or compensation processing is released. Production migration/configuration is unchanged. See [architecture](recruitment/architecture.md), [isolated setup](recruitment/milestone-1-setup.md) and [acceptance guide](recruitment/milestone-1-test-guide.md).
