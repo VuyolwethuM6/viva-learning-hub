@@ -4,6 +4,9 @@ export type RecruitmentUser = {
   email: string;
   role: RecruitmentRole;
   revision: number;
+  aal?: "aal1" | "aal2";
+  ownerAal2Required?: boolean;
+  mfaFactors?: { id: string; friendlyName: string }[];
 };
 export type RecruitmentStaff = {
   user_id: string;
@@ -29,6 +32,8 @@ export type RecruitmentSnapshot = {
     revision: number;
     staff_console_enabled: boolean;
     access_guards_enabled: boolean;
+    access_guards_mandatory?: boolean;
+    owner_aal2_required?: boolean;
     privacy_policy_version: string;
     draft_days: number;
     unsuccessful_months: number;
@@ -49,7 +54,10 @@ export type RecruitmentSnapshot = {
   }[];
 };
 export type RecruitmentOperation =
-  "staff_grant" | "scope_create" | "scope_grant" | "settings";
+  | "staff_grant"
+  | "scope_create"
+  | "scope_grant"
+  | "settings";
 export type RecruitmentChoices = Record<string, string | boolean | number> & {
   requestId: string;
 };

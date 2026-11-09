@@ -1,3 +1,4 @@
+import { rpc } from "../_lib/admin.js";
 import type { ServerResponse } from "node:http";
 import { privateResponse, sameOrigin } from "../_lib/admin.js";
 import {
@@ -26,7 +27,11 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
   try {
     const url = new URL(req.url || "", "http://localhost");
     const route = url.searchParams.get("route") || "snapshot";
-    if (!["session", "snapshot", "reauthenticate", "mutate"].includes(route))
+    if (
+      !["session", "snapshot", "reauthenticate", "mutate", "recover"].includes(
+        route,
+      )
+    )
       throw new HttpError(404, "Recruitment operation unavailable.");
     if (!["GET", "POST", "DELETE"].includes(req.method || ""))
       throw new HttpError(405, "Method not allowed.");
@@ -83,6 +88,23 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
     if (req.method === "GET") {
       if (route === "session") return sendJson(res, 200, { user });
       if (route === "snapshot") return await recruitmentSnapshot(res, user);
+      if (route === "recover") {
+        const requestId = url.searchParams.get("requestId") || "";
+        if (
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            requestId,
+          )
+        )
+          throw new HttpError(400, "Choose a valid pending request ID.");
+        return sendJson(
+          res,
+          200,
+          await rpc("recruitment_recover_request", {
+            p_actor: user.id,
+            p_request_id: requestId,
+          }),
+        );
+      }
       throw new HttpError(405, "POST is required.");
     }
     if (req.method !== "POST" || !["mutate", "reauthenticate"].includes(route))
@@ -96,6 +118,9 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
       route === "reauthenticate",
     );
   } catch (error) {
+    // Mark known application rejections; unmarked intermediary errors remain uncertain.
+    if (error instanceof HttpError && error.status >= 400 && error.status < 500)
+      res.setHeader("X-Recruitment-Error", "confirmed");
     return handleError(
       res,
       error,

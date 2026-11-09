@@ -16,12 +16,15 @@ export function recruitmentToken(req: ApiRequest, refresh = false) {
       ?.slice(name.length + 1) || ""
   );
 }
-type Session = {
+export type RecruitmentSession = {
   access_token: string;
   refresh_token: string;
   expires_in: number;
 };
-export function recruitmentCookies(res: ServerResponse, session?: Session) {
+export function recruitmentCookies(
+  res: ServerResponse,
+  session?: RecruitmentSession,
+) {
   const secure =
     process.env.NODE_ENV === "production" ||
     ["preview", "production"].includes(process.env.VERCEL_ENV || "");
@@ -60,6 +63,12 @@ export async function recruitmentIdentity(token: string) {
     id?: string;
     email?: string;
     email_confirmed_at?: string;
+    factors?: {
+      id: string;
+      factor_type: string;
+      status: string;
+      friendly_name?: string;
+    }[];
   };
   if (
     !user.id ||
@@ -69,9 +78,38 @@ export async function recruitmentIdentity(token: string) {
   )
     throw new HttpError(401, "A verified staff identity is required.");
   try {
-    return await rpc<RecruitmentUser>("recruitment_context", {
+    const context = await rpc<RecruitmentUser>("recruitment_context", {
       p_actor: user.id,
     });
+    // GET /user above validates this exact JWT with Supabase before claims are trusted.
+    // Opaque/malformed claims never establish AAL2, even if a provider accepts the token.
+    let aal: "aal1" | "aal2" = "aal1";
+    try {
+      const claims = JSON.parse(
+        Buffer.from(token.split(".")[1], "base64url").toString("utf8"),
+      );
+      if (
+        claims.sub === user.id &&
+        claims.aal === "aal2" &&
+        typeof claims.session_id === "string" &&
+        /^[0-9a-f-]{36}$/i.test(claims.session_id) &&
+        typeof claims.exp === "number" &&
+        claims.exp > Date.now() / 1000
+      )
+        aal = "aal2";
+    } catch {
+      /* No assurance from unparseable claims. */
+    }
+    return {
+      ...context,
+      aal,
+      mfaFactors: (user.factors || [])
+        .filter((f) => f.factor_type === "totp" && f.status === "verified")
+        .map((f) => ({
+          id: f.id,
+          friendlyName: f.friendly_name || "Authenticator",
+        })),
+    };
   } catch (e) {
     if (e instanceof HttpError && e.status === 409)
       throw new HttpError(
@@ -109,13 +147,15 @@ export async function limitRecruitment(req: ApiRequest, identity: string) {
       );
   }
 }
-export async function recruitmentSignIn(res: ServerResponse, auth: Response) {
+export async function recruitmentSession(
+  auth: Response,
+): Promise<RecruitmentSession> {
   if (!auth.ok)
     throw new HttpError(
       auth.status === 429 ? 429 : 401,
       "Recruitment sign-in failed.",
     );
-  const session = (await auth.json()) as Session;
+  const session = (await auth.json()) as RecruitmentSession;
   if (
     !session.access_token ||
     !session.refresh_token ||
@@ -123,6 +163,10 @@ export async function recruitmentSignIn(res: ServerResponse, auth: Response) {
     !/^[A-Za-z0-9._~-]+$/.test(session.refresh_token)
   )
     throw new HttpError(502, "Invalid authentication response.");
+  return session;
+}
+export async function recruitmentSignIn(res: ServerResponse, auth: Response) {
+  const session = await recruitmentSession(auth);
   try {
     const user = await recruitmentIdentity(session.access_token);
     recruitmentCookies(res, session);

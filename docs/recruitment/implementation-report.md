@@ -1,5 +1,7 @@
 # Recruitment Milestone 1 implementation report
 
+Historical report for commit `3f1ffee`. For subsequent security changes and current verification, see [the security remediation report](security-remediation-report.md). Statements below describe the original implementation, not the remediated state.
+
 Implemented locally on the existing `work` branch from `dae505b`. No new development branch was created. Main was not merged or changed. No production Supabase connection, migration, account change, Storage change, provider configuration, email dispatch or deployment was performed.
 
 ## Delivered

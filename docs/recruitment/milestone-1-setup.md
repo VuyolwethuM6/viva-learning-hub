@@ -25,6 +25,9 @@ For an existing isolated application database, review and run the complete `mile
 1. `20261109010000_recruitment_foundations.sql`
 2. `20261109020000_recruitment_security_operations.sql`
 3. `20261109030000_recruitment_access_guards.sql`
+4. `20261109040000_recruitment_security_remediation.sql`
+
+If M1 commit `3f1ffee` is already installed, apply only migration 4 in a transaction; do not rerun the old bootstrap signature. Fresh installs use the complete bundle.
 
 It depends on the existing teaching/accounting/Auth foundation. Fresh isolated installations may use the complete `supabase/schema.sql` instead. Do not use the full fresh schema as a blind production upgrade.
 
@@ -36,7 +39,9 @@ Create/identify an existing verified Auth identity with password sign-in in the 
 
 ```sql
 -- Replace with the intended verified test user's Auth UUID, not an email.
-select public.recruitment_bootstrap('REPLACE_WITH_VERIFIED_AUTH_UUID'::uuid);
+select public.recruitment_bootstrap('REPLACE_WITH_VERIFIED_AUTH_UUID'::uuid,
+ 'OPERATOR_REFERENCE', 'INDEPENDENT_APPROVAL_REFERENCE',
+ 'Approved initial recruitment owner setup in isolated project');
 ```
 
 This operation is not exposed through HTTP or granted to `service_role`, `anon` or `authenticated`. It succeeds once. It adds no `admin_users`, `portal_users` or tutor identity. Do not infer recruitment ownership from finance. No personal UUID or credential belongs in migrations or source control.
@@ -56,3 +61,9 @@ Add a second test owner and manager/officer using existing verified Auth UUIDs. 
 Before a later live approval: obtain production constraints/indexes, active functions, grants/policies/triggers and external-consumer inventory; inspect table-level fence compatibility; confirm Supabase password/refresh/single-session behavior; choose operational owner identities; rehearse restoration. A generic readiness screen is not a production certificate.
 
 Do not push this branch without considering Vercel's automatic preview deployments. Main and production migration execution require separate explicit approval.
+
+## Security remediation
+
+Follow [owner operations and recovery](owner-recovery-runbook.md) for two-owner setup, attributable bootstrap, all-owner recovery, MFA acceptance and operational safeguard locks. MFA and mandatory safeguards default off; no production enforcement is enabled by this migration. Browser recovery persists only an opaque pending request UUID in session storage. Payloads remain server-side. A pending request belongs to its original actor and must not be replaced with a new ID after an uncertain response.
+
+Tutor identity history is preserved even with the legacy fence off. Existing established identities are backfilled at migration time. A replacement identity needs explicit independently approved operational authorization; ordinary first binding and repeated tutor sign-in remain supported. Existing Add Tutor activation remains blocked with the fence on.

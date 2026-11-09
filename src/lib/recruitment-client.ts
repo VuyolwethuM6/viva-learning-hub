@@ -2,6 +2,7 @@ export class RecruitmentError extends Error {
   constructor(
     message: string,
     public status: number,
+    public confirmed = false,
   ) {
     super(message);
   }
@@ -12,15 +13,19 @@ export async function recruitmentRequest<T>(
   data?: object,
   method?: string,
   renew = true,
+  requestId?: string,
 ): Promise<T> {
   const send = () =>
-    fetch(`/api/admin/recruitment?route=${encodeURIComponent(route)}`, {
-      method: method || (data ? "POST" : "GET"),
-      credentials: "same-origin",
-      headers: data ? { "Content-Type": "application/json" } : {},
-      body: data ? JSON.stringify(data) : undefined,
-      signal: AbortSignal.timeout(30000),
-    });
+    fetch(
+      `/api/admin/recruitment?route=${encodeURIComponent(route)}${requestId ? `&requestId=${encodeURIComponent(requestId)}` : ""}`,
+      {
+        method: method || (data ? "POST" : "GET"),
+        credentials: "same-origin",
+        headers: data ? { "Content-Type": "application/json" } : {},
+        body: data ? JSON.stringify(data) : undefined,
+        signal: AbortSignal.timeout(30000),
+      },
+    );
   let response: Response;
   try {
     response = await send();
@@ -41,13 +46,24 @@ export async function recruitmentRequest<T>(
         refresh = undefined;
       });
     await refresh;
-    response = await send();
+    try {
+      response = await send();
+    } catch {
+      throw new RecruitmentError(
+        "The result is uncertain. Retry the original request.",
+        0,
+      );
+    }
   }
   const body = await response.json().catch(() => null);
   if (!response.ok)
     throw new RecruitmentError(
       body?.error || "Recruitment request failed.",
       response.status,
+      response.status >= 400 &&
+        response.status < 500 &&
+        response.headers.get("X-Recruitment-Error") === "confirmed" &&
+        typeof body?.error === "string",
     );
   if (!body)
     throw new RecruitmentError(
@@ -55,4 +71,27 @@ export async function recruitmentRequest<T>(
       0,
     );
   return body as T;
+}
+
+// Only a non-secret UUID is persisted. Choices, proofs, passwords, MFA codes and tokens stay in memory/server storage.
+const pendingKey = "viva.recruitment.pendingRequestId";
+export function pendingRecruitmentRequest() {
+  try {
+    const id = sessionStorage.getItem(pendingKey);
+    return id && /^[0-9a-f-]{36}$/i.test(id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+export function retainRecruitmentRequest(id: string) {
+  try {
+    sessionStorage.setItem(pendingKey, id);
+  } catch {
+    throw new Error(
+      "Browser session storage is required to safely recover this request. No mutation was sent.",
+    );
+  }
+}
+export function clearRecruitmentRequest() {
+  sessionStorage.removeItem(pendingKey);
 }

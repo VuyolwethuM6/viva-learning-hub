@@ -21,6 +21,8 @@ import type { ApiRequest } from "../../api/_lib/http";
 let db: PGlite;
 const owner = "11111111-1111-4111-8111-111111111111",
   manager = "33333333-3333-4333-8333-333333333333";
+const factorId = "77777777-7777-4777-8777-777777777777";
+let aal2Token: string;
 let requests: { path: string; body: Record<string, unknown> }[];
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status });
@@ -76,10 +78,14 @@ async function change(operation: string, data: object) {
     password: "test-password",
   });
   expect(proof.statusCode).toBe(200);
-  const r = await call("mutate", {
-    ...payload,
-    proof: JSON.parse(proof.body).proof,
-  });
+  const r = await call(
+    "mutate",
+    {
+      ...payload,
+      proof: JSON.parse(proof.body).proof,
+    },
+    "owner-fresh",
+  );
   expect(r.statusCode).toBe(200);
   return JSON.parse(r.body).result;
 }
@@ -101,13 +107,27 @@ beforeAll(async () => {
 }, 30000);
 beforeEach(async () => {
   requests = [];
+  aal2Token =
+    "eyJhbGciOiJIUzI1NiJ9." +
+    Buffer.from(
+      JSON.stringify({
+        sub: owner,
+        aal: "aal2",
+        session_id: randomUUID(),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      }),
+    ).toString("base64url") +
+    ".synthetic-signature";
   vi.stubEnv("SUPABASE_URL", "https://synthetic.supabase.test");
   vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "synthetic-key");
   vi.stubEnv("VERCEL_ENV", "preview");
   await db.exec(
-    "truncate public.recruitment_events,public.recruitment_requests,public.recruitment_reauth_challenges,public.recruitment_staff_scopes,public.recruitment_scopes,public.recruitment_staff,public.recruitment_access_approvals,public.recruitment_auth_limits;update public.recruitment_settings set bootstrapped_at=null,revision=0,staff_console_enabled=false,access_guards_enabled=false;",
+    "truncate public.recruitment_tutor_rebind_authorizations,public.recruitment_tutor_bindings,public.recruitment_operational_events,public.recruitment_events,public.recruitment_requests,public.recruitment_reauth_challenges,public.recruitment_staff_scopes,public.recruitment_scopes,public.recruitment_staff,public.recruitment_access_approvals,public.recruitment_auth_limits;update public.recruitment_settings set bootstrapped_at=null,revision=0,staff_console_enabled=false,access_guards_enabled=false,access_guards_mandatory=false,owner_aal2_required=false;",
   );
-  await db.query("select public.recruitment_bootstrap($1)", [owner]);
+  await db.query(
+    "select public.recruitment_bootstrap($1,'test-operator','TEST-APPROVAL-1','Authorized synthetic owner setup')",
+    [owner],
+  );
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
     const url = new URL(String(input));
     const body = JSON.parse(String(init?.body || "{}"));
@@ -116,28 +136,45 @@ beforeEach(async () => {
       throw Error("Real network blocked");
     if (url.pathname === "/auth/v1/user") {
       const token = new Headers(init?.headers).get("authorization") || "";
-      const id = token.includes("owner-")
-        ? owner
-        : token.includes("manager-")
-          ? manager
-          : null;
+      const id =
+        token === "Bearer " + aal2Token
+          ? owner
+          : token.includes("owner-")
+            ? owner
+            : token.includes("manager-")
+              ? manager
+              : null;
       return id
         ? json({
             id,
             email: id === owner ? "owner@example.test" : "manager@example.test",
             email_confirmed_at: "2026-11-01",
+            factors: [
+              {
+                id: factorId,
+                factor_type: "totp",
+                status: "verified",
+                friendly_name: "Synthetic authenticator",
+              },
+            ],
           })
         : json({}, 401);
     }
     if (url.pathname === "/auth/v1/token") {
       if (url.searchParams.get("grant_type") === "refresh_token")
-        return body.refresh_token === "owner-refresh"
+        return body.refresh_token === "owner-mfa-refresh"
           ? json({
-              access_token: "owner-session",
-              refresh_token: "owner-refresh",
+              access_token: aal2Token,
+              refresh_token: "owner-mfa-refresh",
               expires_in: 3600,
             })
-          : json({}, 401);
+          : body.refresh_token === "owner-refresh"
+            ? json({
+                access_token: "owner-session",
+                refresh_token: "owner-refresh",
+                expires_in: 3600,
+              })
+            : json({}, 401);
       if (body.password !== "test-password") return json({}, 400);
       const who =
         body.email === "owner@example.test"
@@ -153,6 +190,16 @@ beforeEach(async () => {
           })
         : json({}, 400);
     }
+    if (url.pathname === `/auth/v1/factors/${factorId}/challenge`)
+      return json({ id: "88888888-8888-4888-8888-888888888888" });
+    if (url.pathname === `/auth/v1/factors/${factorId}/verify`)
+      return body.code === "123456"
+        ? json({
+            access_token: aal2Token,
+            refresh_token: "owner-mfa-refresh",
+            expires_in: 3600,
+          })
+        : json({}, 400);
     if (url.pathname === "/auth/v1/logout") return json({});
     const name = url.pathname.split("/").pop()!;
     if (
@@ -163,6 +210,7 @@ beforeEach(async () => {
         "recruitment_rate_limit",
         "recruitment_issue_challenge",
         "recruitment_mutate",
+        "recruitment_recover_request",
       ].includes(name)
     ) {
       const entries = Object.entries(body);
@@ -244,16 +292,20 @@ describe("recruitment API with real isolated SQL and synthetic Auth", () => {
     const proof = JSON.parse(auth.body).proof;
     expect(
       (
-        await call("mutate", {
-          ...payload,
-          data: { ...payload.data, label: "tampered" },
-          proof,
-        })
+        await call(
+          "mutate",
+          {
+            ...payload,
+            data: { ...payload.data, label: "tampered" },
+            proof,
+          },
+          "owner-fresh",
+        )
       ).statusCode,
     ).toBe(409);
     const both = await Promise.all([
-      call("mutate", { ...payload, proof }),
-      call("mutate", { ...payload, proof }),
+      call("mutate", { ...payload, proof }, "owner-fresh"),
+      call("mutate", { ...payload, proof }, "owner-fresh"),
     ]);
     expect(both.map((x) => x.statusCode)).toEqual([200, 200]);
     expect(both[0].body).toBe(both[1].body);
@@ -386,5 +438,140 @@ describe("recruitment API with real isolated SQL and synthetic Auth", () => {
         (x) => x.startsWith("viva_recruitment") && x.includes("Max-Age=0"),
       ),
     ).toBe(true);
+  });
+  it("rotates password-confirmed sessions and binds proofs to the replacement cookie", async () => {
+    const payload = {
+      operation: "scope_create",
+      data: {
+        requestId: randomUUID(),
+        kind: "vacancy",
+        label: "Rotated session",
+      },
+      password: "test-password",
+    };
+    const proof = await call("reauthenticate", payload);
+    expect(proof.statusCode).toBe(200);
+    expect((proof.headers["Set-Cookie"] as string[])[0]).toContain(
+      "viva_recruitment=owner-fresh;",
+    );
+    const mutation = {
+      operation: payload.operation,
+      data: payload.data,
+      proof: JSON.parse(proof.body).proof,
+    };
+    expect((await call("mutate", mutation, "owner-session")).statusCode).toBe(
+      409,
+    );
+    expect((await call("mutate", mutation, "owner-fresh")).statusCode).toBe(
+      200,
+    );
+    expect(requests.some((r) => r.path === "/auth/v1/logout")).toBe(true);
+  });
+  it("requires real provider-validated AAL2 for owner writes when enabled and supports Supabase TOTP step-up", async () => {
+    await db.exec(
+      "select public.recruitment_operate('require_owner_mfa','operator-A','MFA-TEST','Isolated owner MFA acceptance setup')",
+    );
+    const payload = {
+      operation: "scope_create",
+      data: { requestId: randomUUID(), kind: "vacancy", label: "MFA secured" },
+      password: "test-password",
+    };
+    expect((await call("reauthenticate", payload)).statusCode).toBe(403);
+    expect(
+      (await call("reauthenticate", { ...payload, factorId, code: "000000" }))
+        .statusCode,
+    ).toBe(401);
+    expect(
+      (await db.query("select * from public.recruitment_reauth_challenges"))
+        .rows,
+    ).toHaveLength(0);
+    const result = await call("reauthenticate", {
+      ...payload,
+      factorId,
+      code: "123456",
+    });
+    expect(result.statusCode).toBe(200);
+    expect((result.headers["Set-Cookie"] as string[])[0]).toContain(
+      `viva_recruitment=${aal2Token};`,
+    );
+    const body = {
+      operation: payload.operation,
+      data: payload.data,
+      proof: JSON.parse(result.body).proof,
+    };
+    expect((await call("mutate", body, "owner-fresh")).statusCode).toBe(409);
+    expect((await call("mutate", body, aal2Token)).statusCode).toBe(200);
+    const state = await call("snapshot", undefined, aal2Token);
+    expect(JSON.parse(state.body).user.aal).toBe("aal2");
+    // Changing JWT claims is useless without provider validation of the exact token.
+    const forged = aal2Token.slice(0, -1) + "x";
+    expect((await call("snapshot", undefined, forged)).statusCode).toBe(401);
+    expect(
+      JSON.stringify(
+        (await db.query("select payload from public.recruitment_requests"))
+          .rows,
+      ),
+    ).not.toContain("123456");
+  });
+  it("takes assurance from refreshed provider tokens and logs out only the recruitment session", async () => {
+    const refreshed = await call(
+      "session",
+      { action: "refresh" },
+      "",
+      undefined,
+      {
+        cookie:
+          "viva_recruitment_refresh=owner-mfa-refresh; viva_admin=separate",
+      },
+    );
+    expect(refreshed.statusCode).toBe(200);
+    expect(JSON.parse(refreshed.body).user.aal).toBe("aal2");
+    const downgraded = await call(
+      "session",
+      { action: "refresh" },
+      "",
+      undefined,
+      { cookie: "viva_recruitment_refresh=owner-refresh" },
+    );
+    expect(JSON.parse(downgraded.body).user.aal).toBe("aal1");
+    const out = await call("session", undefined, aal2Token, "DELETE");
+    expect(out.statusCode).toBe(200);
+    expect(
+      (out.headers["Set-Cookie"] as string[]).every(
+        (v) => v.startsWith("viva_recruitment") && v.includes("Max-Age=0"),
+      ),
+    ).toBe(true);
+  });
+  it("recovers by UUID only, denies unrelated actors and marks application errors without marking uncertain failures", async () => {
+    const payload = {
+      operation: "scope_create",
+      data: { requestId: randomUUID(), kind: "vacancy", label: "Restorable" },
+      password: "test-password",
+    };
+    await call("reauthenticate", payload);
+    const restored = await call(
+      "recover&requestId=" + payload.data.requestId,
+      undefined,
+      "owner-fresh",
+    );
+    expect(restored.statusCode).toBe(200);
+    expect(JSON.parse(restored.body)).toMatchObject({
+      data: payload.data,
+      completed: false,
+    });
+    const denied = await call(
+      "recover&requestId=" + payload.data.requestId,
+      undefined,
+      "manager-session",
+    );
+    expect(denied.statusCode).toBe(403);
+    expect(denied.headers["X-Recruitment-Error"]).toBe("confirmed");
+    expect(denied.body).not.toContain("Restorable");
+    vi.mocked(fetch).mockRejectedValueOnce(
+      new Error("Synthetic gateway failure"),
+    );
+    const unavailable = await call("snapshot");
+    expect(unavailable.statusCode).toBe(502);
+    expect(unavailable.headers["X-Recruitment-Error"]).toBeUndefined();
   });
 });

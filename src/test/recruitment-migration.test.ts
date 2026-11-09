@@ -13,6 +13,7 @@ const migrations = [
   "20261109010000_recruitment_foundations.sql",
   "20261109020000_recruitment_security_operations.sql",
   "20261109030000_recruitment_access_guards.sql",
+  "20261109040000_recruitment_security_remediation.sql",
 ].map((n) => readFileSync("supabase/migrations/" + n, "utf8"));
 let db: PGlite;
 async function v<T = Record<string, unknown>>(
@@ -86,9 +87,17 @@ beforeAll(async () => {
 }, 30000);
 beforeEach(async () => {
   await db.exec(
-    "truncate public.recruitment_requests,public.recruitment_events,public.recruitment_reauth_challenges,public.recruitment_staff_scopes,public.recruitment_scopes,public.recruitment_staff,public.recruitment_access_approvals,public.recruitment_auth_limits; update public.recruitment_settings set bootstrapped_at=null,revision=0,staff_console_enabled=false,access_guards_enabled=false,privacy_policy_version='';",
+    "truncate public.recruitment_tutor_rebind_authorizations,public.recruitment_tutor_bindings,public.recruitment_operational_events,public.recruitment_requests,public.recruitment_events,public.recruitment_reauth_challenges,public.recruitment_staff_scopes,public.recruitment_scopes,public.recruitment_staff,public.recruitment_access_approvals,public.recruitment_auth_limits; update public.recruitment_settings set bootstrapped_at=null,revision=0,staff_console_enabled=false,access_guards_enabled=false,access_guards_mandatory=false,owner_aal2_required=false,privacy_policy_version='';",
   );
-  await db.query("select public.recruitment_bootstrap($1)", [owner]);
+  for (const id of [owner, other, manager, officer, finance])
+    await db.query(
+      "insert into auth.users values($1,$2,now()) on conflict(id) do update set email_confirmed_at=now()",
+      [id, id.slice(0, 4) + "@example.test"],
+    );
+  await db.query(
+    "select public.recruitment_bootstrap($1,'test-operator','TEST-APPROVAL-1','Authorized synthetic owner setup')",
+    [owner],
+  );
 });
 afterAll(async () => {
   await db?.close();
@@ -146,6 +155,13 @@ describe("isolated PostgreSQL recruitment foundations", () => {
         'select public.accounting_post($1,\'synthetic-opening\',public.tuition_today(),\'Synthetic opening capital\',\'manual\',null,\'[{"account":"1000","cents":10000},{"account":"3000","cents":-10000}]\')',
         [owner],
       );
+      await upgrade.query(
+        "insert into public.teaching_tutors(name,email,user_id) values('Historical binding','historical@example.test',$1)",
+        [owner],
+      );
+      await upgrade.exec(
+        "update public.teaching_tutors set user_id=null where email='historical@example.test';insert into public.teaching_tutors(name,email,last_signed_in_at) values('Unresolved history','unresolved@example.test',now())",
+      );
       const capture = async () => ({
         tutors: (
           await upgrade.query(
@@ -169,11 +185,46 @@ describe("isolated PostgreSQL recruitment foundations", () => {
         ).rows,
       });
       const before = await capture();
-      for (const sql of migrations) await upgrade.exec(sql);
+      for (const sql of migrations.slice(0, 3)) await upgrade.exec(sql);
+      expect(await capture()).toEqual(before);
+      await upgrade.query("select public.recruitment_bootstrap($1)", [owner]); // original installed M1 signature
+      await upgrade.exec(migrations[3]);
       expect(await capture()).toEqual(before);
       expect(
-        (await upgrade.query("select * from public.recruitment_staff")).rows,
-      ).toEqual([]);
+        (
+          await upgrade.query<{ established_user_id: string }>(
+            "select b.established_user_id from public.recruitment_tutor_bindings b join public.teaching_tutors t on t.id=b.tutor_id where t.email='historical@example.test'",
+          )
+        ).rows[0].established_user_id,
+      ).toBe(owner);
+      expect(
+        (
+          await upgrade.query<{ history_unresolved: boolean }>(
+            "select b.history_unresolved from public.recruitment_tutor_bindings b join public.teaching_tutors t on t.id=b.tutor_id where t.email='unresolved@example.test'",
+          )
+        ).rows[0].history_unresolved,
+      ).toBe(true);
+      await expect(
+        upgrade.query(
+          "update public.teaching_tutors set user_id=$1 where email='unresolved@example.test'",
+          [owner],
+        ),
+      ).rejects.toThrow("owner-approved");
+      expect(
+        (
+          await upgrade.query(
+            "select role,enabled from public.recruitment_staff where user_id=$1",
+            [owner],
+          )
+        ).rows[0],
+      ).toEqual({ role: "owner", enabled: true });
+      expect(
+        (
+          await upgrade.query(
+            "select owner_aal2_required,access_guards_mandatory from public.recruitment_settings",
+          )
+        ).rows[0],
+      ).toEqual({ owner_aal2_required: false, access_guards_mandatory: false });
     } finally {
       await upgrade.close();
     }
@@ -229,11 +280,14 @@ describe("isolated PostgreSQL recruitment foundations", () => {
     ).toBe(0);
     await expect(snapshot(finance)).rejects.toThrow("permission");
     await expect(
-      db.query("select public.recruitment_bootstrap($1)", [other]),
+      db.query(
+        "select public.recruitment_bootstrap($1,'test-operator','TEST-APPROVAL-1','Authorized synthetic owner setup')",
+        [other],
+      ),
     ).rejects.toThrow("already");
     expect(
       await v(
-        "select has_function_privilege('service_role','public.recruitment_bootstrap(uuid)','execute') v",
+        "select has_function_privilege('service_role','public.recruitment_bootstrap(uuid,text,text,text)','execute') v",
       ),
     ).toBe(false);
     expect(
@@ -365,13 +419,19 @@ describe("isolated PostgreSQL recruitment foundations", () => {
       enabled: true,
       expectedRevision: -1,
     });
+    await change("scope_grant", {
+      userId: officer,
+      scopeId: a.scopeId,
+      enabled: false,
+      expectedRevision: -1,
+    });
     await change(
       "scope_grant",
       {
         userId: officer,
         scopeId: a.scopeId,
         enabled: true,
-        expectedRevision: -1,
+        expectedRevision: 0,
       },
       manager,
     );
@@ -419,12 +479,18 @@ describe("isolated PostgreSQL recruitment foundations", () => {
       enabled: true,
       expectedRevision: -1,
     });
+    await change("scope_grant", {
+      userId: officer,
+      scopeId: scope.scopeId,
+      enabled: false,
+      expectedRevision: -1,
+    });
     const data = {
       requestId: randomUUID(),
       userId: officer,
       scopeId: scope.scopeId,
       enabled: true,
-      expectedRevision: -1,
+      expectedRevision: 0,
     };
     await change("scope_grant", data, manager);
     await change("staff_grant", {
@@ -520,5 +586,411 @@ describe("isolated PostgreSQL recruitment foundations", () => {
         "select count(*)::int v from pg_proc where pronamespace='public'::regnamespace and proname like 'recruitment_%' and prosecdef and not coalesce(proconfig,'{}') @> array['search_path=\"\"']",
       ),
     ).toBe(0);
+  });
+  it("revokes unverified staff permanently across email reverification and permits reductions but not elevation", async () => {
+    await grant(manager, "manager");
+    await enable();
+    const scope = await change("scope_create", {
+      kind: "vacancy",
+      label: "Revocable scope",
+    });
+    await change("scope_grant", {
+      userId: manager,
+      scopeId: scope.scopeId,
+      enabled: true,
+      expectedRevision: -1,
+    });
+    await db.query(
+      "update auth.users set email_confirmed_at=null where id=$1",
+      [manager],
+    );
+    await expect(snapshot(manager)).rejects.toThrow("permission");
+    await change("scope_grant", {
+      userId: manager,
+      scopeId: scope.scopeId,
+      enabled: false,
+      expectedRevision: 0,
+    });
+    await expect(
+      change("scope_grant", {
+        userId: manager,
+        scopeId: scope.scopeId,
+        enabled: true,
+        expectedRevision: 1,
+      }),
+    ).rejects.toThrow("verified");
+    await change("staff_grant", {
+      userId: manager,
+      role: "officer",
+      enabled: true,
+      expectedRevision: 0,
+    });
+    await expect(
+      change("staff_grant", {
+        userId: manager,
+        role: "manager",
+        enabled: true,
+        expectedRevision: 1,
+      }),
+    ).rejects.toThrow("verified");
+    await change("staff_grant", {
+      userId: manager,
+      role: "officer",
+      enabled: false,
+      expectedRevision: 1,
+    });
+    await db.query(
+      "update auth.users set email_confirmed_at=now() where id=$1",
+      [manager],
+    );
+    await expect(snapshot(manager)).rejects.toThrow("permission");
+    expect(
+      await v(
+        "select enabled v from public.recruitment_staff where user_id=$1",
+        [manager],
+      ),
+    ).toBe(false);
+  });
+  it("serializes concurrent revocations of an unverified target and rejects unauthorized revocation", async () => {
+    await grant(other, "owner");
+    await grant(officer, "officer");
+    await grant(manager, "manager");
+    await enable();
+    const data = {
+      requestId: randomUUID(),
+      userId: officer,
+      role: "officer",
+      enabled: false,
+      expectedRevision: 0,
+    };
+    const prepared = await Promise.all(
+      [owner, other].map(async (actor) => {
+        const payload = { ...data, requestId: randomUUID() },
+          proof = randomUUID().replaceAll("-", "").repeat(2);
+        await db.query(
+          "select public.recruitment_issue_challenge($1,$2,$3,$4,$5)",
+          [actor, "a".repeat(64), "staff_grant", json(payload), proof],
+        );
+        return { actor, payload, proof };
+      }),
+    );
+    await db.query(
+      "update auth.users set email_confirmed_at=null where id=$1",
+      [officer],
+    );
+    for (const actor of [manager, officer, finance])
+      await expect(change("staff_grant", data, actor)).rejects.toThrow(
+        "permission",
+      );
+    const results = await Promise.allSettled(
+      prepared.map((p) =>
+        db.query("select public.recruitment_mutate($1,$2,$3,$4,$5)", [
+          p.actor,
+          "staff_grant",
+          json(p.payload),
+          "a".repeat(64),
+          p.proof,
+        ]),
+      ),
+    );
+    expect(results.filter((x) => x.status === "fulfilled")).toHaveLength(1);
+    expect(
+      await v(
+        "select revision v from public.recruitment_staff where user_id=$1",
+        [officer],
+      ),
+    ).toBe(1);
+    await db.query(
+      "update auth.users set email_confirmed_at=now() where id=$1",
+      [officer],
+    );
+    await expect(snapshot(officer)).rejects.toThrow("permission");
+  });
+  it("locks mandatory safeguards outside normal flags and records exceptional disablement", async () => {
+    const operate = (action: string) =>
+      v(
+        "select public.recruitment_operate($1,'operator-A','APPROVAL-22','Independent operational approval') v",
+        [action],
+      );
+    await enable();
+    // Ordinary disabled/enabled states remain available before production lock.
+    await change("settings", {
+      expectedRevision: 2,
+      staffConsoleEnabled: false,
+      accessGuardsEnabled: false,
+      privacyPolicyVersion: "test",
+    });
+    await operate("lock_safeguards");
+    await expect(
+      change("settings", {
+        expectedRevision: 4,
+        staffConsoleEnabled: false,
+        accessGuardsEnabled: false,
+        privacyPolicyVersion: "test",
+      }),
+    ).rejects.toThrow("separately approved");
+    await operate("exception_disable_safeguards");
+    const settings = (await snapshot()).settings;
+    expect(settings.access_guards_enabled).toBe(false);
+    expect(settings.access_guards_mandatory).toBe(true);
+    expect(settings.staff_console_enabled).toBe(false);
+    expect(
+      await v(
+        "select count(*)::int v from public.recruitment_operational_events where action='exception_disable_safeguards'",
+      ),
+    ).toBe(1);
+    await operate("restore_safeguards");
+    expect((await snapshot()).settings.access_guards_enabled).toBe(true);
+    await expect(
+      db.exec("delete from public.recruitment_operational_events"),
+    ).rejects.toThrow("append-only");
+    expect(
+      await v(
+        "select has_function_privilege('service_role','public.recruitment_operate(text,text,text,text,uuid,uuid,uuid)','execute') v",
+      ),
+    ).toBe(false);
+  });
+  it("enforces opt-in AAL2 at both proof issuance and mutation, including proofs created before enforcement", async () => {
+    const data = {
+        requestId: randomUUID(),
+        kind: "vacancy",
+        label: "MFA scope",
+      },
+      proof = "e".repeat(64);
+    await db.query(
+      "select public.recruitment_issue_challenge($1,$2,$3,$4,$5)",
+      [owner, "a".repeat(64), "scope_create", json(data), proof],
+    );
+    await db.exec(
+      "select public.recruitment_operate('require_owner_mfa','operator-A','MFA-APPROVAL','Hosted enrollment and recovery accepted')",
+    );
+    await expect(
+      db.query("select public.recruitment_mutate($1,$2,$3,$4,$5)", [
+        owner,
+        "scope_create",
+        json(data),
+        "a".repeat(64),
+        proof,
+      ]),
+    ).rejects.toThrow("AAL2");
+    await expect(
+      change("scope_create", { kind: "vacancy", label: "Denied AAL1" }),
+    ).rejects.toThrow("AAL2");
+    await db.query("select public.recruitment_mutate($1,$2,$3,$4,$5,'aal2')", [
+      owner,
+      "scope_create",
+      json(data),
+      "a".repeat(64),
+      proof,
+    ]);
+    expect(
+      await v(
+        "select count(*)::int v from public.recruitment_requests where id=$1",
+        [data.requestId],
+      ),
+    ).toBe(1);
+    expect(
+      await v(
+        "select to_regprocedure('public.recruitment_mutate(uuid,text,jsonb,text,text)') is null v",
+      ),
+    ).toBe(true);
+  });
+  it("restores only the authorized actor's exact request without credentials and rechecks current scopes", async () => {
+    const data = {
+      requestId: randomUUID(),
+      kind: "vacancy",
+      label: "Server-only choices",
+    };
+    await db.query(
+      "select public.recruitment_issue_challenge($1,$2,$3,$4,$5)",
+      [owner, "a".repeat(64), "scope_create", json(data), "f".repeat(64)],
+    );
+    const restore = () =>
+      v<{ data: object; completed: boolean }>(
+        "select public.recruitment_recover_request($1,$2) v",
+        [owner, data.requestId],
+      );
+    expect(await restore()).toMatchObject({ data, completed: false });
+    await grant(other, "owner");
+    await expect(
+      v("select public.recruitment_recover_request($1,$2) v", [
+        other,
+        data.requestId,
+      ]),
+    ).rejects.toThrow("No recoverable");
+    await change("scope_create", data);
+    expect(await restore()).toMatchObject({ data, completed: true });
+  });
+  it("limits manager directories and delegation to owner-introduced staff in shared authorized scopes", async () => {
+    await grant(manager, "manager");
+    await grant(officer, "officer");
+    await grant(other, "officer");
+    await enable();
+    const scope = await change("scope_create", {
+      kind: "vacancy",
+      label: "Manager scope",
+    });
+    expect((await snapshot(manager)).staff).toEqual([]);
+    await change("scope_grant", {
+      userId: manager,
+      scopeId: scope.scopeId,
+      enabled: true,
+      expectedRevision: -1,
+    });
+    expect((await snapshot(manager)).staff).toEqual([]);
+    await expect(
+      change(
+        "scope_grant",
+        {
+          userId: other,
+          scopeId: scope.scopeId,
+          enabled: true,
+          expectedRevision: -1,
+        },
+        manager,
+      ),
+    ).rejects.toThrow("delegation");
+    await change("scope_grant", {
+      userId: officer,
+      scopeId: scope.scopeId,
+      enabled: false,
+      expectedRevision: -1,
+    });
+    expect((await snapshot(manager)).staff.map((x) => x.user_id)).toEqual([
+      officer,
+    ]);
+    await change(
+      "scope_grant",
+      {
+        userId: officer,
+        scopeId: scope.scopeId,
+        enabled: true,
+        expectedRevision: 0,
+      },
+      manager,
+    );
+    expect((await snapshot()).staff).toHaveLength(4);
+  });
+  it("preserves first binding, denies inherited replacement after Auth deletion and consumes owner-approved authorization once", async () => {
+    const original = randomUUID(),
+      replacement = randomUUID(),
+      first = randomUUID();
+    await db.query(
+      "insert into auth.users values($1,'binding-old@example.test',now()),($2,'binding-new@example.test',now()),($3,'binding-first@example.test',now())",
+      [original, replacement, first],
+    );
+    await db.exec(
+      "select set_config('viva.teaching_actor','11111111-1111-4111-8111-111111111111',false)",
+    );
+    // Established identity populated by an operator before first sign-in; no historical Auth actor prevents deletion.
+    const tutor = await v<string>(
+      "insert into public.teaching_tutors(name,email,user_id) values('Binding test','binding-old@example.test',$1) returning id v",
+      [original],
+    );
+    await expect(
+      db.query("update public.teaching_tutors set user_id=$1 where id=$2", [
+        replacement,
+        tutor,
+      ]),
+    ).rejects.toThrow("owner-approved");
+    await db.exec(
+      "insert into public.teaching_tutors(name,email) values('First binding test','binding-first@example.test')",
+    );
+    await enable();
+    await db.query("select public.tutor_bind($1)", [first]);
+    await db.query("select public.tutor_bind($1)", [first]);
+    await db.exec(
+      "select set_config('viva.teaching_actor','11111111-1111-4111-8111-111111111111',false)",
+    );
+    expect(
+      await v(
+        "select established_user_id v from public.recruitment_tutor_bindings where tutor_id=$1",
+        [tutor],
+      ),
+    ).toBe(original);
+    await db.query("delete from auth.users where id=$1", [original]);
+    expect(
+      await v("select user_id v from public.teaching_tutors where id=$1", [
+        tutor,
+      ]),
+    ).toBe(null);
+    await db.query(
+      "update auth.users set email='binding-old@example.test' where id=$1",
+      [replacement],
+    );
+    await expect(
+      db.query("select public.tutor_bind($1)", [replacement]),
+    ).rejects.toThrow("owner-approved");
+    await expect(
+      db.query(
+        "select public.recruitment_operate('authorize_tutor_rebind','operator-A','REBIND-1','Approved replacement identity',$1,$1,$2)",
+        [replacement, tutor],
+      ),
+    ).rejects.toThrow("permission");
+    await db.query(
+      "select public.recruitment_operate('authorize_tutor_rebind','operator-A','REBIND-1','Independent owner approved replacement',$1,$2,$3)",
+      [replacement, owner, tutor],
+    );
+    await db.query("select public.tutor_bind($1)", [replacement]);
+    await db.query("select public.tutor_bind($1)", [replacement]); // normal repeat sign-in, no new authorization
+    expect(
+      await v(
+        "select established_user_id v from public.recruitment_tutor_bindings where tutor_id=$1",
+        [tutor],
+      ),
+    ).toBe(replacement);
+    expect(
+      await v(
+        "select count(*)::int v from public.recruitment_tutor_rebind_authorizations where tutor_id=$1 and consumed_at is not null",
+        [tutor],
+      ),
+    ).toBe(1);
+    expect(
+      await v("select enabled v from public.teaching_tutors where id=$1", [
+        tutor,
+      ]),
+    ).toBe(true);
+    await db.query(
+      "update auth.users set email='3333@example.test' where id=$1",
+      [replacement],
+    );
+  });
+  it("records actual database operator attribution and supports an explicitly approved all-owner recovery", async () => {
+    const first = await db.query<{
+      database_actor: string;
+      operator_reference: string;
+      approval_reference: string;
+    }>(
+      "select * from public.recruitment_operational_events where action='bootstrap_owner'",
+    );
+    expect(first.rows[0]).toMatchObject({
+      operator_reference: "test-operator",
+      approval_reference: "TEST-APPROVAL-1",
+    });
+    expect(first.rows[0].database_actor).toBe(await v("select session_user v"));
+    await db.query(
+      "update auth.users set email_confirmed_at=null where id=$1",
+      [owner],
+    );
+    await expect(snapshot()).rejects.toThrow("permission");
+    await expect(
+      db.exec(
+        "select public.recruitment_operate('recover_owner','','','',null)",
+      ),
+    ).rejects.toThrow("required");
+    await db.query(
+      "select public.recruitment_operate('recover_owner','verified-operator','RECOVERY-APPROVAL','Independent business owner identity verified',$1)",
+      [other],
+    );
+    expect((await snapshot(other)).user.role).toBe("owner");
+    expect(
+      await v(
+        "select count(*)::int v from public.recruitment_operational_events where action='recover_owner'",
+      ),
+    ).toBe(1);
+    await db.query(
+      "update auth.users set email_confirmed_at=now() where id=$1",
+      [owner],
+    );
   });
 });

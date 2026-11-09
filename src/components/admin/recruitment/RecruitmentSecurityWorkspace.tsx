@@ -1,5 +1,11 @@
-import { useRef, useState } from "react";
-import { recruitmentRequest, RecruitmentError } from "@/lib/recruitment-client";
+import { useEffect, useRef, useState } from "react";
+import {
+  recruitmentRequest,
+  RecruitmentError,
+  pendingRecruitmentRequest,
+  retainRecruitmentRequest,
+  clearRecruitmentRequest,
+} from "@/lib/recruitment-client";
 import type {
   RecruitmentSnapshot,
   RecruitmentOperation,
@@ -22,6 +28,11 @@ export function RecruitmentSecurityWorkspace({
   reload: () => Promise<void>;
 }) {
   const owner = s.user.role === "owner";
+  const [recovering, setRecovering] = useState(
+    Boolean(pendingRecruitmentRequest()),
+  );
+  const [code, setCode] = useState("");
+  const [factorId, setFactorId] = useState(s.user.mfaFactors?.[0]?.id || "");
   const [review, setReview] = useState<{
     operation: RecruitmentOperation;
     data: RecruitmentChoices;
@@ -36,11 +47,48 @@ export function RecruitmentSecurityWorkspace({
   const [selectedStaff, setSelectedStaff] = useState("new");
   const [grantTarget, setGrantTarget] = useState("");
   const [grantScope, setGrantScope] = useState("");
+  useEffect(() => {
+    let active = true;
+    const id = pendingRecruitmentRequest();
+    if (!id) return;
+    setRecovering(true);
+    recruitmentRequest<{
+      operation: RecruitmentOperation;
+      data: RecruitmentChoices;
+      completed: boolean;
+    }>("recover", undefined, "GET", true, id)
+      .then((saved) => {
+        if (!active) return;
+        if (saved.completed) {
+          clearRecruitmentRequest();
+          setNotice(
+            "The pending security change was already recorded. No operation was repeated.",
+          );
+        } else {
+          setReview({ operation: saved.operation, data: saved.data });
+          setUncertain(true);
+          setNotice(
+            "Pending request restored. Review and authenticate to retry the original request.",
+          );
+        }
+        setRecovering(false);
+      })
+      .catch(() => {
+        if (active)
+          setError(
+            "A pending request needs recovery. Sign in as its authorized actor or contact an owner before starting another change.",
+          );
+      });
+    return () => {
+      active = false;
+    };
+  }, [s.user.id]);
   function prepare(
     event: React.FormEvent<HTMLFormElement>,
     operation: RecruitmentOperation,
   ) {
     event.preventDefault();
+    if (recovering || pendingRecruitmentRequest()) return;
     returnFocus.current = event.currentTarget.querySelector<HTMLElement>(
       'button[type="submit"]',
     );
@@ -91,17 +139,21 @@ export function RecruitmentSecurityWorkspace({
     setBusy(true);
     setError("");
     try {
+      retainRecruitmentRequest(review.data.requestId);
       let fresh = proof;
       if (!fresh) {
         fresh = (
           await recruitmentRequest<{ proof: string }>("reauthenticate", {
             ...review,
             password,
+            factorId,
+            code,
           })
         ).proof;
         setProof(fresh);
       }
       await recruitmentRequest("mutate", { ...review, proof: fresh });
+      clearRecruitmentRequest();
       setReview(null);
       setProof("");
       setUncertain(false);
@@ -115,12 +167,15 @@ export function RecruitmentSecurityWorkspace({
       setError(
         e instanceof Error ? e.message : "The change could not be confirmed.",
       );
-      if (e instanceof RecruitmentError && e.status >= 400 && e.status < 500) {
+      if (e instanceof RecruitmentError && e.confirmed) {
         setProof("");
-        setUncertain(false);
+        // A rejection of this retry cannot establish whether an earlier uncertain attempt committed.
+        if (!uncertain) clearRecruitmentRequest();
+        setUncertain(uncertain);
       } else setUncertain(true);
     } finally {
       setPassword("");
+      setCode("");
       setBusy(false);
     }
   }
@@ -160,13 +215,19 @@ export function RecruitmentSecurityWorkspace({
       </section>
       {notice && <p role="status">{notice}</p>}
       {!review && error && <p role="alert">{error}</p>}
+      {recovering && (
+        <p role="status">
+          Recover the pending request before starting another change.
+        </p>
+      )}
       {owner && (
         <div className="recruitment-grid">
           <section className="recruitment-card">
             <h2>Recruitment staff</h2>
             <p>
-              Existing verified Auth identities only. These grants do not create
-              general Admin, teaching or finance access.
+              New grants require verified Auth identities. Existing access can
+              be revoked even if the identity cannot sign in. These grants do
+              not create general Admin, teaching or finance access.
             </p>
             <ul>
               {s.staff.map((x) => (
@@ -218,7 +279,9 @@ export function RecruitmentSecurityWorkspace({
                   <option value="yes">Enabled</option>
                 </select>
               </label>
-              <Button type="submit">Review staff grant</Button>
+              <Button type="submit" disabled={recovering}>
+                Review staff grant
+              </Button>
             </form>
           </section>
           <section className="recruitment-card">
@@ -249,7 +312,12 @@ export function RecruitmentSecurityWorkspace({
                   name="guards"
                   defaultValue={s.settings.access_guards_enabled ? "yes" : "no"}
                 >
-                  <option value="no">Disabled</option>
+                  <option
+                    value="no"
+                    disabled={s.settings.access_guards_mandatory}
+                  >
+                    Disabled
+                  </option>
                   <option value="yes">Enabled</option>
                 </select>
               </label>
@@ -261,7 +329,9 @@ export function RecruitmentSecurityWorkspace({
                   defaultValue={s.settings.privacy_policy_version}
                 />
               </label>
-              <Button type="submit">Review rollout controls</Button>
+              <Button type="submit" disabled={recovering}>
+                Review rollout controls
+              </Button>
             </form>
           </section>
           <section className="recruitment-card">
@@ -281,7 +351,9 @@ export function RecruitmentSecurityWorkspace({
                 Scope label
                 <input name="label" required minLength={2} maxLength={120} />
               </label>
-              <Button type="submit">Review new scope</Button>
+              <Button type="submit" disabled={recovering}>
+                Review new scope
+              </Button>
             </form>
           </section>
         </div>
@@ -332,7 +404,9 @@ export function RecruitmentSecurityWorkspace({
                   <option value="yes">Enabled</option>
                 </select>
               </label>
-              <Button type="submit">Review scope grant</Button>
+              <Button type="submit" disabled={recovering}>
+                Review scope grant
+              </Button>
             </form>
           ) : (
             <p>Add an eligible staff identity and scope first.</p>
@@ -381,6 +455,7 @@ export function RecruitmentSecurityWorkspace({
             setReview(null);
             setProof("");
             setPassword("");
+            setCode("");
             setError("");
           }
         }}
@@ -436,11 +511,44 @@ export function RecruitmentSecurityWorkspace({
                     />
                   </label>
                 )}
+                {!proof && owner && s.user.ownerAal2Required && (
+                  <>
+                    <label>
+                      Verified authenticator
+                      <select
+                        value={factorId}
+                        onChange={(e) => setFactorId(e.target.value)}
+                        required
+                        disabled={busy}
+                      >
+                        <option value="">Choose authenticator</option>
+                        {s.user.mfaFactors?.map((f) => (
+                          <option key={f.id} value={f.id}>
+                            {f.friendlyName}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Authenticator code
+                      <input
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        pattern="[0-9]{6}"
+                        maxLength={6}
+                        required
+                        disabled={busy}
+                      />
+                    </label>
+                  </>
+                )}
                 {error && <p role="alert">{error}</p>}
                 {uncertain && (
                   <p>
-                    Keep this review open. Retry uses the same request ID and
-                    cannot duplicate a confirmed security change.
+                    The request ID is retained across reloads. Retry uses the
+                    same ID and cannot duplicate a confirmed security change.
                   </p>
                 )}
                 <Button type="submit" disabled={busy}>
@@ -454,6 +562,7 @@ export function RecruitmentSecurityWorkspace({
                   onClick={() => {
                     setReview(null);
                     setPassword("");
+                    setCode("");
                     setProof("");
                     setError("");
                   }}
