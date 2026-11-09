@@ -29,7 +29,7 @@ export default function Footer() {
       { name: "Our Tutors", href: "/tutors" },
       { name: "Locations", message: "Hello Viva Tutorials, I would like assistance with locations." },
       { name: "Success Stories", href: "/success-stories" },
-      { name: "Careers", message: "Hello Viva Tutorials, I would like assistance with careers." }
+      { name: "Careers", href: "/careers" }
     ]
   };
 
