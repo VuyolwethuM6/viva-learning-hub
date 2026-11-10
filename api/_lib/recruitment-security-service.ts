@@ -138,11 +138,13 @@ export async function recruitmentChange(
   if (
     !result ||
     typeof result !== "object" ||
-    (input.operation === "scope_create"
-      ? typeof result.scopeId !== "string"
-      : input.operation === "settings"
-        ? result.saved !== true
-        : result.userId !== input.data.userId)
+    (input.operation.startsWith("vacancy_")
+      ? result.saved !== true
+      : input.operation === "scope_create"
+        ? typeof result.scopeId !== "string"
+        : input.operation === "settings"
+          ? result.saved !== true
+          : result.userId !== input.data.userId)
   )
     throw new HttpError(
       502,

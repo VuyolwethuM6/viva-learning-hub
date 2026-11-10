@@ -3,4 +3,13 @@ import type { RecruitmentRole } from "../../src/lib/recruitment-types.js";
 export const canChangeRecruitment = (
   role: RecruitmentRole,
   operation: string,
-) => role === "owner" || (role === "manager" && operation === "scope_grant");
+) => {
+  if (role === "owner") return true;
+  if (operation === "scope_grant") return role === "manager";
+  if (["vacancy_save", "vacancy_submit", "vacancy_revise"].includes(operation))
+    return true;
+  return (
+    role === "manager" &&
+    ["vacancy_create", "vacancy_assign"].includes(operation)
+  );
+};

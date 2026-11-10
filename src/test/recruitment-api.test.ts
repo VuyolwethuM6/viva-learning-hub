@@ -122,7 +122,7 @@ beforeEach(async () => {
   vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "synthetic-key");
   vi.stubEnv("VERCEL_ENV", "preview");
   await db.exec(
-    "truncate public.recruitment_tutor_rebind_authorizations,public.recruitment_tutor_bindings,public.recruitment_operational_events,public.recruitment_events,public.recruitment_requests,public.recruitment_reauth_challenges,public.recruitment_staff_scopes,public.recruitment_scopes,public.recruitment_staff,public.recruitment_access_approvals,public.recruitment_auth_limits;update public.recruitment_settings set bootstrapped_at=null,revision=0,staff_console_enabled=false,access_guards_enabled=false,access_guards_mandatory=false,owner_aal2_required=false;",
+    "truncate public.recruitment_vacancy_publications,public.recruitment_vacancy_approvals,public.recruitment_vacancy_assignments,public.recruitment_vacancy_versions,public.recruitment_vacancies,public.recruitment_tutor_rebind_authorizations,public.recruitment_tutor_bindings,public.recruitment_operational_events,public.recruitment_events,public.recruitment_requests,public.recruitment_reauth_challenges,public.recruitment_staff_scopes,public.recruitment_scopes,public.recruitment_staff,public.recruitment_access_approvals,public.recruitment_auth_limits;update public.recruitment_settings set bootstrapped_at=null,revision=0,staff_console_enabled=false,access_guards_enabled=false,access_guards_mandatory=false,owner_aal2_required=false;",
   );
   await db.query(
     "select public.recruitment_bootstrap($1,'test-operator','TEST-APPROVAL-1','Authorized synthetic owner setup')",
@@ -215,7 +215,7 @@ beforeEach(async () => {
     ) {
       const entries = Object.entries(body);
       const args = entries.map(([, v]) =>
-        typeof v === "object" ? JSON.stringify(v) : v,
+        v !== null && typeof v === "object" ? JSON.stringify(v) : v,
       );
       try {
         const result = await db.query<{ v: unknown }>(

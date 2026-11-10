@@ -1,3 +1,7 @@
+import {
+  vacancyContentSchema,
+  vacancyOperations,
+} from "../../src/lib/recruitment-vacancies.js";
 import { z } from "zod";
 import { HttpError } from "./http.js";
 import type {
@@ -6,6 +10,48 @@ import type {
 } from "../../src/lib/recruitment-types.js";
 const base = { requestId: z.string().uuid() };
 const revision = z.number().int().min(-1).max(2147483646);
+const vacancyId = z.string().uuid();
+const vacancyTransition = z
+  .object({
+    ...base,
+    vacancyId,
+    expectedRevision: revision.min(0),
+    reason: z.string().trim().max(1000),
+  })
+  .strict();
+const vacancySchemas = {
+  vacancy_create: z
+    .object({
+      ...base,
+      scopeId: vacancyId.nullable(),
+      content: vacancyContentSchema,
+    })
+    .strict(),
+  vacancy_save: z
+    .object({
+      ...base,
+      vacancyId,
+      expectedRevision: revision.min(0),
+      content: vacancyContentSchema,
+    })
+    .strict(),
+  vacancy_assign: z
+    .object({
+      ...base,
+      vacancyId,
+      expectedRevision: revision.min(0),
+      userId: vacancyId,
+      enabled: z.boolean(),
+    })
+    .strict(),
+  vacancy_settings: z
+    .object({
+      ...base,
+      expectedRevision: revision.min(0),
+      publicVacanciesEnabled: z.boolean(),
+    })
+    .strict(),
+};
 const schemas = {
   staff_grant: z
     .object({
@@ -46,12 +92,21 @@ export function recruitmentInput(
   operation: unknown,
   data: unknown,
 ): { operation: RecruitmentOperation; data: RecruitmentChoices } {
-  if (typeof operation !== "string" || !Object.hasOwn(schemas, operation))
+  if (
+    typeof operation !== "string" ||
+    (!Object.hasOwn(schemas, operation) &&
+      !(vacancyOperations as readonly string[]).includes(operation))
+  )
     throw new HttpError(
       400,
       "This recruitment operation has not been released.",
     );
-  const parsed = schemas[operation as RecruitmentOperation].safeParse(data);
+  const schema = Object.hasOwn(schemas, operation)
+    ? schemas[operation as keyof typeof schemas]
+    : Object.hasOwn(vacancySchemas, operation)
+      ? vacancySchemas[operation as keyof typeof vacancySchemas]
+      : vacancyTransition;
+  const parsed = schema.safeParse(data);
   if (!parsed.success)
     throw new HttpError(
       400,

@@ -1,3 +1,4 @@
+import type { VacancyOperation } from "./recruitment-vacancies";
 export type RecruitmentRole = "owner" | "manager" | "officer";
 export type RecruitmentUser = {
   id: string;
@@ -34,6 +35,8 @@ export type RecruitmentSnapshot = {
     access_guards_enabled: boolean;
     access_guards_mandatory?: boolean;
     owner_aal2_required?: boolean;
+    public_vacancies_enabled?: boolean;
+    public_vacancies_generation?: number;
     privacy_policy_version: string;
     draft_days: number;
     unsuccessful_months: number;
@@ -57,7 +60,8 @@ export type RecruitmentOperation =
   | "staff_grant"
   | "scope_create"
   | "scope_grant"
-  | "settings";
-export type RecruitmentChoices = Record<string, string | boolean | number> & {
+  | "settings"
+  | VacancyOperation;
+export type RecruitmentChoices = Record<string, unknown> & {
   requestId: string;
 };

@@ -87,7 +87,7 @@ beforeAll(async () => {
 }, 30000);
 beforeEach(async () => {
   await db.exec(
-    "truncate public.recruitment_tutor_rebind_authorizations,public.recruitment_tutor_bindings,public.recruitment_operational_events,public.recruitment_requests,public.recruitment_events,public.recruitment_reauth_challenges,public.recruitment_staff_scopes,public.recruitment_scopes,public.recruitment_staff,public.recruitment_access_approvals,public.recruitment_auth_limits; update public.recruitment_settings set bootstrapped_at=null,revision=0,staff_console_enabled=false,access_guards_enabled=false,access_guards_mandatory=false,owner_aal2_required=false,privacy_policy_version='';",
+    "truncate public.recruitment_vacancy_publications,public.recruitment_vacancy_approvals,public.recruitment_vacancy_assignments,public.recruitment_vacancy_versions,public.recruitment_vacancies,public.recruitment_tutor_rebind_authorizations,public.recruitment_tutor_bindings,public.recruitment_operational_events,public.recruitment_requests,public.recruitment_events,public.recruitment_reauth_challenges,public.recruitment_staff_scopes,public.recruitment_scopes,public.recruitment_staff,public.recruitment_access_approvals,public.recruitment_auth_limits; update public.recruitment_settings set bootstrapped_at=null,revision=0,staff_console_enabled=false,access_guards_enabled=false,access_guards_mandatory=false,owner_aal2_required=false,privacy_policy_version='';",
   );
   for (const id of [owner, other, manager, officer, finance])
     await db.query(

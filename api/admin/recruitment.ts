@@ -28,9 +28,14 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
     const url = new URL(req.url || "", "http://localhost");
     const route = url.searchParams.get("route") || "snapshot";
     if (
-      !["session", "snapshot", "reauthenticate", "mutate", "recover"].includes(
-        route,
-      )
+      ![
+        "session",
+        "snapshot",
+        "reauthenticate",
+        "mutate",
+        "recover",
+        "vacancies",
+      ].includes(route)
     )
       throw new HttpError(404, "Recruitment operation unavailable.");
     if (!["GET", "POST", "DELETE"].includes(req.method || ""))
@@ -88,6 +93,50 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
     if (req.method === "GET") {
       if (route === "session") return sendJson(res, 200, { user });
       if (route === "snapshot") return await recruitmentSnapshot(res, user);
+      if (route === "vacancies") {
+        const search = url.searchParams.get("search") || "";
+        const status = url.searchParams.get("status") || "";
+        const category = url.searchParams.get("category") || "";
+        const vacancy = url.searchParams.get("vacancyId");
+        const offsetText = url.searchParams.get("offset") || "0";
+        const historyText = url.searchParams.get("historyBefore");
+        if (
+          search.length > 160 ||
+          Number(offsetText) > 100000 ||
+          !/^(0|[1-9][0-9]{0,6})$/.test(offsetText) ||
+          (historyText !== null && !/^[1-9][0-9]{0,8}$/.test(historyText)) ||
+          (vacancy !== null &&
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+              vacancy,
+            )) ||
+          (status &&
+            ![
+              "draft",
+              "submitted",
+              "approved",
+              "published",
+              "paused",
+              "closed",
+              "archived",
+            ].includes(status)) ||
+          (category &&
+            !["tutor", "administrator", "support_staff"].includes(category))
+        )
+          throw new HttpError(400, "Choose valid vacancy filters.");
+        return sendJson(
+          res,
+          200,
+          await rpc("recruitment_vacancy_workspace", {
+            p_actor: user.id,
+            p_vacancy: vacancy,
+            p_offset: Number(offsetText),
+            p_history_before: historyText === null ? null : Number(historyText),
+            p_search: search,
+            p_status: status,
+            p_category: category,
+          }),
+        );
+      }
       if (route === "recover") {
         const requestId = url.searchParams.get("requestId") || "";
         if (
@@ -109,7 +158,13 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
     }
     if (req.method !== "POST" || !["mutate", "reauthenticate"].includes(route))
       throw new HttpError(405, "Method not allowed.");
-    const body = await readJsonBody(req, 8192, "Recruitment security");
+    const body = await readJsonBody(req, 131072, "Recruitment security");
+    if (
+      (typeof body.operation !== "string" ||
+        !body.operation.startsWith("vacancy_")) &&
+      Buffer.byteLength(JSON.stringify(body)) > 8192
+    )
+      throw new HttpError(413, "Request body is too large.");
     return await recruitmentChange(
       req,
       res,
