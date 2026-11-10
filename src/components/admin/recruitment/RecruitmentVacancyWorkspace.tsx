@@ -144,6 +144,7 @@ export function RecruitmentVacancyWorkspace({
 
   const fetchDetail = useCallback(async () => {
     const sequence = ++detailSequence.current;
+    setHistoryBusy(false);
     if (!selectedId) {
       setDetail(null);
       setDetailLoading(false);
@@ -356,6 +357,7 @@ export function RecruitmentVacancyWorkspace({
   }
   async function earlierVersions() {
     if (!detail || !selected || historyBefore === null || historyBusy) return;
+    const generation = detailSequence.current;
     setHistoryBusy(true);
     try {
       const data = await recruitmentRequest<VacancyWorkspace>(
@@ -366,6 +368,7 @@ export function RecruitmentVacancyWorkspace({
         undefined,
         { vacancyId: selected.id, historyBefore },
       );
+      if (generation !== detailSequence.current) return;
       setHistoryVersions((previous) => [
         ...new Map(
           [...previous, ...data.versions].map((version) => [
@@ -377,11 +380,12 @@ export function RecruitmentVacancyWorkspace({
       setHistoryBefore(data.historyBefore ?? null);
       setHistoryMore(Boolean(data.versionsHasMore));
     } catch (e) {
+      if (generation !== detailSequence.current) return;
       setError(
         e instanceof Error ? e.message : "Version history could not be loaded.",
       );
     } finally {
-      setHistoryBusy(false);
+      if (generation === detailSequence.current) setHistoryBusy(false);
     }
   }
   function choose(vacancy: RecruitmentVacancy) {

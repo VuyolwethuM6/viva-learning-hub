@@ -495,4 +495,72 @@ describe("recruitment vacancy workspace", () => {
     ).not.toHaveProperty("code");
     expect(sessionStorage.length).toBe(0);
   });
+  it("ignores an earlier-version response after the reviewer selects a different vacancy", async () => {
+    data.versions[0].number = 100;
+    data.versions[1].number = 150;
+    let resolveEarlier!: (value: VacancyWorkspace) => void;
+    const earlierA = new Promise<VacancyWorkspace>((resolve) => {
+      resolveEarlier = resolve;
+    });
+    send.mockImplementation(
+      async (route, _body, _method, _renew, _id, query) => {
+        if (route !== "vacancies") return {};
+        if (query?.historyBefore && query.vacancyId === vacancyId)
+          return earlierA;
+        if (query?.historyBefore && query.vacancyId === secondId)
+          return {
+            ...data,
+            vacancies: [data.vacancies[1]],
+            versions: [data.versions[1]],
+            historyBefore: null,
+            versionsHasMore: false,
+          };
+        if (query?.vacancyId)
+          return {
+            ...data,
+            vacancies: data.vacancies.filter((v) => v.id === query.vacancyId),
+            versions: data.versions.filter(
+              (v) => v.vacancyId === query.vacancyId,
+            ),
+            historyBefore: query.vacancyId === vacancyId ? 51 : 101,
+            versionsHasMore: true,
+          };
+        return data;
+      },
+    );
+    await open();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Load earlier versions" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /Support coordinator/ }),
+    );
+    await screen.findByRole("heading", {
+      name: "Support coordinator",
+      level: 2,
+    });
+    await act(async () => {
+      resolveEarlier({
+        ...data,
+        versions: [
+          { ...data.versions[0], id: crypto.randomUUID(), number: 50 },
+        ],
+        historyBefore: null,
+        versionsHasMore: false,
+      });
+    });
+    expect(
+      screen.getByRole("button", { name: "Load earlier versions" }),
+    ).not.toBeDisabled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Load earlier versions" }),
+    );
+    await waitFor(() =>
+      expect(
+        send.mock.calls.some(
+          (c) => c[5]?.vacancyId === secondId && c[5]?.historyBefore === 101,
+        ),
+      ).toBe(true),
+    );
+  });
 });
