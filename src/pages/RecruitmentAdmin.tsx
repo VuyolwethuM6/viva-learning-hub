@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { RecruitmentVacancyWorkspace } from "@/components/admin/recruitment/RecruitmentVacancyWorkspace";
+import { pendingRecruitmentRequest } from "@/lib/recruitment-client";
 import { recruitmentRequest } from "@/lib/recruitment-client";
 import type { RecruitmentSnapshot } from "@/lib/recruitment-types";
 import { RecruitmentSecurityWorkspace } from "@/components/admin/recruitment/RecruitmentSecurityWorkspace";
@@ -13,6 +15,10 @@ import {
 import "./recruitment-admin.css";
 
 export default function RecruitmentAdmin() {
+  const [pending, setPending] = useState(Boolean(pendingRecruitmentRequest()));
+  const [workspace, setWorkspace] = useState<"vacancies" | "security">(
+    pendingRecruitmentRequest() ? "security" : "vacancies",
+  );
   const [snapshot, setSnapshot] = useState<RecruitmentSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -21,6 +27,12 @@ export default function RecruitmentAdmin() {
   const [password, setPassword] = useState("");
   const [logout, setLogout] = useState(false);
   const logoutTrigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const changed = () => setPending(Boolean(pendingRecruitmentRequest()));
+    window.addEventListener("recruitment-pending-changed", changed);
+    return () =>
+      window.removeEventListener("recruitment-pending-changed", changed);
+  }, []);
   const reload = useCallback(async () => {
     setSnapshot(await recruitmentRequest<RecruitmentSnapshot>("snapshot"));
   }, []);
@@ -145,9 +157,9 @@ export default function RecruitmentAdmin() {
             <div className="recruitment-title">
               <div>
                 <p className="recruitment-eyebrow">
-                  Secure foundations · Milestone 1
+                  Recruitment administration
                 </p>
-                <h1>Recruitment security</h1>
+                <h1>Recruitment workspace</h1>
                 <p>
                   {snapshot.user.email} · {snapshot.user.role}
                 </p>
@@ -164,7 +176,36 @@ export default function RecruitmentAdmin() {
               </Button>
             </div>
             {error && <p role="alert">{error}</p>}
-            <RecruitmentSecurityWorkspace snapshot={snapshot} reload={reload} />
+            <nav
+              aria-label="Recruitment workspace"
+              className="flex flex-wrap gap-3 mb-5"
+            >
+              <Button
+                variant={workspace === "vacancies" ? "default" : "outline"}
+                disabled={pending && workspace !== "vacancies"}
+                onClick={() => setWorkspace("vacancies")}
+              >
+                Vacancy management
+              </Button>
+              <Button
+                variant={workspace === "security" ? "default" : "outline"}
+                disabled={pending && workspace !== "security"}
+                onClick={() => setWorkspace("security")}
+              >
+                Security and governance
+              </Button>
+            </nav>
+            {workspace === "vacancies" ? (
+              <RecruitmentVacancyWorkspace
+                snapshot={snapshot}
+                reload={reload}
+              />
+            ) : (
+              <RecruitmentSecurityWorkspace
+                snapshot={snapshot}
+                reload={reload}
+              />
+            )}
             <Dialog
               open={logout}
               onOpenChange={(open) => {

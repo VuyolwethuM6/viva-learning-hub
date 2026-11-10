@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RecruitmentSecurityWorkspace } from "@/components/admin/recruitment/RecruitmentSecurityWorkspace";
+import { emptyVacancyContent } from "@/lib/recruitment-vacancies";
 import { RecruitmentError } from "@/lib/recruitment-client";
 import type { RecruitmentSnapshot } from "@/lib/recruitment-types";
 const { send } = vi.hoisted(() => ({ send: vi.fn() }));
@@ -220,5 +221,90 @@ describe("recruitment security review", () => {
     await screen.findByText("Confirmed stale revision");
     expect(screen.getByRole("button", { name: "Cancel" })).not.toBeDisabled();
     expect(sessionStorage.length).toBe(0);
+  });
+  it("restores the authorized immutable vacancy context before an owner retries publication", async () => {
+    const requestId = crypto.randomUUID(),
+      vacancyId = crypto.randomUUID(),
+      versionId = crypto.randomUUID();
+    const content = {
+      ...emptyVacancyContent(),
+      title: "Reviewed mathematics tutor",
+    };
+    sessionStorage.setItem("viva.recruitment.pendingRequestId", requestId);
+    send.mockImplementation(async (route) =>
+      route === "recover"
+        ? {
+            operation: "vacancy_publish",
+            data: { requestId, vacancyId, expectedRevision: 2, reason: "" },
+            completed: false,
+          }
+        : {
+            vacancies: [
+              {
+                id: vacancyId,
+                reference: "VIVA-TEST-1",
+                revision: 2,
+                draftVersionId: versionId,
+              },
+            ],
+            versions: [{ id: versionId, number: 1, content }],
+          },
+    );
+    render(
+      <RecruitmentSecurityWorkspace snapshot={snapshot()} reload={vi.fn()} />,
+    );
+    await screen.findByRole("region", { name: "Recovered vacancy review" });
+    expect(screen.getByText(content.title)).toBeInTheDocument();
+    expect(screen.getByText(/Current version 1/)).toBeInTheDocument();
+    expect(send.mock.calls.map((c) => c[0])).toEqual(["recover", "vacancies"]);
+    expect(send.mock.calls[1][5]).toEqual({ vacancyId });
+    expect(Object.values(sessionStorage)).toEqual([requestId]);
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+    send.mockImplementation(async (route) =>
+      route === "reauthenticate"
+        ? { proof: "a".repeat(64) }
+        : { result: { saved: true } },
+    );
+    fireEvent.change(screen.getByLabelText("Confirm staff password"), {
+      target: { value: "test-password" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Authenticate and confirm" }),
+    );
+    await screen.findByText("Security change recorded.");
+    fireEvent.change(screen.getByLabelText("Scope label"), {
+      target: { value: "Different governance choice" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Review new scope" }));
+    expect(
+      screen.queryByRole("region", { name: "Recovered vacancy review" }),
+    ).not.toBeInTheDocument();
+  });
+  it("fails closed when pending publication details are no longer authorized", async () => {
+    const requestId = crypto.randomUUID();
+    sessionStorage.setItem("viva.recruitment.pendingRequestId", requestId);
+    send.mockImplementation(async (route) => {
+      if (route === "recover")
+        return {
+          operation: "vacancy_publish",
+          data: {
+            requestId,
+            vacancyId: crypto.randomUUID(),
+            expectedRevision: 2,
+            reason: "",
+          },
+          completed: false,
+        };
+      throw new RecruitmentError("Scope revoked", 403, true);
+    });
+    render(
+      <RecruitmentSecurityWorkspace snapshot={snapshot()} reload={vi.fn()} />,
+    );
+    await screen.findByText(/A pending request needs recovery/);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(sessionStorage.length).toBe(1);
+    expect(
+      screen.getByRole("button", { name: "Review new scope" }),
+    ).toBeDisabled();
   });
 });

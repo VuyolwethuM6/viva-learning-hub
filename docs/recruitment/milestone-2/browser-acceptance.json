@@ -1,0 +1,22 @@
+{
+  "results": [
+    "Actual wizard saved a complete tutor draft through private API/real SQL",
+    "Draft→submitted→approved→published workflow; public visibility flag remains authoritative",
+    "careers-list responsive 320/390/768/1440",
+    "careers-detail responsive 320/390/768/1440",
+    "Database-backed public cards/detail, mobile layouts, no nonfunctional Apply or personal-data form",
+    "Unapproved revision remains private; committed-response loss+reload recovers UUID without duplicate save",
+    "Scoped manager/explicitly assigned officer workspace and server-side unauthorized-publication denial",
+    "Synthetic fixture rate-limit window reset between independent long scenarios; runtime limits unchanged",
+    "Pause invalidates prior ETag/body and detail visibility immediately",
+    "Approved revision republished; immutable historical preview; final closure and archive remove public visibility",
+    "admin-history responsive 320/390/768/1440"
+  ],
+  "errors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Failed to load resource: net::ERR_FAILED"
+  ],
+  "blocked": []
+}

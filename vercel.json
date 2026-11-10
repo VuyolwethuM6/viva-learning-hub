@@ -187,6 +187,10 @@
       "destination": "/careers/index.html"
     },
     {
+      "source": "/careers/:slug",
+      "destination": "/index.html"
+    },
+    {
       "source": "/services",
       "destination": "/services/index.html"
     },

@@ -20,6 +20,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/About"));
 const RecruitmentAdmin = lazy(() => import("./pages/RecruitmentAdmin"));
 const Careers = lazy(() => import("./pages/Careers"));
+const VacancyDetail = lazy(() => import("./pages/VacancyDetail"));
 const Services = lazy(() => import("./pages/Services"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 
@@ -70,6 +71,7 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
           <Route path="/careers" element={<Careers />} />
+          <Route path="/careers/:slug" element={<VacancyDetail />} />
           <Route path="/services" element={<Services />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<WhatsAppRedirect />} />

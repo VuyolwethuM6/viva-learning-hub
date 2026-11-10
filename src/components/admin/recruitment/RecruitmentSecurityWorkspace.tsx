@@ -19,6 +19,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { VivaLoader } from "@/components/VivaLoader";
+import { VacancyContentView } from "./VacancyWizard";
+import type {
+  VacancyContent,
+  VacancyWorkspace,
+} from "@/lib/recruitment-vacancies";
 
 export function RecruitmentSecurityWorkspace({
   snapshot: s,
@@ -36,6 +41,13 @@ export function RecruitmentSecurityWorkspace({
   const [review, setReview] = useState<{
     operation: RecruitmentOperation;
     data: RecruitmentChoices;
+  } | null>(null);
+  const [recoveredVacancy, setRecoveredVacancy] = useState<{
+    reference: string;
+    number: number;
+    revision: number;
+    content: VacancyContent;
+    stale: boolean;
   } | null>(null);
   const [proof, setProof] = useState("");
   const [password, setPassword] = useState("");
@@ -57,7 +69,7 @@ export function RecruitmentSecurityWorkspace({
       data: RecruitmentChoices;
       completed: boolean;
     }>("recover", undefined, "GET", true, id)
-      .then((saved) => {
+      .then(async (saved) => {
         if (!active) return;
         if (saved.completed) {
           clearRecruitmentRequest();
@@ -65,6 +77,40 @@ export function RecruitmentSecurityWorkspace({
             "The pending security change was already recorded. No operation was repeated.",
           );
         } else {
+          if (
+            saved.operation.startsWith("vacancy_") &&
+            typeof saved.data.vacancyId === "string"
+          ) {
+            const detail = await recruitmentRequest<VacancyWorkspace>(
+              "vacancies",
+              undefined,
+              "GET",
+              true,
+              undefined,
+              { vacancyId: saved.data.vacancyId },
+            );
+            if (!active) return;
+            const vacancy = detail.vacancies.find(
+              (v) => v.id === saved.data.vacancyId,
+            );
+            const version = detail.versions.find(
+              (v) => v.id === vacancy?.draftVersionId,
+            );
+            if (!vacancy || !version)
+              throw new Error(
+                "The authorized vacancy version could not be restored.",
+              );
+            setRecoveredVacancy({
+              reference: vacancy.reference,
+              number: version.number,
+              revision: vacancy.revision,
+              content:
+                saved.operation === "vacancy_save"
+                  ? (saved.data.content as VacancyContent)
+                  : version.content,
+              stale: vacancy.revision !== saved.data.expectedRevision,
+            });
+          }
           setReview({ operation: saved.operation, data: saved.data });
           setUncertain(true);
           setNotice(
@@ -88,6 +134,7 @@ export function RecruitmentSecurityWorkspace({
     operation: RecruitmentOperation,
   ) {
     event.preventDefault();
+    setRecoveredVacancy(null);
     if (recovering || pendingRecruitmentRequest()) return;
     returnFocus.current = event.currentTarget.querySelector<HTMLElement>(
       'button[type="submit"]',
@@ -155,6 +202,7 @@ export function RecruitmentSecurityWorkspace({
       await recruitmentRequest("mutate", { ...review, proof: fresh });
       clearRecruitmentRequest();
       setReview(null);
+      setRecoveredVacancy(null);
       setProof("");
       setUncertain(false);
       setNotice("Security change recorded.");
@@ -453,6 +501,7 @@ export function RecruitmentSecurityWorkspace({
         onOpenChange={(open) => {
           if (!open && !busy && !uncertain) {
             setReview(null);
+            setRecoveredVacancy(null);
             setProof("");
             setPassword("");
             setCode("");
@@ -488,10 +537,32 @@ export function RecruitmentSecurityWorkspace({
                   .map(([k, v]) => (
                     <div key={k}>
                       <dt>{k}</dt>
-                      <dd>{String(v)}</dd>
+                      <dd>
+                        {typeof v === "object"
+                          ? JSON.stringify(v, null, 2)
+                          : String(v)}
+                      </dd>
                     </div>
                   ))}
               </dl>
+              {recoveredVacancy && (
+                <section aria-label="Recovered vacancy review">
+                  <p>
+                    {recoveredVacancy.reference} · Current version{" "}
+                    {recoveredVacancy.number} · revision{" "}
+                    {recoveredVacancy.revision}
+                  </p>
+                  {recoveredVacancy.stale && (
+                    <p role="alert">
+                      This vacancy changed after the original review. Retrying
+                      resolves only the original request ID; the server will
+                      reject stale changes rather than approve a different
+                      version.
+                    </p>
+                  )}
+                  <VacancyContentView content={recoveredVacancy.content} />
+                </section>
+              )}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -561,6 +632,7 @@ export function RecruitmentSecurityWorkspace({
                   disabled={busy || uncertain}
                   onClick={() => {
                     setReview(null);
+                    setRecoveredVacancy(null);
                     setPassword("");
                     setCode("");
                     setProof("");

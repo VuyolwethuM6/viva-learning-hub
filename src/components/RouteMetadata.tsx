@@ -38,31 +38,39 @@ export default function RouteMetadata() {
   const path = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
   const page = (pages as Record<string, PageMetadata>)[path];
   const isIndexable = Boolean(page && page.indexable !== false);
-  const metadata = ["/tutor", "/student"].includes(path)
+  const metadata = /^\/careers\/[^/]+$/.test(path)
     ? {
-        title:
-          path === "/student"
-            ? "Student Portal | Viva Tutorials"
-            : "Tutor Portal | Viva Tutorials",
-        description:
-          path === "/student"
-            ? "Your secure Viva Tutorials learning space."
-            : "Your secure Viva Tutorials teaching workspace.",
+        title: "Career opportunity | Viva Tutorials",
+        description: "Explore opportunities to join Viva Tutorials.",
       }
-    : path === "/parent"
+    : ["/tutor", "/student"].includes(path)
       ? {
-          title: "Parent Portal | Viva Tutorials",
-          description: "Your secure Viva Tutorials family account.",
+          title:
+            path === "/student"
+              ? "Student Portal | Viva Tutorials"
+              : "Tutor Portal | Viva Tutorials",
+          description:
+            path === "/student"
+              ? "Your secure Viva Tutorials learning space."
+              : "Your secure Viva Tutorials teaching workspace.",
         }
-      : path === "/admin" || path === "/admin/recruitment"
+      : path === "/parent"
         ? {
-            title: path === "/admin/recruitment" ? "Recruitment | Viva Tutorials" : "Admin | Viva Tutorials",
-            description: "Authorized Viva Tutorials administration.",
+            title: "Parent Portal | Viva Tutorials",
+            description: "Your secure Viva Tutorials family account.",
           }
-        : (page ?? {
-            title: "Page Not Found | Viva Tutorials",
-            description: "The page you requested could not be found.",
-          });
+        : path === "/admin" || path === "/admin/recruitment"
+          ? {
+              title:
+                path === "/admin/recruitment"
+                  ? "Recruitment | Viva Tutorials"
+                  : "Admin | Viva Tutorials",
+              description: "Authorized Viva Tutorials administration.",
+            }
+          : (page ?? {
+              title: "Page Not Found | Viva Tutorials",
+              description: "The page you requested could not be found.",
+            });
   const canonical = `${siteUrl}${path}`;
 
   useEffect(() => {
@@ -71,7 +79,13 @@ export default function RouteMetadata() {
     updateMeta(
       "name",
       "robots",
-      ["/admin", "/admin/recruitment", "/parent", "/tutor", "/student"].includes(path)
+      [
+        "/admin",
+        "/admin/recruitment",
+        "/parent",
+        "/tutor",
+        "/student",
+      ].includes(path)
         ? "noindex,nofollow"
         : isIndexable
           ? "index,follow"

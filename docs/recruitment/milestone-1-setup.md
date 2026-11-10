@@ -1,3 +1,5 @@
+> After Milestone 2 is installed, apply/reconcile migrations in order. Do not replay the M1-only setup bundle by itself: earlier function definitions can replace later vacancy dispatchers and grants. Use the current fresh schema only for a fresh database, or the reviewed incremental upgrade for an existing one. See [Milestone 2 deployment guidance](milestone-2/deployment-and-review.md).
+
 # Milestone 1 isolated setup
 
 This is a review/test guide. Implementation did not execute cloud migrations, change provider settings, deploy, push or merge main. Use a disposable local/test Supabase project for manual acceptance, never the production project.

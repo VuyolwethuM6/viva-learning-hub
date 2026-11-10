@@ -37,6 +37,7 @@ export const TopBar = () => (
       <div className="flex items-center gap-3 overflow-x-auto lg:gap-6">
         <a
           href="tel:+27733913206"
+          aria-label="Call Viva Tutorials"
           className="flex cursor-pointer items-center gap-2 whitespace-nowrap transition-colors hover:text-[#ff7849]"
         >
           <Phone className="h-3.5 w-3.5 animate-[wiggle_1s_ease-in-out_infinite]" />

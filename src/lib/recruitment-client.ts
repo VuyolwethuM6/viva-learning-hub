@@ -14,10 +14,11 @@ export async function recruitmentRequest<T>(
   method?: string,
   renew = true,
   requestId?: string,
+  query?: Record<string, string | number>,
 ): Promise<T> {
   const send = () =>
     fetch(
-      `/api/admin/recruitment?route=${encodeURIComponent(route)}${requestId ? `&requestId=${encodeURIComponent(requestId)}` : ""}`,
+      `/api/admin/recruitment?route=${encodeURIComponent(route)}${requestId ? `&requestId=${encodeURIComponent(requestId)}` : ""}${query ? `&${new URLSearchParams(Object.entries(query).map(([k, v]) => [k, String(v)])).toString()}` : ""}`,
       {
         method: method || (data ? "POST" : "GET"),
         credentials: "same-origin",
@@ -86,6 +87,7 @@ export function pendingRecruitmentRequest() {
 export function retainRecruitmentRequest(id: string) {
   try {
     sessionStorage.setItem(pendingKey, id);
+    window.dispatchEvent(new Event("recruitment-pending-changed"));
   } catch {
     throw new Error(
       "Browser session storage is required to safely recover this request. No mutation was sent.",
@@ -94,4 +96,5 @@ export function retainRecruitmentRequest(id: string) {
 }
 export function clearRecruitmentRequest() {
   sessionStorage.removeItem(pendingKey);
+  window.dispatchEvent(new Event("recruitment-pending-changed"));
 }
