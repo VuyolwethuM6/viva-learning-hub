@@ -3,7 +3,7 @@ import { Readable } from "node:stream";
 import type { ServerResponse } from "node:http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiRequest } from "../../api/_lib/http";
-import handler from "../../api/careers";
+import handler from "../../api/recruitment";
 import { publicVacancyFixture } from "./fixtures/public-vacancy";
 const { database } = vi.hoisted(() => ({ database: vi.fn() }));
 vi.mock("../../api/_lib/admin", () => ({ rpc: database }));
@@ -54,6 +54,20 @@ beforeEach(() => {
 });
 afterEach(() => vi.resetAllMocks());
 describe("public careers publication boundary", () => {
+  it("preserves public data and cache behavior through the physical function rewrite", async () => {
+    const direct = await call();
+    const rewritten = await call("/api/recruitment?__viva_recruitment=careers");
+    expect(rewritten.statusCode).toBe(200);
+    expect(rewritten.body).toBe(direct.body);
+    expect(rewritten.headers["Cache-Control"]).toBe(
+      direct.headers["Cache-Control"],
+    );
+    expect(rewritten.headers["ETag"]).toBe(direct.headers["ETag"]);
+    expect(
+      (await call("/api/recruitment?__viva_recruitment=careers&route=worker"))
+        .statusCode,
+    ).toBe(400);
+  });
   it("uses only the public RPC and strips private fields at every exposed level", async () => {
     const vacancy = publicVacancyFixture();
     resolve({

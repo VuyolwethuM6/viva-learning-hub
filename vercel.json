@@ -25,9 +25,7 @@
       "maxDuration": 60
     },
     "api/recruitment.ts": {
-      "maxDuration": 300
-    },
-    "api/admin/recruitment.ts": {
+      "maxDuration": 300,
       "includeFiles": "{docs/recruitment/production-installation/**,docs/recruitment/owner-recovery-runbook.md,docs/recruitment/milestone-3/operations.md,docs/recruitment/milestone-3/api-and-security.md,docs/recruitment/milestone-3/implementation-report.md}"
     }
   },
@@ -218,6 +216,14 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/admin/recruitment",
+      "destination": "/api/recruitment?__viva_recruitment=staff"
+    },
+    {
+      "source": "/api/careers",
+      "destination": "/api/recruitment?__viva_recruitment=careers"
+    },
     {
       "source": "/recruitment/:path*",
       "destination": "/index.html"

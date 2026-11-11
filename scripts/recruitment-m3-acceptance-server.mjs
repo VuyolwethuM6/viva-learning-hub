@@ -168,14 +168,38 @@ globalThis.fetch = async (input, init) => {
   }
   throw Error("Live network blocked");
 };
-const { default: applicant } = await vite.ssrLoadModule("/api/recruitment.ts"),
-  { default: admin } = await vite.ssrLoadModule("/api/admin/recruitment.ts"),
-  { default: careers } = await vite.ssrLoadModule("/api/careers.ts");
+const { default: applicant } = await vite.ssrLoadModule("/api/recruitment.ts");
+const { readFileSync: readRoutingFile } = await import("node:fs");
+const recruitmentRewrites = JSON.parse(
+  readRoutingFile("vercel.json", "utf8"),
+).rewrites.filter((rule) =>
+  ["/api/admin/recruitment", "/api/careers"].includes(rule.source),
+);
+async function rewrittenRecruitment(req, res) {
+  const original = req.url;
+  const source = new URL(original, "http://localhost:4183");
+  const rule = recruitmentRewrites.find(
+    (entry) => entry.source === source.pathname,
+  );
+  if (rule) {
+    const target = new URL(rule.destination, "http://localhost:4183");
+    for (const [key, value] of source.searchParams)
+      target.searchParams.append(key, value);
+    req.url = target.pathname + target.search;
+  }
+  try {
+    return await applicant(req, res);
+  } finally {
+    req.url = original;
+  }
+}
 const server = httpServer(async (req, res) => {
   try {
     if (req.url.startsWith("/api/recruitment")) return applicant(req, res);
-    if (req.url.startsWith("/api/admin/recruitment")) return admin(req, res);
-    if (req.url.startsWith("/api/careers")) return careers(req, res);
+    if (req.url.startsWith("/api/admin/recruitment"))
+      return rewrittenRecruitment(req, res);
+    if (req.url.startsWith("/api/careers"))
+      return rewrittenRecruitment(req, res);
     if (req.url === "/__synthetic/link") {
       const row = (
         await f.db.query(

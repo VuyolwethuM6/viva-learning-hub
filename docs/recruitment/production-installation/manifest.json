@@ -73,13 +73,28 @@
   "runtimeSources": [
     {
       "path": "vercel.json",
-      "sha256": "08cf3346c09a17577221f1dfbe1d8e311b35ef745da2e6a7ea5c8119446c03ab",
-      "bytes": 8695
+      "sha256": "ca9862202840f3696d9b21cc334421a1d17f59370aef1525fd6933abc551bb4e",
+      "bytes": 8887
     },
     {
       "path": "package.json",
-      "sha256": "cba2b6c2cf4d944f3c3511394c5c99524f9b7b968c0eed357cc8d6d6db7ce273",
-      "bytes": 3204
+      "sha256": "6878e2672904d90c07a158ab0d8eb3c86827b27d35860bcf4f7c39bb3651cd25",
+      "bytes": 3301
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "a9f126e6fd723d546fe29ad974c51aa473c206a990f4345daf31a1b416667da8",
+      "bytes": 559
+    },
+    {
+      "path": "tsconfig.node.json",
+      "sha256": "1fce4a13c9e9a5060fc479cecad1f5b4d3e0342a3a5b8f68f3e5acc535f3862d",
+      "bytes": 519
+    },
+    {
+      "path": "scripts/check-vercel-api.mjs",
+      "sha256": "69d303f17c954b813d85faaadea3ce917b91166ebedbd0af6ad2fc4ef1eac36f",
+      "bytes": 1678
     },
     {
       "path": "scripts/recruitment-clamav-gateway.mjs",
@@ -90,6 +105,26 @@
       "path": "scripts/recruitment-erasure-manifest.mjs",
       "sha256": "f3052758044ff2b3a4db67c52d986575c1b24af5c4bab4ccf661921fba20b4ee",
       "bytes": 2372
+    },
+    {
+      "path": "api/recruitment.ts",
+      "sha256": "bc7e061d18d23fccfa7014c9dd333bb5f61b8350ed5a2ade0a4b3b4ec55a672f",
+      "bytes": 2194
+    },
+    {
+      "path": "api/_lib/recruitment-admin-handler.ts",
+      "sha256": "ebe155feda5f8b0ceb853995e782a37e8bc32d135d7db2a65f3814aeaf3d535c",
+      "bytes": 7247
+    },
+    {
+      "path": "api/_lib/recruitment-applicant-handler.ts",
+      "sha256": "23b3d8ba2079b867a00ff655f8812313462d6be1c98804fa6bfd375f13850143",
+      "bytes": 13322
+    },
+    {
+      "path": "api/_lib/recruitment-careers-handler.ts",
+      "sha256": "a76824ea7acfd2ae96f144dbae4b24731bbcb000fb8b248ff8f4e165140fbe1f",
+      "bytes": 7611
     },
     {
       "path": "api/_lib/recruitment-deployment.ts",
@@ -162,13 +197,18 @@
     },
     {
       "path": "DEPLOYMENT.md",
-      "sha256": "0e3003a27eecd00aa400d7af084beecf7e9a29d8d6de3645088fb48826ff3f48",
-      "bytes": 15319
+      "sha256": "d03100b5d270615a75c5b0dafc1c6ceb76075268d57e2d6711b5637dbc141f88",
+      "bytes": 16330
+    },
+    {
+      "path": "PREVIEW-COMPATIBILITY.md",
+      "sha256": "d6a6335d1612ddaba736bee98f864e6b741c58c63c62a8a74735214462b967ae",
+      "bytes": 6573
     },
     {
       "path": "README.md",
-      "sha256": "ec96f2f01253104bb6bc339ae00b078ac2b2e6679197428639905df852a41ff7",
-      "bytes": 13622
+      "sha256": "7b288bfc91ca97ecc2ccd3140581c42ea1fbe684a199b6dd6cb8b7c397c75406",
+      "bytes": 14149
     },
     {
       "path": "REHEARSAL.md",
@@ -177,8 +217,8 @@
     },
     {
       "path": "RELEASE-REVIEW.md",
-      "sha256": "de2d1b4014bc617b2cdd5ef1a268e5dbbb08dbd18a99c75b04a3273a15738f72",
-      "bytes": 11401
+      "sha256": "93ef889ee3b86b24129a3ba2a1cce0f46db57a0cf8dea4291fccd8ea75c168d0",
+      "bytes": 11923
     },
     {
       "path": "browser-evidence.json",
@@ -239,6 +279,11 @@
       "path": "installer-prechecks.sql.inc",
       "sha256": "27037d3b5bb14bdc6527586975de102ee0cabedfc108f898db47640bc4b93734",
       "bytes": 8116
+    },
+    {
+      "path": "preview-packaging-evidence.json",
+      "sha256": "b3669d4544e23ac1bfa40b0009e6da6fccbd0997a7a6cd905a645a9f36c93530",
+      "bytes": 2002
     },
     {
       "path": "rehearsal-evidence.json",

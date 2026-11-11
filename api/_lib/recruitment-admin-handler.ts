@@ -1,15 +1,15 @@
-import { rpc } from "../_lib/admin.js";
-import { handleRecruitmentCases } from "../_lib/recruitment-case-service.js";
-import { handleRecruitmentDeployment } from "../_lib/recruitment-deployment.js";
+import { rpc } from "./admin.js";
+import { handleRecruitmentCases } from "./recruitment-case-service.js";
+import { handleRecruitmentDeployment } from "./recruitment-deployment.js";
 import type { ServerResponse } from "node:http";
-import { privateResponse, sameOrigin } from "../_lib/admin.js";
+import { privateResponse, sameOrigin } from "./admin.js";
 import {
   handleError,
   HttpError,
   readJsonBody,
   sendJson,
   type ApiRequest,
-} from "../_lib/http.js";
+} from "./http.js";
 import {
   limitRecruitment,
   recruitmentAuth,
@@ -17,11 +17,11 @@ import {
   recruitmentSignIn,
   recruitmentToken,
   requireRecruitment,
-} from "../_lib/recruitment-auth.js";
+} from "./recruitment-auth.js";
 import {
   recruitmentChange,
   recruitmentSnapshot,
-} from "../_lib/recruitment-security-service.js";
+} from "./recruitment-security-service.js";
 
 export default async function handler(req: ApiRequest, res: ServerResponse) {
   privateResponse(res);

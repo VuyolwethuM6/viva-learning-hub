@@ -14,7 +14,7 @@ import {
   it,
   vi,
 } from "vitest";
-import handler from "../../api/admin/recruitment";
+import handler from "../../api/recruitment";
 import admin from "../../api/admin/records";
 import portal from "../../api/admin/session";
 import type { ApiRequest } from "../../api/_lib/http";

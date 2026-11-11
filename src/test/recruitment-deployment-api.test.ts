@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import type { ApiRequest } from "../../api/_lib/http";
-import handler from "../../api/admin/recruitment";
+import handler from "../../api/recruitment";
 import { fixture, owner, manager, officer } from "./helpers/recruitment-m3";
 let f: Awaited<ReturnType<typeof fixture>>;
 let verified = true;
@@ -13,12 +13,18 @@ const calls: string[] = [];
 const identities: Record<string, string> = { owner, manager, officer };
 const json = (value: unknown, status = 200) =>
   new Response(JSON.stringify(value), { status });
-async function call(query = "", identity = "owner", method = "GET") {
+async function call(
+  query = "",
+  identity = "owner",
+  method = "GET",
+  path = "/api/admin/recruitment",
+  cookie?: string,
+) {
   const req = Object.assign(Readable.from([]), {
-    url: "/api/admin/recruitment?route=deployment" + query,
+    url: path + "?route=deployment" + query,
     method,
     headers: {
-      cookie: `viva_recruitment=${identity}`,
+      cookie: cookie ?? `viva_recruitment=${identity}`,
       origin: "http://localhost",
       host: "localhost",
       "content-type": "application/json",
@@ -184,6 +190,28 @@ it("offers no write or execution method", async () => {
   expect((await call("", "owner", "DELETE")).statusCode).toBe(405);
   expect((await call("", "owner", "PUT")).statusCode).toBe(405);
   expect(calls.every((name) => name === "recruitment_context")).toBe(true);
+});
+it("preserves owner-only SQL access through the physical function rewrite", async () => {
+  const query =
+    "&__viva_recruitment=staff&document=01-install-m1-through-m3.sql";
+  expect(
+    (await call(query, "owner", "GET", "/api/recruitment")).statusCode,
+  ).toBe(200);
+  for (const role of ["manager", "officer"])
+    expect(
+      (await call(query, role, "GET", "/api/recruitment")).statusCode,
+    ).toBe(403);
+  expect(
+    (
+      await call(
+        query,
+        "",
+        "GET",
+        "/api/recruitment",
+        "viva_admin=owner; viva_recruitment_applicant=owner",
+      )
+    ).statusCode,
+  ).toBe(401);
 });
 it("serves every listed template and guide through the exact allowlist", async () => {
   const inventory = JSON.parse((await call()).body);

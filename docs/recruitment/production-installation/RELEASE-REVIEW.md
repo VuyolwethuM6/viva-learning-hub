@@ -1,5 +1,7 @@
 # Recruitment deployment preparation release review
 
+**Preview follow-up:** e19fbbc's automatic previews were rejected by the Hobby twelve-function limit; its root compiler also lacked the libraries needed for `Object.hasOwn`. The subsequent correction uses one shared recruitment function, preserves the three logical URLs/security handlers, and adds root-config/compiler-budget checks. The 470-test table below is historical evidence for e19fbbc. Read `PREVIEW-COMPATIBILITY.md` for the corrected packaging and current verification; deploy the later reviewed work commit.
+
 Work completed on the existing `work` branch. M1/M2 and accepted M3 commits remain ancestors, including `3f1ffee`, `e8024b4`, `59613ec`, `3cf6af5`, `367d0caf` and `a1444b759`. No original migration, academic workflow, enrollment model, accounting behavior, tutor identity, dependency lockfile or production service was changed. No M4 functionality is included. The final commit is identified by Git rather than a self-referential hash inside this file.
 
 ## Delivered

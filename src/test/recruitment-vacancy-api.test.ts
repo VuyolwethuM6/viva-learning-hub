@@ -14,7 +14,7 @@ import {
   it,
   vi,
 } from "vitest";
-import handler from "../../api/admin/recruitment";
+import handler from "../../api/recruitment";
 import { emptyVacancyContent } from "@/lib/recruitment-vacancies";
 
 import type { ApiRequest } from "../../api/_lib/http";

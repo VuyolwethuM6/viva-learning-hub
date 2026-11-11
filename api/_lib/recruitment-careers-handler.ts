@@ -1,16 +1,16 @@
 import { createHash } from "node:crypto";
 import type { ServerResponse } from "node:http";
 import { z } from "zod";
-import { rpc } from "./_lib/admin.js";
-import { HttpError, sendJson, type ApiRequest } from "./_lib/http.js";
+import { rpc } from "./admin.js";
+import { HttpError, sendJson, type ApiRequest } from "./http.js";
 import {
   emptyVacancyContent,
   vacancyContentSchema,
   type PublicVacancy,
   type PublicVacancyResponse,
-} from "../src/lib/recruitment-vacancies.js";
+} from "../../src/lib/recruitment-vacancies.js";
 
-import { configured, intakeRpc } from "./_lib/recruitment-intake.js";
+import { configured, intakeRpc } from "./recruitment-intake.js";
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const vacancyEnvelope = z.object({

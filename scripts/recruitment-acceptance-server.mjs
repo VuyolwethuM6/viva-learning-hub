@@ -170,9 +170,9 @@ const vite = await createServer({
   appType: "custom",
 });
 const { default: recruitment } = await vite.ssrLoadModule(
-  "/api/admin/recruitment.ts",
+  "/api/recruitment.ts",
 );
-const { default: careers } = await vite.ssrLoadModule("/api/careers.ts");
+const { default: careers } = await vite.ssrLoadModule("/api/recruitment.ts");
 const server = httpServer(async (req, res) => {
   try {
     if (req.url.startsWith("/api/admin/recruitment"))
