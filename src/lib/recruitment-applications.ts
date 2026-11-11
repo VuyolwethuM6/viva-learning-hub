@@ -143,7 +143,7 @@ export const caseStates = [
   "withdrawn", "expired", "deletion_pending", "purged",
 ] as const;
 export const caseActions = [
-  "read", "document", "review", "assign", "hold", "extend_retention", "resolve_conflict",
+  "read", "document", "review", "assign", "revoke_assignment", "hold", "extend_retention", "resolve_conflict",
 ] as const;
 export type CaseAction = (typeof caseActions)[number];
 

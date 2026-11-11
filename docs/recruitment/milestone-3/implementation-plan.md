@@ -4,6 +4,10 @@
 
 ## Required decisions before implementation/launch
 
+Focused M3.1 acceptance and corrections: [phase-1/acceptance-review.md](phase-1/acceptance-review.md).
+Concrete next-phase proposal: [m3.2-implementation-plan.md](m3.2-implementation-plan.md).
+M3.2 remains unimplemented and awaits its review gate.
+
 Confirmed rules remain: no applicant accounts initially; mandatory email verification before uploads/final submission; completeness-only screening; human hiring decisions; owner-only final decisions; independent recruitment roles; email notification only;14-day abandoned drafts, 6-month unsuccessful cases and 12-month pool retention subject to policy/holds; accepted agreements/verified documents/onboarding/explicit owner activation before any future account access; authoritative `teaching_tutors` unchanged.
 
 | Decision requiring approval | Recommended proposal / consequence |

@@ -15,6 +15,7 @@ const otherOwner = "44444444-4444-4444-8444-444444444444";
 const outsider = "55555555-5555-4555-8555-555555555555";
 const migrationPath = "supabase/migrations/20261111010000_recruitment_intake_foundation.sql";
 const migration = readFileSync(migrationPath, "utf8");
+const acceptanceMigration = readFileSync("supabase/migrations/20261111020000_recruitment_intake_acceptance.sql", "utf8");
 const schema = readFileSync("supabase/schema.sql", "utf8");
 const j = JSON.stringify;
 let db: PGlite;
@@ -74,6 +75,11 @@ const completeAnswers = () => ({ fields: {
   adultConfirmed: true, privacyAcknowledged: true, subjects: ["Mathematics"], grades: ["12"],
   qualifications: "Relevant qualification", teachingExperience: "Relevant experience",
 }, questions: { motivation: "Relevant motivation" } });
+async function submittedCase(...args: Parameters<typeof caseRecord>) {
+  const c = await caseRecord(...args);
+  await db.query("update public.recruitment_cases set state='submitted',submitted_at=now(),revision=revision+1 where id=$1", [c.id]);
+  return c;
+}
 
 beforeAll(async () => {
   db = new PGlite();
@@ -88,6 +94,7 @@ beforeEach(async () => {
   await db.query("update auth.users set email=$2 where id=$1", [officer, "officer@example.test"]);
   await db.query("select public.recruitment_bootstrap($1,'synthetic-operator','M31-TEST','Authorized isolated foundation test')", [owner]);
   await db.exec("update public.recruitment_settings set staff_console_enabled=true,access_guards_enabled=true");
+  await db.exec("update public.recruitment_settings set case_evidence_days=null,intake_privacy_notice_version=null,intake_policy_approval_ref=null,intake_policy_approved_at=null");
 });
 afterAll(async () => { await db?.close(); });
 
@@ -161,6 +168,66 @@ describe("M3.1 immutable intake contracts", () => {
 });
 
 describe("M3.1 case isolation and authorization", () => {
+  it("denies staff review of private drafts and of withdrawn or expired cases, including owners", async () => {
+    const draft = await caseRecord();
+    expect(await allowed(owner, draft.id)).toBe(false);
+    const c = await submittedCase();
+    await staff(manager, "manager"); await staff(officer, "officer");
+    await scope(manager, c.scope); await scope(officer, c.scope);
+    await assign(manager, c.id); await assign(officer, c.id);
+    for (const actor of [owner, manager, officer]) expect(await allowed(actor, c.id)).toBe(true);
+    await db.query("update public.recruitment_cases set state='withdrawn',withdrawn_at=now(),revision=revision+1 where id=$1", [c.id]);
+    for (const actor of [owner, manager, officer])
+      for (const action of ["read", "document", "review", "assign", "extend_retention"])
+        expect(await allowed(actor, c.id, action)).toBe(false);
+    expect(await allowed(owner, c.id, "hold")).toBe(true);
+    await db.query("update auth.users set email_confirmed_at=null where id=$1", [officer]);
+    await db.query("update public.recruitment_case_assignments set enabled=false,revision=revision+1 where case_id=$1 and user_id=$2", [c.id, officer]);
+    expect(await value("select enabled v from public.recruitment_case_assignments where case_id=$1 and user_id=$2", [c.id, officer])).toBe(false);
+    await db.query("update public.recruitment_cases set state='expired',revision=revision+1 where id=$1", [draft.id]);
+    for (const action of ["read", "document", "review", "assign"])
+      expect(await allowed(owner, draft.id, action)).toBe(false);
+  });
+  it("rejects whitespace-only complete answers consistently with the shared form validator", async () => {
+    const f = await form();
+    for (const whitespace of ["\t\n\r", "\u00a0", "\u2003", "\ufeff", "\u2028\u2029"]) {
+      const fieldAnswer = { ...completeAnswers(), fields: { ...completeAnswers().fields, firstName: whitespace } };
+      const questionAnswer = { ...completeAnswers(), questions: { motivation: whitespace } };
+      for (const answer of [fieldAnswer, questionAnswer]) {
+        expect(intakeAnswersSchema(f.definition, true).safeParse(answer).success).toBe(false);
+        expect(await value("select public.recruitment_answers_valid($1,$2,true) v", [f.id, j(answer)])).toBe(false);
+      }
+    }
+  });
+  it("binds vacancy acknowledgement to the exact approved privacy notice", async () => {
+    const c = await caseRecord();
+    await expect(db.query("insert into public.recruitment_consent_events(case_id,purpose,action,notice_version,email_revision,evidence_expires_at) values($1,'vacancy_notice','acknowledge','different-notice',1,now()+interval '14 days')", [c.id])).rejects.toThrow("consent_notice_mismatch");
+    await db.query("insert into public.recruitment_consent_events(case_id,purpose,action,notice_version,email_revision,evidence_expires_at) values($1,'vacancy_notice','acknowledge','synthetic-notice',1,now()+interval '14 days')", [c.id]);
+  });
+  it("prevents withdrawal timestamps from silently shortening a still-reviewable case", async () => {
+    const c = await submittedCase();
+    await expect(db.query("update public.recruitment_cases set withdrawn_at=now(),revision=revision+1 where id=$1", [c.id])).rejects.toThrow("recruitment_case_withdrawal_state");
+  });
+  it("keeps conflicts effective for assigned owners, managers and officers after verified email changes", async () => {
+    const c = await submittedCase();
+    await staff(manager, "manager"); await staff(officer, "officer");
+    await scope(manager, c.scope); await scope(officer, c.scope);
+    await assign(manager, c.id); await assign(officer, c.id);
+    for (const [actor, email] of [[owner, "owner@example.test"], [manager, "manager@example.test"], [officer, "officer@example.test"]]) {
+      expect(await allowed(actor, c.id)).toBe(true);
+      await db.query("update public.recruitment_case_contacts set normalized_email=$2,email_revision=email_revision+1,verified_at=verified_at+interval '1 second' where case_id=$1", [c.id, email]);
+      for (const action of ["read", "document", "review", "assign", "revoke_assignment", "hold", "extend_retention", "resolve_conflict"])
+        expect(await allowed(actor, c.id, action)).toBe(false);
+      await db.query("update public.recruitment_case_contacts set normalized_email=$2,email_revision=email_revision+1,verified_at=verified_at+interval '1 second' where case_id=$1", [c.id, `changed-${actor}@example.test`]);
+      expect(await allowed(actor, c.id)).toBe(false);
+    }
+  });
+  it("rejects cross-case payloads and altered contact scope/vacancy pins", async () => {
+    const a = await caseRecord(), b = await caseRecord();
+    await expect(db.query("insert into public.recruitment_case_payloads(case_id,form_id,revision,kind,answers) values($1,$2,0,'draft',$3)", [a.id, b.form.id, j({ fields: {}, questions: {} })])).rejects.toThrow("payload_form_mismatch");
+    await expect(db.query("update public.recruitment_case_contacts set vacancy_id=$2 where case_id=$1", [a.id, b.form.vacancy.id])).rejects.toThrow("case_contact_mismatch");
+    await expect(db.query("update public.recruitment_case_contacts set scope_id=$2 where case_id=$1", [a.id, b.scope])).rejects.toThrow("case_contact_mismatch");
+  });
   it("pins exact scope/form/publication relationships and never requires applicant Auth", async () => {
     const c = await caseRecord();
     expect(await value("select count(*)::int v from auth.users where id=$1", [c.id])).toBe(0);
@@ -182,7 +249,7 @@ describe("M3.1 case isolation and authorization", () => {
     expect(await value("select active v from public.recruitment_case_contacts where case_id=$1", [next.id])).toBe(true);
   });
   it("requires active case assignment as well as scope and keeps case work available after vacancy closure", async () => {
-    const c = await caseRecord();
+    const c = await submittedCase();
     await staff(manager, "manager"); await staff(officer, "officer");
     await scope(manager, c.scope); await scope(officer, c.scope);
     expect(await allowed(manager, c.id)).toBe(false);
@@ -204,8 +271,8 @@ describe("M3.1 case isolation and authorization", () => {
     expect(await allowed(outsider, c.id)).toBe(false);
   });
   it("captures owner self-interest and keeps it sticky after both applicant and staff email changes", async () => {
-    const c = await caseRecord(await form(), "owner@example.test");
-    for (const a of ["read", "document", "review", "assign", "hold", "extend_retention", "resolve_conflict"])
+    const c = await submittedCase(await form(), "owner@example.test");
+    for (const a of ["read", "document", "review", "assign", "revoke_assignment", "hold", "extend_retention", "resolve_conflict"])
       expect(await allowed(owner, c.id, a)).toBe(false);
     await db.query("update auth.users set email='owner-new@example.test' where id=$1", [owner]);
     await db.query("update public.recruitment_case_contacts set normalized_email='candidate-new@example.test',email_revision=2,verified_at=clock_timestamp()+interval '1 second' where case_id=$1", [c.id]);
@@ -224,7 +291,7 @@ describe("M3.1 case isolation and authorization", () => {
     expect(await value("select public.recruitment_case_conflicted($1,$2) v", [officer, c.id])).toBe(true);
   });
   it("allows assignment revocation after target unverification/disable and never regains it on reverification", async () => {
-    const c = await caseRecord(); await staff(officer, "officer"); await scope(officer, c.scope); await assign(officer, c.id);
+    const c = await submittedCase(); await staff(officer, "officer"); await scope(officer, c.scope); await assign(officer, c.id);
     await db.query("update auth.users set email_confirmed_at=null where id=$1", [officer]);
     expect(await allowed(officer, c.id)).toBe(false);
     await db.query("update public.recruitment_staff set enabled=false where user_id=$1", [officer]);
@@ -306,6 +373,21 @@ describe("M3.1 retention, evidence and dormant rollout", () => {
     await db.exec("set role anon");
     try { await expect(db.exec("select * from public.recruitment_cases")).rejects.toThrow("permission denied"); }
     finally { await db.exec("reset role"); }
+    await db.exec("set role service_role");
+    try { await expect(db.query("select public.recruitment_case_staff_allowed($1,$2,'read')", [owner, randomUUID()])).rejects.toThrow("permission denied"); }
+    finally { await db.exec("reset role"); }
+  });
+  it("does not treat the proposed ninety days as approved policy or enable any rollout flag", async () => {
+    expect(await value("select case_evidence_days v from public.recruitment_settings")).toBeNull();
+    expect(await value("select intake_policy_approved_at v from public.recruitment_settings")).toBeNull();
+    await db.exec("update public.recruitment_settings set case_evidence_days=90");
+    for (const flag of ["vacancy_intake_enabled", "talent_pool_intake_enabled", "applicant_email_enabled", "document_uploads_enabled", "case_processing_enabled"])
+      await expect(db.exec(`update public.recruitment_settings set ${flag}=true`)).rejects.toThrow("recruitment_m31_intake_interlock");
+    const definitions = await db.query<{ definition: string }>("select pg_get_functiondef(oid) definition from pg_proc where pronamespace='public'::regnamespace and proname in ('recruitment_guard_case','recruitment_guard_case_contact','recruitment_guard_case_evidence','recruitment_capture_case_conflicts','recruitment_capture_staff_conflicts')");
+    for (const row of definitions.rows) {
+      expect(row.definition).not.toMatch(/public\.recruitment_requests\b/);
+      expect(row.definition).not.toMatch(/public\.recruitment_events\b/);
+    }
   });
   it("keeps consent independent by purpose and checks verified email revisions and calendar expiry", async () => {
     const c = await caseRecord();
@@ -321,6 +403,19 @@ describe("M3.1 retention, evidence and dormant rollout", () => {
     await db.query(consentSql, [poolCase, "2025-02-28T10:00:00Z"]);
     expect(await value("select count(*)::int v from public.recruitment_consent_events where case_id=$1", [poolCase])).toBe(1);
     expect(await value("select count(*)::int v from public.recruitment_consent_events where case_id=$1", [c.id])).toBe(0);
+  });
+  it("allows withdrawal of an earlier pool consent without accepting a replacement notice", async () => {
+    const poolScope = randomUUID(), firstForm = randomUUID(), nextForm = randomUUID(), caseId = randomUUID();
+    await db.query("insert into public.recruitment_scopes(id,kind,label) values($1,'talent_pool','Synthetic withdrawal pool')", [poolScope]);
+    for (const [id, notice] of [[firstForm, "notice-v1"], [nextForm, "notice-v2"]])
+      await db.query("insert into public.recruitment_intake_forms(id,purpose,scope_id,definition,privacy_notice_version,document_policy_version,approved_by) values($1,'talent_pool',$2,$3,$4,'pdf-v1',$5)", [id, poolScope, j(createIntakeDefinition("talent_pool", null)), notice, owner]);
+    await db.query("insert into public.recruitment_cases(id,kind,scope_id,form_id,retention_due_at) values($1,'talent_pool',$2,$3,now())", [caseId, poolScope, firstForm]);
+    await db.query("insert into public.recruitment_case_contacts(case_id,kind,scope_id,normalized_email,email_hmac,key_version,verified_at) values($1,'talent_pool',$2,'pool@example.test',$3,1,now())", [caseId, poolScope, "e".repeat(64)]);
+    await db.query("insert into public.recruitment_consent_events(case_id,purpose,action,notice_version,email_revision,recorded_at,expires_at,evidence_expires_at) values($1,'talent_pool','affirm','notice-v1',1,now(),((now() at time zone 'Africa/Johannesburg')+interval '12 months') at time zone 'Africa/Johannesburg',now()+interval '13 months')", [caseId]);
+    // Synthetic draft rebase exercises the evidence boundary, not a live pool workflow.
+    await db.query("update public.recruitment_cases set form_id=$2,revision=revision+1 where id=$1", [caseId, nextForm]);
+    await db.query("insert into public.recruitment_consent_events(case_id,purpose,action,notice_version,email_revision,evidence_expires_at) values($1,'talent_pool','withdraw','notice-v1',1,now()+interval '30 days')", [caseId]);
+    await expect(db.query("insert into public.recruitment_consent_events(case_id,purpose,action,notice_version,email_revision,evidence_expires_at) values($1,'talent_pool','withdraw','invented-notice',1,now()+interval '30 days')", [caseId])).rejects.toThrow("consent_notice_mismatch");
   });
   it("does not renew a draft on reads and prevents reversal or premature completion of erasure", async () => {
     const c = await caseRecord();
@@ -379,7 +474,7 @@ describe("M3.1 retention, evidence and dormant rollout", () => {
       const tables = ["auth.users", "public.admin_users", "public.applications", "public.teaching_tutors", "public.recruitment_tutor_bindings", "public.recruitment_staff", "public.recruitment_scopes", "public.recruitment_vacancies", "public.recruitment_vacancy_versions", "public.recruitment_requests", "public.recruitment_events", "public.accounting_journals", "public.accounting_lines"];
       const capture = async () => Promise.all(tables.map(async (t) => (await upgrade.query(`select to_jsonb(x) row from ${t} x order by to_jsonb(x)::text`)).rows));
       const before = await capture();
-      await upgrade.exec(`begin;${migration}commit;`);
+      await upgrade.exec(`begin;${migration}\n${acceptanceMigration}commit;`);
       expect(await capture()).toEqual(before);
       expect((await upgrade.query("select count(*)::int n from public.recruitment_cases")).rows[0]).toEqual({ n: 0 });
     } finally { await upgrade.close(); }
@@ -387,11 +482,30 @@ describe("M3.1 retention, evidence and dormant rollout", () => {
   it("keeps canonical SQL, fresh schema and transaction bundle identical and supports rerun without changing legacy functions", async () => {
     expect(schema.split("-- BEGIN RECRUITMENT MILESTONE 3.1\n")[1].split("-- END RECRUITMENT MILESTONE 3.1")[0].trim()).toBe(migration.trim());
     expect(readFileSync("docs/recruitment/milestone-3/phase-1/migration.sql", "utf8")).toContain(migration);
+    expect(schema.split("-- BEGIN RECRUITMENT MILESTONE 3.1 ACCEPTANCE\n")[1].split("-- END RECRUITMENT MILESTONE 3.1 ACCEPTANCE")[0].trim()).toBe(acceptanceMigration.trim());
+    expect(readFileSync("docs/recruitment/milestone-3/phase-1/acceptance-migration.sql", "utf8")).toContain(acceptanceMigration);
     const capture = () => db.query("select proname,pg_get_functiondef(oid) definition from pg_proc where pronamespace='public'::regnamespace and proname in ('recruitment_mutate','recruitment_authorize','recruitment_assert','recruitment_require_assurance','tutor_bind','accounting_post') order by oid");
     const before = (await capture()).rows;
     const c = await caseRecord();
     await db.exec(migration);
+    await db.exec(acceptanceMigration);
     expect((await capture()).rows).toEqual(before);
-    expect(await allowed(owner, c.id)).toBe(true);
+    expect(await allowed(owner, c.id)).toBe(false); // Rerun the full chain; draft PII remains private.
+  });
+  it("fails a correction transaction on inconsistent installed withdrawals without silently rewriting data", async () => {
+    const c = await submittedCase();
+    await db.exec("alter table public.recruitment_cases drop constraint recruitment_case_withdrawal_state");
+    await db.query("update public.recruitment_cases set withdrawn_at=now(),revision=revision+1 where id=$1", [c.id]);
+    try {
+      await db.exec("begin");
+      await expect(db.exec(acceptanceMigration)).rejects.toThrow("recruitment_case_withdrawal_state");
+      await db.exec("rollback");
+      expect(await value("select state v from public.recruitment_cases where id=$1", [c.id])).toBe("submitted");
+      expect(await value("select withdrawn_at is not null v from public.recruitment_cases where id=$1", [c.id])).toBe(true);
+    } finally {
+      await db.exec("rollback");
+      await db.query("delete from public.recruitment_cases where id=$1", [c.id]); // Isolated synthetic fixture only.
+      await db.exec(acceptanceMigration);
+    }
   });
 });

@@ -4,6 +4,16 @@ Status: implemented locally under the conditional M3 authorization, on `work`.
 This phase stops before M3.2. There are no applicant routes, email sends, sessions,
 uploads, scanner deployments, staff case screens, workers or live mutations.
 
+Acceptance update: apply `20261111020000_recruitment_intake_acceptance.sql` AFTER the
+original migration. See [acceptance-review.md](acceptance-review.md). Original SQL and
+checksum remain unchanged; the fresh schema includes both blocks. Ordinary staff PII
+access/allocation is now limited to submitted/under-review cases, not private drafts,
+withdrawn or expired cases. Separate `revoke_assignment` permission preserves revocation
+without granting review access. Positive notice evidence is bound to the approved form;
+withdrawal may refer to an actual prior consent without accepting a replacement notice.
+SQL completeness uses the same whitespace set as JavaScript trim. Withdrawal timestamps
+must agree with the case state. Do not replay the old standalone M3.1 bundle over fixes.
+
 ## Decisions and phase boundaries
 
 Accepted business rules: accountless verified email; initial adult-only recruitment;
@@ -138,7 +148,7 @@ the actual actor. Passing an owner UUID is not authentication.
 
 | Action | Owner | Manager | Officer | Applicant/worker in M3.1 |
 | --- | --- | --- | --- | --- |
-| Case read/document/review | Current verified owner, no conflict | Enabled staff console + active scope + explicit case assignment + no conflict | Same | None; no capability/worker RPC exists |
+| Case read/document/review | Current verified owner, submitted/review state, no conflict | Submitted/review state + enabled staff console + active scope + explicit case assignment + no conflict | Same | None; no capability/worker RPC exists |
 | Allocate case | Same owner checks | Same manager checks; eligible other target | Denied | Denied |
 | Hold/extend retention/resolve conflict | Independent current owner only; protected evidence | Denied | Denied | Denied |
 | Final decisions/activation | Denied; no action/state available | Denied | Denied | Denied |
