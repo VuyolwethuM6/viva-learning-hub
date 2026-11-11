@@ -203,13 +203,25 @@ export default function VacancyDetail() {
                 <PublicVacancyContent content={content} />
                 <aside className="h-fit rounded-3xl border border-orange-100 bg-orange-50/60 p-6">
                   <h2 className="text-xl font-bold text-[#24143b]">
-                    Applications are not yet available
+                    {vacancy.acceptingApplications
+                      ? "Apply for this opportunity"
+                      : "Applications are not yet available"}
                   </h2>
-                  <p className="mt-3 leading-7 text-slate-600">
-                    You can read this published opportunity now. Application
-                    submission and document collection are not available on this
-                    page.
-                  </p>
+                  {vacancy.acceptingApplications && (
+                    <a
+                      className="inline-block rounded-lg bg-[#6A3AB2] text-white px-5 py-3 mt-4"
+                      href={`/recruitment/apply/${vacancy.slug}`}
+                    >
+                      Verify email and apply
+                    </a>
+                  )}
+                  {!vacancy.acceptingApplications && (
+                    <p className="mt-3 leading-7 text-slate-600">
+                      You can read this published opportunity now. Application
+                      submission and document collection are not available on
+                      this page.
+                    </p>
+                  )}
                   <p className="mt-3 text-sm leading-6 text-slate-600">
                     Please check back for updates. Our other website forms are
                     for their stated purposes and do not accept job

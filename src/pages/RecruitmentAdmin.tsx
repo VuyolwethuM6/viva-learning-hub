@@ -1,6 +1,11 @@
+import { RecruitmentCasesWorkspace } from "@/components/admin/recruitment/RecruitmentCasesWorkspace";
+import { RecruitmentFormsWorkspace } from "@/components/admin/recruitment/RecruitmentFormsWorkspace";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RecruitmentVacancyWorkspace } from "@/components/admin/recruitment/RecruitmentVacancyWorkspace";
-import { pendingRecruitmentRequest } from "@/lib/recruitment-client";
+import {
+  pendingRecruitmentRequest,
+  pendingCaseRequest,
+} from "@/lib/recruitment-client";
 import { recruitmentRequest } from "@/lib/recruitment-client";
 import type { RecruitmentSnapshot } from "@/lib/recruitment-types";
 import { RecruitmentSecurityWorkspace } from "@/components/admin/recruitment/RecruitmentSecurityWorkspace";
@@ -16,8 +21,14 @@ import "./recruitment-admin.css";
 
 export default function RecruitmentAdmin() {
   const [pending, setPending] = useState(Boolean(pendingRecruitmentRequest()));
-  const [workspace, setWorkspace] = useState<"vacancies" | "security">(
-    pendingRecruitmentRequest() ? "security" : "vacancies",
+  const [workspace, setWorkspace] = useState<
+    "vacancies" | "security" | "cases" | "forms"
+  >(
+    pendingRecruitmentRequest()
+      ? "security"
+      : pendingCaseRequest()
+        ? "cases"
+        : "vacancies",
   );
   const [snapshot, setSnapshot] = useState<RecruitmentSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
@@ -194,12 +205,32 @@ export default function RecruitmentAdmin() {
               >
                 Security and governance
               </Button>
+              <Button
+                variant={workspace === "cases" ? "default" : "outline"}
+                disabled={pending && workspace !== "cases"}
+                onClick={() => setWorkspace("cases")}
+              >
+                Applications and talent pool
+              </Button>
+              {snapshot.user.role === "owner" && (
+                <Button
+                  variant={workspace === "forms" ? "default" : "outline"}
+                  disabled={pending && workspace !== "forms"}
+                  onClick={() => setWorkspace("forms")}
+                >
+                  Forms and intake
+                </Button>
+              )}
             </nav>
             {workspace === "vacancies" ? (
               <RecruitmentVacancyWorkspace
                 snapshot={snapshot}
                 reload={reload}
               />
+            ) : workspace === "cases" ? (
+              <RecruitmentCasesWorkspace snapshot={snapshot} />
+            ) : workspace === "forms" ? (
+              <RecruitmentFormsWorkspace snapshot={snapshot} />
             ) : (
               <RecruitmentSecurityWorkspace
                 snapshot={snapshot}

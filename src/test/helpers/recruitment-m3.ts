@@ -98,7 +98,11 @@ export async function fixture() {
       "alter table public.recruitment_settings drop constraint if exists recruitment_m31_intake_interlock;update public.recruitment_settings set vacancy_intake_enabled=true,talent_pool_intake_enabled=true,applicant_email_enabled=true,document_uploads_enabled=true,case_processing_enabled=true,public_vacancies_enabled=true",
     );
   }
-  async function vacancy(category = "tutor", documents = true) {
+  async function vacancy(
+    category = "tutor",
+    documents = true,
+    documentKeys = ["cv"],
+  ) {
     const c = {
       ...emptyVacancyContent(),
       title: "Synthetic vacancy",
@@ -115,7 +119,7 @@ export async function fixture() {
       opensAt: new Date(Date.now() - 86400000).toISOString(),
       closesAt: new Date(Date.now() + 86400000).toISOString(),
       requiredDocuments: documents
-        ? [{ key: "cv", label: "CV", required: true }]
+        ? documentKeys.map((key) => ({ key, label: key, required: true }))
         : [],
     };
     const created = await change("vacancy_create", {

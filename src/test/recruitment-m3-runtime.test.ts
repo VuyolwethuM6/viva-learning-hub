@@ -935,3 +935,48 @@ it("bounds message pages without exposing internal reviewer notes to the applica
     ).items,
   ).toEqual([]);
 });
+
+it("enforces the exact 40 MiB case budget and rejects another verified case’s document identifiers", async () => {
+  const v = await f.vacancy("tutor", true, [
+      "cv",
+      "cover",
+      "portfolio",
+      "qualification",
+      "extra",
+    ]),
+    a = await f.email(v.slug, "quota-a@example.test"),
+    b = await f.email(v.slug, "quota-b@example.test");
+  const reserve = (key: string, size: number) =>
+    f.rpc("recruitment_document_mutate", {
+      p_hash: a.hash,
+      p_action: "reserve",
+      d: {
+        requestId: randomUUID(),
+        requirementKey: key,
+        name: "synthetic.pdf",
+        size,
+        checksum: "0".repeat(64),
+      },
+      p_digest: "c".repeat(64),
+      p_key_version: 1,
+    });
+  const doc = await reserve("cv", 10485760);
+  for (const key of ["cover", "portfolio", "qualification"])
+    await reserve(key, 10485760);
+  await expect(reserve("extra", 1)).rejects.toThrow("document_quota");
+  await expect(
+    f.rpc("recruitment_document_mutate", {
+      p_hash: b.hash,
+      p_action: "chunk_plan",
+      d: {
+        documentId: doc.documentId,
+        generation: doc.generation,
+        index: 0,
+        size: 2097152,
+        checksum: "0".repeat(64),
+      },
+      p_digest: "0".repeat(64),
+      p_key_version: 1,
+    }),
+  ).rejects.toThrow("case_unavailable");
+});

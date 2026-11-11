@@ -59,12 +59,14 @@ export async function recruitmentRequest<T>(
   const body = await response.json().catch(() => null);
   if (!response.ok)
     throw new RecruitmentError(
-      body?.error || "Recruitment request failed.",
+      (typeof body?.error === "string" ? body.error : body?.error?.message) ||
+        "Recruitment request failed.",
       response.status,
       response.status >= 400 &&
         response.status < 500 &&
         response.headers.get("X-Recruitment-Error") === "confirmed" &&
-        typeof body?.error === "string",
+        (typeof body?.error === "string" ||
+          typeof body?.error?.code === "string"),
     );
   if (!body)
     throw new RecruitmentError(
@@ -97,4 +99,12 @@ export function retainRecruitmentRequest(id: string) {
 export function clearRecruitmentRequest() {
   sessionStorage.removeItem(pendingKey);
   window.dispatchEvent(new Event("recruitment-pending-changed"));
+}
+
+export function pendingCaseRequest() {
+  try {
+    return sessionStorage.getItem("viva.recruitment.case.pending") || "";
+  } catch {
+    return "";
+  }
 }

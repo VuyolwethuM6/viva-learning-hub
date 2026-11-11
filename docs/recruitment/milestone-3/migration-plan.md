@@ -1,5 +1,6 @@
 # Proposed M3 schema and migration dependencies
 
+> Current status: the owner subsequently authorized all M3.2–M3.6 implementation. The historical proposals/review gates below are superseded by [implementation-report.md](implementation-report.md), [runtime-contracts.md](runtime-contracts.md) and [operations.md](operations.md). Production execution and rollout remain separately gated.
 **Status update: M3.1 has an implemented local-only additive migration.** See [phase-1/architecture-and-contracts.md](phase-1/architecture-and-contracts.md) for the exact thirteen-table foundation, privileges and interlock. No production SQL has been executed. The remaining logical entities and slices below are the original later-phase proposal, not implemented migrations. Every live migration still requires target inspection and separate execution approval.
 
 ## Dependency graph

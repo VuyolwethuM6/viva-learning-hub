@@ -18,6 +18,7 @@ import {
 } from "@/lib/public-careers";
 
 export default function Careers() {
+  const [poolEnabled, setPoolEnabled] = useState(false);
   const [vacancies, setVacancies] = useState<PublicVacancy[]>([]);
   const [category, setCategory] = useState("all");
   const [offset, setOffset] = useState(0);
@@ -35,6 +36,7 @@ export default function Careers() {
       .then((response) => {
         if (!controller.signal.aborted) {
           setVacancies(response.vacancies);
+          setPoolEnabled(response.talentPoolEnabled === true);
           setTotal(response.total);
           setNextOffset(response.nextOffset);
         }
@@ -125,8 +127,9 @@ export default function Careers() {
                   Current opportunities
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Applications are not yet available. Published opportunities
-                  are available to read here.
+                  {vacancies.some((v) => v.acceptingApplications)
+                    ? "Applications are open for eligible published roles. Verify your email to begin."
+                    : "Applications are not yet available. Published opportunities are available to read here."}
                 </p>
               </div>
               {!loading && !error && (
@@ -326,8 +329,16 @@ export default function Careers() {
                 advertised.
               </p>
               <p className="mt-3 text-sm leading-6 text-white/90">
-                Talent-pool registration is not available yet. We are not
-                collecting registrations or personal information here.
+                {poolEnabled ? (
+                  <a
+                    className="underline font-bold"
+                    href="/recruitment/talent-pool"
+                  >
+                    Register for the general talent pool
+                  </a>
+                ) : (
+                  "Talent-pool registration is not available yet. We are not collecting registrations or personal information here."
+                )}
               </p>
             </div>
           </div>

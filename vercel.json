@@ -23,6 +23,9 @@
     "api/admin/records.ts": {
       "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
       "maxDuration": 60
+    },
+    "api/recruitment.ts": {
+      "maxDuration": 300
     }
   },
   "headers": [
@@ -159,9 +162,38 @@
           "value": "frame-ancestors 'none'"
         }
       ]
+    },
+    {
+      "source": "/recruitment/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+        }
+      ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/recruitment/:path*",
+      "destination": "/index.html"
+    },
     {
       "source": "/api/student",
       "destination": "/api/admin/session?portal=student"

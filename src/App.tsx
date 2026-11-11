@@ -1,3 +1,4 @@
+import { RecruitmentPrivacyBoundary } from "./components/RecruitmentPrivacyBoundary";
 import { VivaLoader } from "@/components/VivaLoader";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,6 +19,7 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/About"));
+const RecruitmentApplicant = lazy(() => import("./pages/RecruitmentApplicant"));
 const RecruitmentAdmin = lazy(() => import("./pages/RecruitmentAdmin"));
 const Careers = lazy(() => import("./pages/Careers"));
 const VacancyDetail = lazy(() => import("./pages/VacancyDetail"));
@@ -32,7 +34,9 @@ const PhysicalScience = lazy(() => import("./pages/PhysicalScience"));
 const LifeSciences = lazy(() => import("./pages/LifeSciences"));
 const Accounting = lazy(() => import("./pages/Accounting"));
 const Geography = lazy(() => import("./pages/Geography"));
-const InformationTechnology = lazy(() => import("./pages/InformationTechnology"));
+const InformationTechnology = lazy(
+  () => import("./pages/InformationTechnology"),
+);
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const StudyMaterials = lazy(() => import("./pages/StudyMaterials"));
@@ -49,24 +53,26 @@ type AppProps = {
 const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
   const content = (
     <MotionConfig reducedMotion="user">
-        <a
-          href="#main-content"
-          className="sr-only z-[100] bg-white px-4 py-3 text-[#1a0b2e] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:rounded-md focus:shadow-lg"
-          onClick={(event) => {
-            const target = document.querySelector<HTMLElement>("main") ?? document.querySelector<HTMLElement>("h1");
-            if (target) {
-              target.id = "main-content";
-              target.tabIndex = -1;
-            } else {
-              event.preventDefault();
-            }
-          }}
-        >
-          Skip to main content
-        </a>
-        <RouteMetadata />
-        <Analytics />
-        <Suspense fallback={<VivaLoader size="page" label="Loading page…" />}>
+      <a
+        href="#main-content"
+        className="sr-only z-[100] bg-white px-4 py-3 text-[#1a0b2e] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:rounded-md focus:shadow-lg"
+        onClick={(event) => {
+          const target =
+            document.querySelector<HTMLElement>("main") ??
+            document.querySelector<HTMLElement>("h1");
+          if (target) {
+            target.id = "main-content";
+            target.tabIndex = -1;
+          } else {
+            event.preventDefault();
+          }
+        }}
+      >
+        Skip to main content
+      </a>
+      <RouteMetadata />
+      <Analytics />
+      <Suspense fallback={<VivaLoader size="page" label="Loading page…" />}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
@@ -77,7 +83,30 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
           <Route path="/contact" element={<WhatsAppRedirect />} />
           <Route path="/enroll" element={<Enrollment />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/recruitment" element={<RecruitmentAdmin />} />
+          <Route
+            path="/recruitment/*"
+            element={
+              <RecruitmentPrivacyBoundary>
+                <RecruitmentApplicant />
+              </RecruitmentPrivacyBoundary>
+            }
+          />
+          <Route
+            path="/recruitment/apply/:slug"
+            element={
+              <RecruitmentPrivacyBoundary>
+                <RecruitmentApplicant />
+              </RecruitmentPrivacyBoundary>
+            }
+          />
+          <Route
+            path="/admin/recruitment"
+            element={
+              <RecruitmentPrivacyBoundary>
+                <RecruitmentAdmin />
+              </RecruitmentPrivacyBoundary>
+            }
+          />
           <Route path="/parent" element={<Parent />} />
           <Route path="/student" element={<Student />} />
           <Route path="/tutor" element={<Tutor />} />
@@ -88,7 +117,10 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
           <Route path="/life-sciences" element={<LifeSciences />} />
           <Route path="/accounting" element={<Accounting />} />
           <Route path="/geography" element={<Geography />} />
-          <Route path="/information-technology" element={<InformationTechnology />} />
+          <Route
+            path="/information-technology"
+            element={<InformationTechnology />}
+          />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/study-materials" element={<StudyMaterials />} />
@@ -97,7 +129,7 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-        </Suspense>
+      </Suspense>
     </MotionConfig>
   );
 
@@ -108,7 +140,9 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
           <Toaster />
           <Sonner />
           {staticLocation ? (
-            <MemoryRouter initialEntries={[staticLocation]}>{content}</MemoryRouter>
+            <MemoryRouter initialEntries={[staticLocation]}>
+              {content}
+            </MemoryRouter>
           ) : (
             <BrowserRouter>{content}</BrowserRouter>
           )}

@@ -1,5 +1,6 @@
 # Proposed M3 API, authorization and security decisions
 
+> Current status: the owner subsequently authorized all M3.2–M3.6 implementation. The historical proposals/review gates below are superseded by [implementation-report.md](implementation-report.md), [runtime-contracts.md](runtime-contracts.md) and [operations.md](operations.md). Production execution and rollout remain separately gated.
 **Approval proposal only.** No routes below exist as M3 functionality at the reviewed M2 baseline. Existing `/api/admin/recruitment` and `/api/careers` behavior remains unchanged until approved implementation.
 
 ## Endpoint boundaries

@@ -10,7 +10,12 @@ declare global {
 export type AnalyticsParameters = Record<string, string | number | boolean>;
 
 export function initializeAnalytics() {
-  if (!measurementId) return;
+  if (
+    !measurementId ||
+    window.location.pathname.startsWith("/recruitment") ||
+    window.location.pathname.startsWith("/admin/recruitment")
+  )
+    return;
 
   if (!window.dataLayer) {
     window.dataLayer = [];
@@ -36,7 +41,12 @@ export function initializeAnalytics() {
 }
 
 export function trackPageView(path: string, title: string) {
-  if (!measurementId) return;
+  if (
+    !measurementId ||
+    window.location.pathname.startsWith("/recruitment") ||
+    window.location.pathname.startsWith("/admin/recruitment")
+  )
+    return;
 
   initializeAnalytics();
   window.gtag?.("event", "page_view", {
@@ -46,13 +56,24 @@ export function trackPageView(path: string, title: string) {
   });
 }
 
-export function trackAnalyticsEvent(name: string, parameters: AnalyticsParameters = {}) {
-  if (!measurementId) return;
+export function trackAnalyticsEvent(
+  name: string,
+  parameters: AnalyticsParameters = {},
+) {
+  if (
+    !measurementId ||
+    window.location.pathname.startsWith("/recruitment") ||
+    window.location.pathname.startsWith("/admin/recruitment")
+  )
+    return;
 
   initializeAnalytics();
   window.gtag?.("event", name, parameters);
 }
 
-export function trackSiteClick(eventName: string, parameters: AnalyticsParameters = {}) {
+export function trackSiteClick(
+  eventName: string,
+  parameters: AnalyticsParameters = {},
+) {
   trackAnalyticsEvent(eventName, parameters);
 }

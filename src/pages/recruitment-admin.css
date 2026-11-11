@@ -193,3 +193,56 @@
     font-size: 24px;
   }
 }
+
+/* Shared private applicant and case workspace controls. */
+.recruitment-card textarea {
+  width: 100%;
+  min-height: 88px;
+  padding: 12px;
+  border: 1px solid #94a3b8;
+  border-radius: 10px;
+  background: white;
+}
+.recruitment-card textarea:focus-visible {
+  outline: 3px solid #7949fe;
+  outline-offset: 2px;
+}
+.recruitment-card input[type="checkbox"] {
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+  accent-color: #6a3ab2;
+}
+.recruitment-card label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 12px;
+}
+.recruitment-card fieldset {
+  min-width: 0;
+}
+.recruitment-card h2,
+.recruitment-card h3 {
+  overflow-wrap: anywhere;
+}
+.recruitment-card details > summary {
+  cursor: pointer;
+  padding: 12px 0;
+  font-weight: 600;
+}
+.recruitment-card dl dd {
+  margin: 0;
+}
+.recruitment-card button {
+  white-space: normal;
+  height: auto;
+  min-height: 44px;
+}
+@media print {
+  .recruitment-shell > header,
+  .recruitment-card button,
+  .recruitment-card details {
+    display: none;
+  }
+}
