@@ -23,6 +23,7 @@ process.env.RECRUITMENT_SCANNER_KEY = "synthetic-scanner-key".repeat(3);
 process.env.RESEND_API_KEY = "synthetic-only";
 process.env.EMAIL_FROM = "synthetic@example.test";
 const vite = await createServer({
+    cacheDir: "/tmp/viva-recruitment-acceptance-vite",
     server: { middlewareMode: true, hmr: false },
     appType: "custom",
   }),

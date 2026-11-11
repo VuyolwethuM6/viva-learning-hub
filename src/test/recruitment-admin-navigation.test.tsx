@@ -8,6 +8,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import RecruitmentAdmin from "@/pages/RecruitmentAdmin";
 import type { RecruitmentSnapshot } from "@/lib/recruitment-types";
+import { MemoryRouter } from "react-router-dom";
 const { send } = vi.hoisted(() => ({ send: vi.fn() }));
 vi.mock("@/lib/recruitment-client", async (original) => ({
   ...(await original<typeof import("@/lib/recruitment-client")>()),
@@ -56,7 +57,11 @@ describe("recruitment navigation after request recovery", () => {
     send.mockImplementation(async (route) =>
       route === "snapshot" ? snapshot : recovery,
     );
-    render(<RecruitmentAdmin />);
+    render(
+      <MemoryRouter>
+        <RecruitmentAdmin />
+      </MemoryRouter>,
+    );
     const vacancies = await screen.findByRole("button", {
       name: "Vacancy management",
     });

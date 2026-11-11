@@ -1,0 +1,18 @@
+-- SEPARATE OWNER/LEGAL/EXPOSURE APPROVAL, AFTER VACANCY PILOT ACCEPTANCE.
+-- This exposes consent-based registration to every requester allowed by edge controls.
+begin;
+do $pool_release$
+declare cfg public.recruitment_settings;f public.recruitment_intake_forms;
+ expected_revision integer=null;operator_ref text='__REQUIRED_OPERATOR_REFERENCE__';approval_ref text='__REQUIRED_POOL_RELEASE_APPROVAL__';acceptance_ref text='__REQUIRED_PILOT_AND_EXPOSURE_ACCEPTANCE__';
+begin
+ if expected_revision is null or operator_ref like '__REQUIRED_%' or approval_ref like '__REQUIRED_%' or acceptance_ref like '__REQUIRED_%' then raise exception 'STOP: actual approval and expected revision required';end if;
+ select * into cfg from public.recruitment_settings where singleton for update;
+ if not found then raise exception 'Missing recruitment settings';end if;
+ if cfg.revision<>expected_revision or cfg.talent_pool_intake_enabled or not cfg.vacancy_intake_enabled or not cfg.applicant_email_enabled or not cfg.case_processing_enabled or not public.recruitment_intake_ready() then raise exception 'Wrong release/approval state';end if;
+ if not exists(select 1 from pg_constraint where conrelid='public.recruitment_settings'::regclass and conname='recruitment_m3_release_interlock' and convalidated) then raise exception 'Reviewed release interlock required';end if;
+ if (select count(*) from public.recruitment_intake_forms x join public.recruitment_intake_form_bindings b on b.form_id=x.id and b.enabled where x.purpose='talent_pool' and x.privacy_notice_version=cfg.intake_privacy_notice_version)<>1 then raise exception 'Exactly one current owner-approved consent-based talent-pool form required';end if;
+ select x.* into f from public.recruitment_intake_forms x join public.recruitment_intake_form_bindings b on b.form_id=x.id and b.enabled where x.purpose='talent_pool' and x.privacy_notice_version=cfg.intake_privacy_notice_version;
+ update public.recruitment_settings set talent_pool_intake_enabled=true,revision=revision+1,public_vacancies_generation=public_vacancies_generation+1 where singleton;
+ insert into public.recruitment_operational_events(action,database_actor,operator_reference,approval_reference,reason,details) values('m3_talent_pool_release',session_user,operator_ref,approval_ref,'Owner-approved affirmative-consent talent-pool release after vacancy pilot and privacy acceptance',jsonb_build_object('formId',f.id,'acceptance',acceptance_ref));
+end $pool_release$;
+commit;

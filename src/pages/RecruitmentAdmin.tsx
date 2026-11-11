@@ -1,5 +1,7 @@
 import { RecruitmentCasesWorkspace } from "@/components/admin/recruitment/RecruitmentCasesWorkspace";
 import { RecruitmentFormsWorkspace } from "@/components/admin/recruitment/RecruitmentFormsWorkspace";
+import { RecruitmentDeploymentWorkspace } from "@/components/admin/recruitment/RecruitmentDeploymentWorkspace";
+import { Link, useLocation } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RecruitmentVacancyWorkspace } from "@/components/admin/recruitment/RecruitmentVacancyWorkspace";
 import {
@@ -20,6 +22,7 @@ import {
 import "./recruitment-admin.css";
 
 export default function RecruitmentAdmin() {
+  const deployment = useLocation().pathname === "/admin/recruitment/deployment";
   const [pending, setPending] = useState(Boolean(pendingRecruitmentRequest()));
   const [workspace, setWorkspace] = useState<
     "vacancies" | "security" | "cases" | "forms"
@@ -170,7 +173,11 @@ export default function RecruitmentAdmin() {
                 <p className="recruitment-eyebrow">
                   Recruitment administration
                 </p>
-                <h1>Recruitment workspace</h1>
+                <h1>
+                  {deployment
+                    ? "Recruitment deployment"
+                    : "Recruitment workspace"}
+                </h1>
                 <p>
                   {snapshot.user.email} · {snapshot.user.role}
                 </p>
@@ -191,38 +198,63 @@ export default function RecruitmentAdmin() {
               aria-label="Recruitment workspace"
               className="flex flex-wrap gap-3 mb-5"
             >
-              <Button
-                variant={workspace === "vacancies" ? "default" : "outline"}
-                disabled={pending && workspace !== "vacancies"}
-                onClick={() => setWorkspace("vacancies")}
-              >
-                Vacancy management
-              </Button>
-              <Button
-                variant={workspace === "security" ? "default" : "outline"}
-                disabled={pending && workspace !== "security"}
-                onClick={() => setWorkspace("security")}
-              >
-                Security and governance
-              </Button>
-              <Button
-                variant={workspace === "cases" ? "default" : "outline"}
-                disabled={pending && workspace !== "cases"}
-                onClick={() => setWorkspace("cases")}
-              >
-                Applications and talent pool
-              </Button>
-              {snapshot.user.role === "owner" && (
-                <Button
-                  variant={workspace === "forms" ? "default" : "outline"}
-                  disabled={pending && workspace !== "forms"}
-                  onClick={() => setWorkspace("forms")}
-                >
-                  Forms and intake
+              {deployment && (
+                <Button asChild variant="outline">
+                  <Link to="/admin/recruitment">Back to recruitment</Link>
                 </Button>
               )}
+              {!deployment && (
+                <>
+                  <Button
+                    variant={workspace === "vacancies" ? "default" : "outline"}
+                    disabled={pending && workspace !== "vacancies"}
+                    onClick={() => setWorkspace("vacancies")}
+                  >
+                    Vacancy management
+                  </Button>
+                  <Button
+                    variant={workspace === "security" ? "default" : "outline"}
+                    disabled={pending && workspace !== "security"}
+                    onClick={() => setWorkspace("security")}
+                  >
+                    Security and governance
+                  </Button>
+                  <Button
+                    variant={workspace === "cases" ? "default" : "outline"}
+                    disabled={pending && workspace !== "cases"}
+                    onClick={() => setWorkspace("cases")}
+                  >
+                    Applications and talent pool
+                  </Button>
+                  {snapshot.user.role === "owner" && (
+                    <Button
+                      variant={workspace === "forms" ? "default" : "outline"}
+                      disabled={pending && workspace !== "forms"}
+                      onClick={() => setWorkspace("forms")}
+                    >
+                      Forms and intake
+                    </Button>
+                  )}
+                  {snapshot.user.role === "owner" && (
+                    <Button asChild variant="outline">
+                      <Link to="/admin/recruitment/deployment">
+                        Deployment dashboard
+                      </Link>
+                    </Button>
+                  )}
+                </>
+              )}
             </nav>
-            {workspace === "vacancies" ? (
+            {deployment ? (
+              snapshot.user.role === "owner" ? (
+                <RecruitmentDeploymentWorkspace />
+              ) : (
+                <p role="alert">
+                  Recruitment owner access is required for deployment
+                  preparation.
+                </p>
+              )
+            ) : workspace === "vacancies" ? (
               <RecruitmentVacancyWorkspace
                 snapshot={snapshot}
                 reload={reload}

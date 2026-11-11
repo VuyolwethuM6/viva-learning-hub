@@ -1,0 +1,44 @@
+-- PROPOSED NEW OPERATIONAL RELEASE SQL, NOT PART OF THE COMMITTED APP MIGRATIONS.
+-- SEPARATE EXACT-SQL/OWNER EXECUTION APPROVAL REQUIRED. DO NOT RUN WITH INSTALLER.
+-- Flags are GLOBAL. Restricted pilot requires independently verified edge IP controls
+-- on /recruitment/* AND /api/recruitment, covering all methods/query variants.
+-- No test-email allowlist exists in application code. Public mode is genuinely public.
+begin;
+set local lock_timeout='5s';
+do $vacancy_release$
+declare cfg public.recruitment_settings;v public.recruitment_vacancies;f public.recruitment_intake_forms;
+ pilot_vacancy uuid=null;expected_revision integer=null;
+ operator_ref text='__REQUIRED_OPERATOR_REFERENCE__';approval_ref text='__REQUIRED_OWNER_RELEASE_APPROVAL__';
+ deployment_ref text='__REQUIRED_DEPLOYMENT_AND_HOSTED_ACCEPTANCE_REFERENCE__';
+ exposure_mode text='public'; -- User selected open approved intake, not private/IP-only testing.
+ edge_acceptance_ref text='__REQUIRED_EDGE_CONTROL_OR_PUBLIC_EXPOSURE_APPROVAL__';before_flags jsonb;
+begin
+ if pilot_vacancy is null or expected_revision is null or operator_ref like '__REQUIRED_%' or approval_ref like '__REQUIRED_%' or deployment_ref like '__REQUIRED_%' or edge_acceptance_ref like '__REQUIRED_%' or exposure_mode not in('restricted','public') then raise exception 'STOP: vacancy revision deployment exposure and independent owner approval required';end if;
+ select * into cfg from public.recruitment_settings where singleton for update;
+ if not found then raise exception 'Missing recruitment settings';end if;
+ if cfg.revision<>expected_revision or cfg.vacancy_intake_enabled or cfg.talent_pool_intake_enabled or cfg.applicant_email_enabled or cfg.document_uploads_enabled or cfg.case_processing_enabled then raise exception 'Wrong settings revision or release already active; reconcile';end if;
+ if not cfg.staff_console_enabled or not cfg.access_guards_enabled or not cfg.access_guards_mandatory or not cfg.owner_aal2_required then raise exception 'Hosted-accepted staff console, mandatory safeguards and owner AAL2 required before this production release';end if;
+ if (select count(*) from public.recruitment_staff s join auth.users u on u.id=s.user_id where s.role='owner' and s.enabled and u.email_confirmed_at is not null)<2 then raise exception 'Two independently controlled verified usable owners must be accepted';end if;
+ if not public.recruitment_intake_ready() or cfg.scanner_attested_at is null or cfg.scanner_policy_version<>'pdf-v1' then raise exception 'Actual legal/operational approval and accepted real scanner required';end if;
+ if not exists(select 1 from pg_constraint where conrelid='public.recruitment_settings'::regclass and conname='recruitment_m31_intake_interlock' and convalidated) or exists(select 1 from pg_constraint where conrelid='public.recruitment_settings'::regclass and conname='recruitment_m3_release_interlock') then raise exception 'Unexpected interlock state; do not drop constraints manually';end if;
+ select * into v from public.recruitment_vacancies where id=pilot_vacancy for share;
+ if v.id is null or v.status<>'published' or v.published_version_id is null then raise exception 'One exact owner-published pilot vacancy required';end if;
+ if exists(select 1 from public.recruitment_intake_form_bindings where purpose='vacancy' and enabled and vacancy_id<>pilot_vacancy) then raise exception 'Disable unrelated vacancy form bindings through owner governance before limited pilot';end if;
+ if (select count(*) from public.recruitment_intake_forms x join public.recruitment_intake_form_bindings b on b.form_id=x.id and b.enabled where x.vacancy_id=v.id and x.version_id=v.published_version_id and x.privacy_notice_version=cfg.intake_privacy_notice_version)<>1 then raise exception 'Exactly one current owner-approved form binding required';end if;
+ select x.* into f from public.recruitment_intake_forms x join public.recruitment_intake_form_bindings b on b.form_id=x.id and b.enabled where x.vacancy_id=v.id and x.version_id=v.published_version_id and x.privacy_notice_version=cfg.intake_privacy_notice_version;
+ if not exists(select 1 from public.recruitment_vacancy_versions where id=v.published_version_id and (content->>'opensAt')::timestamptz<=clock_timestamp() and (content->>'closesAt')::timestamptz>clock_timestamp()) then raise exception 'Application window not open';end if;
+ if (select count(*) from storage.buckets where(id='recruitment-quarantine' and not public and file_size_limit=2097152 and allowed_mime_types=array['application/octet-stream']) or(id='recruitment-documents' and not public and file_size_limit=10485760 and allowed_mime_types=array['application/pdf']))<>2 or not exists(select 1 from pg_class where oid='storage.objects'::regclass and relrowsecurity) or not exists(select 1 from pg_policy where polrelid='storage.objects'::regclass and polname='recruitment_private_storage' and not polpermissive) then raise exception 'Private Storage acceptance prerequisites changed';end if;
+ before_flags=jsonb_build_object('vacancy',cfg.vacancy_intake_enabled,'pool',cfg.talent_pool_intake_enabled,'email',cfg.applicant_email_enabled,'uploads',cfg.document_uploads_enabled,'processing',cfg.case_processing_enabled,'publicVacancies',cfg.public_vacancies_enabled);
+ -- Replace the all-off interlock atomically with an explicit release dependency fence.
+ alter table public.recruitment_settings drop constraint recruitment_m31_intake_interlock;
+ alter table public.recruitment_settings add constraint recruitment_m3_release_interlock check(
+  (not(vacancy_intake_enabled or talent_pool_intake_enabled or applicant_email_enabled or document_uploads_enabled or case_processing_enabled) or
+    (staff_console_enabled and access_guards_enabled and access_guards_mandatory and owner_aal2_required and intake_policy_approved_at is not null and intake_policy_approval_ref is not null and intake_operations_approved_at is not null and intake_operations_approval_ref is not null and case_evidence_days is not null and backup_retention_days is not null))
+  and (not(vacancy_intake_enabled or talent_pool_intake_enabled) or(applicant_email_enabled and case_processing_enabled))
+  and (not document_uploads_enabled or(scanner_attested_at is not null and scanner_policy_version is not null))
+ );
+ update public.recruitment_settings set public_vacancies_enabled=true,public_vacancies_generation=public_vacancies_generation+1,vacancy_intake_enabled=true,talent_pool_intake_enabled=false,applicant_email_enabled=true,document_uploads_enabled=true,case_processing_enabled=true,revision=revision+1 where singleton;
+ insert into public.recruitment_operational_events(action,database_actor,operator_reference,approval_reference,reason,details) values('m3_vacancy_pilot_release',session_user,operator_ref,approval_ref,'Independent owner-approved production vacancy intake release after hosted and legal acceptance',jsonb_build_object('before',before_flags,'vacancyId',v.id,'formId',f.id,'exposure',exposure_mode,'edgeOrExposureApproval',edge_acceptance_ref,'deploymentAcceptance',deployment_ref));
+end $vacancy_release$;
+notify pgrst,'reload schema';
+commit;

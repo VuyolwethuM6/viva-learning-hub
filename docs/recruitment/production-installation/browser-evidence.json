@@ -1,0 +1,13 @@
+{
+  "ownerDesktop": "passed",
+  "ownerMobile": "passed",
+  "unauthenticated": 401,
+  "managerAndOfficer": 403,
+  "exactSqlCopyAndDownload": "passed",
+  "postInstallationViewer": "passed",
+  "sourceMigrations": 11,
+  "installationSha256": "b2650d8a1cd526a50b5f0b588d4b78bf85cb7466cb4a898865afc488334f90f4",
+  "privateAnalyticsAbsent": true,
+  "pageErrors": [],
+  "environment": "Loopback synthetic Auth/provider fixture with real application handlers and SQL; no hosted-service acceptance"
+}

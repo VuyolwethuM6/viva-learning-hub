@@ -1,0 +1,18 @@
+-- SEPARATE APPROVAL REQUIRED. Records actual completed acceptance; does not perform the tests.
+-- Approve legal notice/evidence duration through owner Forms and intake first. NO default 90 days.
+begin;
+do $operations_acceptance$
+declare backup_days integer=null; -- Actual approved DB AND Storage recovery/erasure horizon.
+ operator_ref text='__REQUIRED_OPERATOR_REFERENCE__';
+ operations_ref text='__REQUIRED_OPERATIONS_ACCEPTANCE_APPROVAL__';
+ scanner_ref text='__REQUIRED_REAL_SCANNER_ACCEPTANCE_APPROVAL__';
+ accepted_policy text='pdf-v1';
+begin
+ if backup_days is null or backup_days not between 1 and 3650 or operator_ref like '__REQUIRED_%' or operations_ref like '__REQUIRED_%' or scanner_ref like '__REQUIRED_%' then raise exception 'STOP: real operational approvals and backup horizon required';end if;
+ if not exists(select 1 from public.recruitment_settings where singleton and intake_policy_approved_at is not null and case_evidence_days is not null) then raise exception 'Approved actual privacy policy and evidence lifetime required';end if;
+ perform public.recruitment_intake_operate('attest_operations',operator_ref,operations_ref,'Approved DB and Storage backup erasure reconciliation scheduler delivery and recovery acceptance completed',backup_days,null);
+ perform public.recruitment_intake_operate('attest_scanner',operator_ref,scanner_ref,'Real engine definitions PDF malware unavailable and quarantine isolation acceptance completed',null,accepted_policy);
+end $operations_acceptance$;
+commit;
+-- Both RPCs are database-owner-only; no grants to application roles are introduced.
+-- Never use an attestation to stand in for missing real engine/delivery/recovery tests.

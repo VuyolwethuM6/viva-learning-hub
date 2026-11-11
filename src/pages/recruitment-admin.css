@@ -246,3 +246,90 @@
     display: none;
   }
 }
+/* Owner deployment preparation: code is text, never executable markup. */
+.deployment-workspace {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.deployment-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  margin: 1rem 0;
+}
+.deployment-workspace h2 {
+  color: #6a3ab2;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+.deployment-workspace h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+.deployment-workspace h4 {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.deployment-workspace .recruitment-card {
+  margin-bottom: 1rem;
+}
+.deployment-workspace li {
+  margin-bottom: 0.65rem;
+  overflow-wrap: anywhere;
+}
+.deployment-workspace p {
+  margin-bottom: 0.7rem;
+}
+.deployment-hash {
+  font-family: monospace;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.deployment-workspace .deployment-source {
+  background: #21172f;
+  color: #fff;
+  padding: 1rem;
+  border-radius: 0.6rem;
+  max-width: 100%;
+  max-height: 32rem;
+  overflow: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  margin-top: 0.7rem;
+}
+.deployment-source:focus {
+  outline: 3px solid #ff6f00;
+  outline-offset: 2px;
+}
+.deployment-source .sql-comment {
+  color: #b7cab0;
+}
+.deployment-source .sql-string {
+  color: #ffd1aa;
+}
+.deployment-source .sql-keyword {
+  color: #d4b6ff;
+  font-weight: 600;
+}
+.deployment-checklist label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-weight: 400;
+}
+.deployment-checklist input {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+  accent-color: #6a3ab2;
+}
+.deployment-doc-link {
+  color: #6a3ab2;
+  text-decoration: underline;
+  text-align: left;
+  overflow-wrap: anywhere;
+}

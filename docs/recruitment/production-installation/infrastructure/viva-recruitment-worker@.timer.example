@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Viva recruitment %i worker after each completion
+[Timer]
+OnBootSec=45s
+OnUnitInactiveSec=60s
+RandomizedDelaySec=5s
+Unit=viva-recruitment-worker@%i.service
+[Install]
+WantedBy=timers.target
+# Instantiate separately for mail, scan and retention. No overlap of an instance.
+# Never reuse or change the existing accounting schedule.

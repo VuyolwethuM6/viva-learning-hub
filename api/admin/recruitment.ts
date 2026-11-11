@@ -1,5 +1,6 @@
 import { rpc } from "../_lib/admin.js";
 import { handleRecruitmentCases } from "../_lib/recruitment-case-service.js";
+import { handleRecruitmentDeployment } from "../_lib/recruitment-deployment.js";
 import type { ServerResponse } from "node:http";
 import { privateResponse, sameOrigin } from "../_lib/admin.js";
 import {
@@ -46,6 +47,7 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
         "case-documents",
         "case-step-up",
         "case-messages",
+        "deployment",
       ].includes(route)
     )
       throw new HttpError(404, "Recruitment operation unavailable.");
@@ -101,6 +103,8 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
       return sendJson(res, 200, { user });
     }
     const user = await requireRecruitment(req);
+    if (route === "deployment")
+      return await handleRecruitmentDeployment(req, res, user, url);
     if (
       [
         "forms",

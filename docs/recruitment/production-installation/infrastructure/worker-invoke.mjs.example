@@ -1,0 +1,11 @@
+// Operational runner, not a Vercel function. Never prints bearer/header/response bodies.
+// Copy as /opt/viva-recruitment/worker-invoke.mjs only after infrastructure approval.
+const action=process.argv[2],endpoint=process.env.RECRUITMENT_WORKER_ENDPOINT||'',key=process.env.RECRUITMENT_WORKER_KEY||'';
+if(!['mail','scan','retention'].includes(action)||key.length<32||key.includes('__REPLACE'))throw Error('worker_configuration_missing');
+const url=new URL(endpoint);if(url.protocol!=='https:'||url.username||url.password||url.pathname!=='/api/recruitment'||url.search!=='?route=worker'||url.hash)throw Error('worker_endpoint_invalid');
+try{
+ const result=await fetch(url,{method:'POST',headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({action,limit:5}),signal:AbortSignal.timeout(275000),redirect:'error'});
+ // Keep infrastructure diagnostics sanitized. Do not emit provider/API response bodies.
+ if(!result.ok){console.error(JSON.stringify({action,status:result.status,ok:false}));process.exitCode=1;}
+ else console.log(JSON.stringify({action,status:result.status,ok:true}));
+}catch{console.error(JSON.stringify({action,ok:false,error:'worker_transport_failure'}));process.exitCode=1;}

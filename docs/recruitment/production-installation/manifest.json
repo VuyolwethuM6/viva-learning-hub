@@ -1,0 +1,249 @@
+{
+  "status": "PREPARED_PRODUCTION_EXECUTION_REQUIRES_SEPARATE_APPROVAL",
+  "sourceCommit": "a1444b7596cfa062801c6a78f5037527c0bde09c",
+  "sourceSetSha256": "6262989e8a7ce90ce6431e15b0c9f2923dbde84be48079dfc05b50517f6553e3",
+  "sourceMigrations": [
+    {
+      "order": 1,
+      "path": "supabase/migrations/20261109010000_recruitment_foundations.sql",
+      "sha256": "8fd3eb9840e655e0af7db9efcb13dd131f343f3ae4a32c19bd891d3bf90a6eb9",
+      "bytes": 5077
+    },
+    {
+      "order": 2,
+      "path": "supabase/migrations/20261109020000_recruitment_security_operations.sql",
+      "sha256": "3875c5d0d5fffeda8e4ea28ca1eddb77510f8692c4853030d4a91af94ea284b1",
+      "bytes": 13765
+    },
+    {
+      "order": 3,
+      "path": "supabase/migrations/20261109030000_recruitment_access_guards.sql",
+      "sha256": "a4f895bd26026c93125fff072a80336a634ad226e04529fabe223e01a4e4a7db",
+      "bytes": 1854
+    },
+    {
+      "order": 4,
+      "path": "supabase/migrations/20261109040000_recruitment_security_remediation.sql",
+      "sha256": "242292ccce6265b22186ead49be021c8c2f5f4e9f856c4181e640808690e6ed5",
+      "bytes": 27241
+    },
+    {
+      "order": 5,
+      "path": "supabase/migrations/20261109050000_recruitment_vacancies.sql",
+      "sha256": "f5d99995c17fcfcf481e663e18ce09b496456cdd79c8b85c860e80a5a2abf1ab",
+      "bytes": 45818
+    },
+    {
+      "order": 6,
+      "path": "supabase/migrations/20261111010000_recruitment_intake_foundation.sql",
+      "sha256": "77acdaff19f4a621a7e077b61d4f5e419ba9d35dc622d9fea5ae5d021233d795",
+      "bytes": 48513
+    },
+    {
+      "order": 7,
+      "path": "supabase/migrations/20261111020000_recruitment_intake_acceptance.sql",
+      "sha256": "a8076db574006eff3a0b21ee322479ad9821f6158713a934af767347647c5e35",
+      "bytes": 12612
+    },
+    {
+      "order": 8,
+      "path": "supabase/migrations/20261111030000_recruitment_applicants.sql",
+      "sha256": "4c8d6c6e6b9575320ae2bd225f2a6de8bf154dc11f70c9b76b1d6aad35301465",
+      "bytes": 56833
+    },
+    {
+      "order": 9,
+      "path": "supabase/migrations/20261111040000_recruitment_documents_submissions.sql",
+      "sha256": "9ae31e46c4941be654521fcc31d99bb27a44b6ee4687efea7f6fdac2cfcb1369",
+      "bytes": 25927
+    },
+    {
+      "order": 10,
+      "path": "supabase/migrations/20261111050000_recruitment_case_operations.sql",
+      "sha256": "bb7615d2742a91b46c08e9d599f31f71cad5f99c365288bbe6b46fae0d9dd441",
+      "bytes": 42773
+    },
+    {
+      "order": 11,
+      "path": "supabase/migrations/20261111060000_recruitment_runtime_guards.sql",
+      "sha256": "522902502c068465f1e2b174cba11b4c3e9686e3f9b350b8e9881b50f6f8c6f9",
+      "bytes": 35255
+    }
+  ],
+  "runtimeSources": [
+    {
+      "path": "vercel.json",
+      "sha256": "08cf3346c09a17577221f1dfbe1d8e311b35ef745da2e6a7ea5c8119446c03ab",
+      "bytes": 8695
+    },
+    {
+      "path": "package.json",
+      "sha256": "cba2b6c2cf4d944f3c3511394c5c99524f9b7b968c0eed357cc8d6d6db7ce273",
+      "bytes": 3204
+    },
+    {
+      "path": "scripts/recruitment-clamav-gateway.mjs",
+      "sha256": "812e263d104d407822c0aa72df0b24e7286ec3e9f335d9c03ee0d8fd20411cdd",
+      "bytes": 5047
+    },
+    {
+      "path": "scripts/recruitment-erasure-manifest.mjs",
+      "sha256": "f3052758044ff2b3a4db67c52d986575c1b24af5c4bab4ccf661921fba20b4ee",
+      "bytes": 2372
+    },
+    {
+      "path": "api/_lib/recruitment-deployment.ts",
+      "sha256": "30034dc3da9592beb8650e7ffa4abe55417afd5bcefc3a3bb6614846564e3e9c",
+      "bytes": 5644
+    },
+    {
+      "path": "src/components/admin/recruitment/RecruitmentDeploymentWorkspace.tsx",
+      "sha256": "ec0d12f69e67b6e7137393032e0dc2b6111e7ef71188f53e773c586768a3e47e",
+      "bytes": 16690
+    }
+  ],
+  "runtimeSourcesNote": "Hashes describe the packaged worktree; sourceCommit pins only the eleven immutable migration sources. Deploy the final reviewed work commit, including dashboard and wrappers.",
+  "expectedRecruitmentTables": 42,
+  "expectedStorageBucketsBefore": 4,
+  "expectedStorageBucketsAfter": 6,
+  "supabaseMigrationHistoryCreated": false,
+  "productionSqlExecuted": false,
+  "localRehearsalEvidence": "REHEARSAL.md",
+  "files": [
+    {
+      "path": "00-remaining-preflight-read-only.sql",
+      "sha256": "f2e749360921ce784dd6adfa33c85e38ad947e89fd7f95fc172c8d2f2480dfbc",
+      "bytes": 4069
+    },
+    {
+      "path": "00b-storage-policy-authority-read-only.sql",
+      "sha256": "6dcd2d315ec1e12aa3ccec6fe4071073730b0df6231fb099f3dd5e976645fd78",
+      "bytes": 544
+    },
+    {
+      "path": "01-install-m1-through-m3.sql",
+      "sha256": "b2650d8a1cd526a50b5f0b588d4b78bf85cb7466cb4a898865afc488334f90f4",
+      "bytes": 341302
+    },
+    {
+      "path": "02-post-installation-read-only.sql",
+      "sha256": "28332bc25bdd71b5b433a6352cf3c9db5b91c70e29d6f2c81a50e1af9eda9e69",
+      "bytes": 8353
+    },
+    {
+      "path": "03-owner-and-console.sql.template",
+      "sha256": "6697775c4886009cbe62074ae9c040c853a0912d0dc7a81a0b60c56b5a3304fa",
+      "bytes": 1891
+    },
+    {
+      "path": "04-operational-attestations.sql.template",
+      "sha256": "9f865a8fa6b05e032914ed91f450387959a782dfbd0b5d02f6fd1e549d0878bc",
+      "bytes": 1692
+    },
+    {
+      "path": "05-vacancy-pilot-activation.sql.template",
+      "sha256": "7461c886122c98cff4d21d7d36c18492d307a8393a7181afcf7f46455b981cb7",
+      "bytes": 7151
+    },
+    {
+      "path": "06-talent-pool-activation.sql.template",
+      "sha256": "9515074e7b9938cda3d4edaf71daf7be685a54e4c71621b23c2d540f11fe70b9",
+      "bytes": 2487
+    },
+    {
+      "path": "07-emergency-pause.sql.template",
+      "sha256": "a97b09321e463e59e4438ffbc339874188f582aa31d08715b66cd2a215c4b0fd",
+      "bytes": 2161
+    },
+    {
+      "path": "COMPATIBILITY.md",
+      "sha256": "adb39940bc9fa8991aaa79889741d0f7ad2d16adee2a1a9a70de21698ff534e4",
+      "bytes": 4474
+    },
+    {
+      "path": "DEPLOYMENT.md",
+      "sha256": "0e3003a27eecd00aa400d7af084beecf7e9a29d8d6de3645088fb48826ff3f48",
+      "bytes": 15319
+    },
+    {
+      "path": "README.md",
+      "sha256": "ec96f2f01253104bb6bc339ae00b078ac2b2e6679197428639905df852a41ff7",
+      "bytes": 13622
+    },
+    {
+      "path": "REHEARSAL.md",
+      "sha256": "7a002dd7060700300e1e66fa65f287ecd5b18ae1c66267e655ded7dd2ae1dc8d",
+      "bytes": 5529
+    },
+    {
+      "path": "RELEASE-REVIEW.md",
+      "sha256": "de2d1b4014bc617b2cdd5ef1a268e5dbbb08dbd18a99c75b04a3273a15738f72",
+      "bytes": 11401
+    },
+    {
+      "path": "browser-evidence.json",
+      "sha256": "1341813883592878727191dc46110097fee51bc8d84e952bbe19c32f2e614afd",
+      "bytes": 491
+    },
+    {
+      "path": "expected-service-rpcs.json",
+      "sha256": "06e14aff17138e24cf1d90d5abf10fe98b21521b65a7692bea96ed702eb36215",
+      "bytes": 2785
+    },
+    {
+      "path": "infrastructure/application.env.example",
+      "sha256": "77c4409a1687ab45908283c6e66534d16e04684b28870537a5c103cf8011f052",
+      "bytes": 1239
+    },
+    {
+      "path": "infrastructure/clamd-policy.conf.example",
+      "sha256": "b73e48b0589670ab7dd2de1b09baa1903893ff211d945ed7353b3be77c9132c7",
+      "bytes": 737
+    },
+    {
+      "path": "infrastructure/scanner-nginx.conf.example",
+      "sha256": "405211a8ede77b05893e8d72f10514e61accd6dc75bd62362ee8698e278d4cc8",
+      "bytes": 1210
+    },
+    {
+      "path": "infrastructure/scanner.env.example",
+      "sha256": "4d9acb5fa1611f63f6c1c6cccfaebfa090393973f158989e3183eedd3247ee4f",
+      "bytes": 288
+    },
+    {
+      "path": "infrastructure/viva-recruitment-scanner.service.example",
+      "sha256": "468ba5d9df72548dc4d90ad6b38b21c11c8c6f5e41f724f4859c27f84704be67",
+      "bytes": 524
+    },
+    {
+      "path": "infrastructure/viva-recruitment-worker@.service.example",
+      "sha256": "bf23e62704b4bfd053406242c9e1d24dd158eaeef3a7c3caeb54889fc08bedc6",
+      "bytes": 400
+    },
+    {
+      "path": "infrastructure/viva-recruitment-worker@.timer.example",
+      "sha256": "bc93af3dc6f115d0f668a62f53e10ff3856a452b866ceca116a6ee6d39ed5fae",
+      "bytes": 351
+    },
+    {
+      "path": "infrastructure/worker-invoke.mjs.example",
+      "sha256": "3d95a5d35bde854ce0bfd23aa215f8f2de787bc2dd43511f3ca839c1008963e6",
+      "bytes": 1236
+    },
+    {
+      "path": "infrastructure/worker.env.example",
+      "sha256": "5ab998617bb490c928556c12db7c4b06c0a53c210b44eaf744c43e49676851ed",
+      "bytes": 252
+    },
+    {
+      "path": "installer-prechecks.sql.inc",
+      "sha256": "27037d3b5bb14bdc6527586975de102ee0cabedfc108f898db47640bc4b93734",
+      "bytes": 8116
+    },
+    {
+      "path": "rehearsal-evidence.json",
+      "sha256": "048e51e1d554de2b5b7debc446860eb4a1ff4387cb4f4573bfd26b12715d41b6",
+      "bytes": 1538
+    }
+  ]
+}

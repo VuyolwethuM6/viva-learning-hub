@@ -1,0 +1,28 @@
+{
+  "environment": "Disposable network-isolated native Docker PostgreSQL; no production connection",
+  "serverVersion": "17.11 (Debian 17.11-1.pgdg12+2)",
+  "installerSuperuser": "f",
+  "storagePolicyAuthority": "Standard ownership branch; Supabase Supautils delegation remains a hosted acceptance requirement",
+  "sourceMigrations": 11,
+  "recruitmentTables": 42,
+  "preservedLegacyTables": 75,
+  "preservedLegacyData": true,
+  "preservedLegacyTriggersAndIndexes": true,
+  "installationSha256": "b2650d8a1cd526a50b5f0b588d4b78bf85cb7466cb4a898865afc488334f90f4",
+  "sourceSetSha256": "6262989e8a7ce90ce6431e15b0c9f2923dbde84be48079dfc05b50517f6553e3",
+  "placeholderRejected": true,
+  "repeatedInstallRejected": true,
+  "allFiveFlagsRejected": true,
+  "releasePrerequisitesFailClosed": true,
+  "syntheticBootstrapAndAttestationsPassed": true,
+  "syntheticVacancyAndTalentPoolReleasePassed": true,
+  "releaseInterlockBlocksMfaOrScannerDisablement": true,
+  "nativeMultiConnectionIdempotencyAndRevisionRaces": true,
+  "emergencyPausePassed": true,
+  "fullPauseAllowsApprovedRecovery": true,
+  "postInstallationVerification": "All 12 SELECT blocks executed; installer privilege and invariant assertions passed",
+  "limitations": [
+    "Auth API, Storage HTTP, Supautils policy delegation, external email/scanner and Vercel runtime are not simulated as hosted acceptance",
+    "All positive operational approval evidence in this rehearsal is synthetic; actual production services, policies and owner recovery still require acceptance"
+  ]
+}

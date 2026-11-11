@@ -1,0 +1,23 @@
+-- SEPARATE EXECUTION APPROVAL REQUIRED. Owner bootstrap only; not intake activation.
+-- Verify identity/control privately; do not put passwords, MFA seeds or personal details in references.
+begin;
+do $owner_setup$
+declare owner_id uuid=null; -- REPLACE with approved verified Auth UUID, not an email.
+ operator_ref text='__REQUIRED_OPERATOR_REFERENCE__';approval_ref text='__REQUIRED_OWNER_BOOTSTRAP_APPROVAL__';
+begin
+ if owner_id is null or operator_ref like '__REQUIRED_%' or approval_ref like '__REQUIRED_%' then raise exception 'STOP: approved owner identity and real attribution required';end if;
+ perform public.recruitment_bootstrap(owner_id,operator_ref,approval_ref,'Independent approval and identity verification completed for initial production recruitment owner');
+end $owner_setup$;
+commit;
+-- After the separately approved frontend/API deployment, owner can sign in while
+-- staff_console_enabled=false (existing M1 owner exception). Bootstrap does not deploy UI.
+-- In /admin/recruitment use existing fresh-confirmed staff_grant to add a SECOND independent
+-- verified owner. Do not grant either person general Admin, finance or teaching membership.
+-- First test current tutor/admin binding behavior. Only with separate safeguards approval,
+-- use owner Security and governance to enable access safeguards and then staff console.
+-- Canonical M1 safeguards intentionally block new/increased legacy Admin/tutor access;
+-- current established access is retained. This is a reviewed behavior change, not a no-op.
+-- After two-owner TOTP enrollment/recovery is hosted-tested, a protected operator may use
+-- recruitment_operate('lock_safeguards',...) and recruitment_operate('require_owner_mfa',...).
+-- Those are separate approvals; full executable procedure signatures are in
+-- docs/recruitment/owner-recovery-runbook.md. Do not enable MFA before enrollment/recovery tests.
