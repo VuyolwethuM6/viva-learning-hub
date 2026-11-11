@@ -1,6 +1,6 @@
 # Proposed M3 schema and migration dependencies
 
-**Design only. No M3 migration file or live SQL has been created/executed.** Names and grouping below are proposed for implementation after approval. Every migration must be additive, default-off, rehearsed against the existing unified schema and presented separately for live execution approval.
+**Status update: M3.1 has an implemented local-only additive migration.** See [phase-1/architecture-and-contracts.md](phase-1/architecture-and-contracts.md) for the exact thirteen-table foundation, privileges and interlock. No production SQL has been executed. The remaining logical entities and slices below are the original later-phase proposal, not implemented migrations. Every live migration still requires target inspection and separate execution approval.
 
 ## Dependency graph
 

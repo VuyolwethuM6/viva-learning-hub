@@ -1,6 +1,6 @@
 # Milestone 3 technical design — application intake and talent pool
 
-**Status: proposed for approval; not implemented.** Baseline is Milestone 2 at `59613eca0fa4d242d1dcec7d2bc03a3818486227`, followed by focused M2 acceptance fix `e29ef09`. No applicant endpoint, table, bucket, scanner, email job or live flag is introduced by these documents. The existing unified Supabase backend, Node API, staff Auth and recruitment owner authority remain authoritative.
+**Status: conditionally authorized; M3.1 foundation implemented locally only.** Baseline is Milestone 2 at `59613eca0fa4d242d1dcec7d2bc03a3818486227`, followed by focused M2 acceptance fix `e29ef09`. The exact M3.1 contracts and accepted business decisions are in [phase-1/architecture-and-contracts.md](phase-1/architecture-and-contracts.md). The remaining sections describe later phases, not completed functionality. No applicant endpoint, bucket, scanner, email job or live flag has been enabled. The existing unified Supabase backend, Node API, staff Auth and recruitment owner authority remain authoritative.
 
 ## 1. Scope and boundaries
 

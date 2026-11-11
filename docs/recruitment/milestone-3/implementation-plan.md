@@ -1,6 +1,6 @@
 # Proposed M3 implementation sequence and approval decisions
 
-**Not implementation authorization.** M2 acceptance fixes are separate from this design. Do not create M3 tables, endpoints, buckets, scanner deployments, mail jobs or live flags until the design is approved. Do not begin interviews, final hiring, onboarding, compensation or activation.
+**Conditional authorization received for M3.1 only; stop for review before M3.2.** See [phase-1/architecture-and-contracts.md](phase-1/architecture-and-contracts.md) and [phase-1/privacy-and-recovery.md](phase-1/privacy-and-recovery.md) for implemented contracts and remaining launch gates. The owner accepted twelve-month submitted review, thirty-day withdrawal, adult-only eligibility, controlled reapplication, explicit rebase, PDF 10 MiB/eight files/40 MiB and clean-before-submit. Final hiring/rejection remain excluded. The original decision checklist below is historical context; accepted decisions are superseded by those phase-1 contracts. No production SQL, rollout, mail, upload or M3.2 implementation is authorized by this delivery.
 
 ## Required decisions before implementation/launch
 
