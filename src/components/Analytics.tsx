@@ -11,6 +11,7 @@ export default function Analytics() {
 
   useEffect(() => {
     if (
+      location.pathname.startsWith("/recruitment") ||
       location.pathname.startsWith("/admin") ||
       location.pathname.startsWith("/parent") ||
       location.pathname.startsWith("/student") ||
@@ -24,6 +25,7 @@ export default function Analytics() {
   useEffect(() => {
     const trackLink = (event: MouseEvent) => {
       if (
+        window.location.pathname.startsWith("/recruitment") ||
         window.location.pathname.startsWith("/admin") ||
         window.location.pathname.startsWith("/parent") ||
         window.location.pathname.startsWith("/student") ||

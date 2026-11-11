@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run check:vercel",
     "build": "vite build",
     "postbuild": "node scripts/prerender-route-metadata.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "check:vercel": "node scripts/check-vercel-api.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

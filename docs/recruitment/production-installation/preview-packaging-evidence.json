@@ -1,0 +1,82 @@
+{
+  "builder": "@vercel/node@30.0.0",
+  "localOnly": true,
+  "dependencyInstallSkipped": true,
+  "functions": 12,
+  "results": [
+    {
+      "entrypoint": "api/admin/accounting.ts",
+      "fileCount": 214,
+      "runtime": "nodejs",
+      "handler": "api/admin/accounting.js"
+    },
+    {
+      "entrypoint": "api/admin/documents.ts",
+      "fileCount": 202,
+      "runtime": "nodejs",
+      "handler": "api/admin/documents.js"
+    },
+    {
+      "entrypoint": "api/admin/messages.ts",
+      "fileCount": 202,
+      "runtime": "nodejs",
+      "handler": "api/admin/messages.js"
+    },
+    {
+      "entrypoint": "api/admin/records.ts",
+      "fileCount": 214,
+      "runtime": "nodejs",
+      "handler": "api/admin/records.js"
+    },
+    {
+      "entrypoint": "api/admin/session.ts",
+      "fileCount": 212,
+      "runtime": "nodejs",
+      "handler": "api/admin/session.js"
+    },
+    {
+      "entrypoint": "api/enrollment-complete.ts",
+      "fileCount": 9,
+      "runtime": "nodejs",
+      "handler": "api/enrollment-complete.js"
+    },
+    {
+      "entrypoint": "api/enrollment-upload-url.ts",
+      "fileCount": 5,
+      "runtime": "nodejs",
+      "handler": "api/enrollment-upload-url.js"
+    },
+    {
+      "entrypoint": "api/enrollment.ts",
+      "fileCount": 5,
+      "runtime": "nodejs",
+      "handler": "api/enrollment.js"
+    },
+    {
+      "entrypoint": "api/payfast/checkout.ts",
+      "fileCount": 11,
+      "runtime": "nodejs",
+      "handler": "api/payfast/checkout.js"
+    },
+    {
+      "entrypoint": "api/payfast/notify.ts",
+      "fileCount": 17,
+      "runtime": "nodejs",
+      "handler": "api/payfast/notify.js"
+    },
+    {
+      "entrypoint": "api/recruitment.ts",
+      "fileCount": 92,
+      "runtime": "nodejs",
+      "handler": "api/recruitment.js"
+    },
+    {
+      "entrypoint": "api/subject-request.ts",
+      "fileCount": 5,
+      "runtime": "nodejs",
+      "handler": "api/subject-request.js"
+    }
+  ],
+  "typescriptVersion": "5.8.3",
+  "hostedAcceptance": false
+}

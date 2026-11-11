@@ -23,6 +23,10 @@
     "api/admin/records.ts": {
       "includeFiles": "{public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}",
       "maxDuration": 60
+    },
+    "api/recruitment.ts": {
+      "maxDuration": 300,
+      "includeFiles": "{docs/recruitment/production-installation/**,docs/recruitment/owner-recovery-runbook.md,docs/recruitment/milestone-3/operations.md,docs/recruitment/milestone-3/api-and-security.md,docs/recruitment/milestone-3/implementation-report.md}"
     }
   },
   "headers": [
@@ -134,9 +138,96 @@
           "value": "frame-ancestors 'none'"
         }
       ]
+    },
+    {
+      "source": "/admin/recruitment",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/recruitment/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/admin/recruitment/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'none'"
+        }
+      ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/admin/recruitment",
+      "destination": "/api/recruitment?__viva_recruitment=staff"
+    },
+    {
+      "source": "/api/careers",
+      "destination": "/api/recruitment?__viva_recruitment=careers"
+    },
+    {
+      "source": "/recruitment/:path*",
+      "destination": "/index.html"
+    },
     {
       "source": "/api/student",
       "destination": "/api/admin/session?portal=student"
@@ -160,6 +251,10 @@
     {
       "source": "/careers",
       "destination": "/careers/index.html"
+    },
+    {
+      "source": "/careers/:slug",
+      "destination": "/index.html"
     },
     {
       "source": "/services",
@@ -239,6 +334,14 @@
     },
     {
       "source": "/student",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/recruitment",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/recruitment/deployment",
       "destination": "/index.html"
     }
   ],

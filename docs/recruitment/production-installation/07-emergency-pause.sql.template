@@ -1,0 +1,20 @@
+-- APPROVED OPERATIONAL PAUSE. No deletion/down migration or automatic data restore.
+-- Works with original all-off interlock OR reviewed release interlock.
+-- Retention/hold/deletion workers MUST continue; they do not depend on public intake flags.
+begin;
+do $pause$
+declare operator_ref text='__REQUIRED_OPERATOR_REFERENCE__';approval_ref text='__REQUIRED_PAUSE_APPROVAL__';
+ keep_existing_applicant_email boolean=true; -- Includes recovery AND already-queued applicant notifications. False stops all applicant email.
+ before_flags jsonb;
+begin
+ if operator_ref like '__REQUIRED_%' or approval_ref like '__REQUIRED_%' then raise exception 'STOP: actual operator and incident/change approval required';end if;
+ perform 1 from public.recruitment_settings where singleton for update;
+ if not found then raise exception 'Missing recruitment settings';end if;
+ select jsonb_build_object('vacancy',vacancy_intake_enabled,'pool',talent_pool_intake_enabled,'email',applicant_email_enabled,'uploads',document_uploads_enabled,'processing',case_processing_enabled) into before_flags from public.recruitment_settings where singleton;
+ update public.recruitment_settings set vacancy_intake_enabled=false,talent_pool_intake_enabled=false,document_uploads_enabled=false,case_processing_enabled=false,applicant_email_enabled=applicant_email_enabled and keep_existing_applicant_email,revision=revision+1,public_vacancies_generation=public_vacancies_generation+1 where singleton;
+ insert into public.recruitment_operational_events(action,database_actor,operator_reference,approval_reference,reason,details) values('m3_operational_pause',session_user,operator_ref,approval_ref,'Approved pause of public intake uploads and normal case processing; retain privacy operations',jsonb_build_object('before',before_flags,'existingApplicantEmailRetained',keep_existing_applicant_email));
+end $pause$;
+commit;
+-- If pausing before legal/operational approval, email was already false and remains false.
+-- Do not truncate test cases, drop buckets/tables, disable guards or replace production DB
+-- with an old backup. Use normal applicant withdrawal/deletion; holds remain authoritative.

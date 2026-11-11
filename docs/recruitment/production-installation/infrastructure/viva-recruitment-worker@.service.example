@@ -1,0 +1,16 @@
+[Unit]
+Description=Viva recruitment %i worker request
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=oneshot
+User=viva-recruitment
+Group=viva-recruitment
+EnvironmentFile=/etc/viva-recruitment/worker.env
+ExecStart=/usr/bin/node /opt/viva-recruitment/worker-invoke.mjs %i
+TimeoutStartSec=290
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+UMask=0077

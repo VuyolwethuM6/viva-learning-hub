@@ -1,0 +1,401 @@
+.vacancy-workspace {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.vacancy-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.vacancy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.vacancy-actions button {
+  white-space: normal;
+  height: auto;
+}
+.vacancy-workspace button:not([data-state]) {
+  min-height: 44px;
+}
+.vacancy-workspace
+  .vacancy-actions
+  button:not([class*="outline"]):not([class*="ghost"]) {
+  background: #6a3ab2;
+  color: #fff;
+}
+.vacancy-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.vacancy-overview > div {
+  border: 1px solid #e6dff5;
+  background: #faf8fe;
+  border-radius: 16px;
+  padding: 16px;
+}
+.vacancy-overview dt {
+  font-size: 13px;
+  color: #475569;
+}
+.vacancy-overview dd {
+  font-size: 20px;
+  font-weight: 800;
+  margin-top: 6px;
+  color: #6a3ab2;
+}
+.vacancy-filters,
+.vacancy-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.vacancy-filters {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+.vacancy-span {
+  grid-column: 1/-1;
+}
+.vacancy-workspace textarea,
+.vacancy-workspace select,
+.vacancy-review select {
+  min-width: 0;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #94a3b8;
+  border-radius: 10px;
+  min-height: 44px;
+  background: #fff;
+  color: #1a0b2e;
+}
+.vacancy-workspace textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+.vacancy-workspace :is(input, textarea, select, button):focus-visible,
+.vacancy-review :is(input, select, button):focus-visible {
+  outline: 3px solid #6a3ab2;
+  outline-offset: 3px;
+}
+.vacancy-workspace small {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+  font-weight: 400;
+}
+.vacancy-list {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 20px 0;
+  padding: 0;
+}
+.vacancy-list li {
+  margin: 0;
+}
+.vacancy-list button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  text-align: left;
+  padding: 16px;
+  border: 1px solid #e6dff5;
+  border-radius: 16px;
+  background: #fff;
+}
+.vacancy-list button[aria-pressed="true"] {
+  border: 2px solid #6a3ab2;
+  background: #faf8fe;
+  padding: 15px;
+}
+.vacancy-list button > span {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.vacancy-status {
+  border-radius: 14px;
+  background: #f0e9fa;
+  color: #6a3ab2;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.vacancy-empty {
+  padding: 32px 12px;
+  text-align: center;
+  border: 1px dashed #d4c6e8;
+  border-radius: 18px;
+  margin: 20px 0;
+}
+.vacancy-empty h3,
+.vacancy-preview h3 {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.vacancy-preview {
+  margin-top: 20px;
+  overflow-wrap: anywhere;
+}
+.vacancy-preview h4,
+.vacancy-validation h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 24px 0 10px;
+}
+.vacancy-preview p {
+  white-space: pre-wrap;
+}
+.vacancy-preview ul,
+.vacancy-validation ul {
+  padding-left: 22px;
+  list-style: disc;
+}
+.vacancy-preview li {
+  margin: 8px 0;
+}
+.vacancy-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  background: #faf8fe;
+  border-radius: 16px;
+  padding: 16px;
+  margin: 20px 0;
+}
+.vacancy-facts dt {
+  font-weight: 700;
+  font-size: 13px;
+}
+.vacancy-facts dd {
+  color: #475569;
+  white-space: pre-wrap;
+}
+.vacancy-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.vacancy-badges span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #f0e9fa;
+  font-size: 12px;
+  color: #6a3ab2;
+  font-weight: 700;
+}
+.vacancy-info,
+.vacancy-validation {
+  background: #fff7ed;
+  border-left: 4px solid #ff6f00;
+  border-radius: 0 12px 12px 0;
+  padding: 16px;
+  line-height: 1.6;
+}
+.vacancy-info {
+  margin: 16px 0;
+}
+.vacancy-workspace .vacancy-notice {
+  background: #f0fdf4;
+  color: #166534;
+  padding: 16px;
+  border-radius: 12px;
+}
+.vacancy-workspace .vacancy-error {
+  color: #991b1b;
+  background: #fef2f2;
+  padding: 16px;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.vacancy-muted {
+  color: #64748b;
+  font-size: 13px;
+}
+.vacancy-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 24px 0;
+}
+.vacancy-steps li {
+  margin: 0;
+}
+.vacancy-steps button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  background: #f7f5fc;
+  border: 1px solid #e6dff5;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+.vacancy-steps button span {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #6a3ab2;
+  min-width: 24px;
+  min-height: 24px;
+}
+.vacancy-steps button[aria-current="step"] {
+  background: #6a3ab2;
+  color: #fff;
+  border-color: #6a3ab2;
+}
+.vacancy-wizard fieldset {
+  border: 1px solid #e6dff5;
+  padding: 16px;
+  border-radius: 16px;
+  min-width: 0;
+}
+.vacancy-wizard legend {
+  font-size: 15px;
+  font-weight: 700;
+  padding: 0 8px;
+}
+.vacancy-repeat-row {
+  display: grid;
+  gap: 12px;
+  border-bottom: 1px solid #e6dff5;
+  padding: 16px 0;
+  margin-bottom: 16px;
+}
+.vacancy-wizard .vacancy-checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.vacancy-wizard .vacancy-checkbox input {
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+}
+.vacancy-history {
+  border-top: 1px solid #e6dff5;
+  padding-top: 24px;
+  margin-top: 32px;
+}
+.vacancy-history h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.vacancy-history ol {
+  list-style: none;
+  padding: 0;
+}
+.vacancy-history li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #eee7f7;
+  padding: 12px 0;
+}
+.vacancy-history li > div {
+  display: grid;
+  gap: 5px;
+  font-size: 13px;
+}
+.vacancy-history li details {
+  min-width: 0;
+  width: 100%;
+}
+.vacancy-history pre {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.vacancy-assignment-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 16px;
+}
+.vacancy-reason {
+  margin-top: 20px;
+}
+.vacancy-review {
+  max-width: 760px;
+}
+.vacancy-review p {
+  line-height: 1.6;
+}
+.vacancy-review h4 {
+  font-weight: 700;
+}
+.vacancy-review .vacancy-preview {
+  border-top: 1px solid #e6dff5;
+  padding-top: 20px;
+}
+@media (max-width: 760px) {
+  .vacancy-filters,
+  .vacancy-fields,
+  .vacancy-facts,
+  .vacancy-assignment-form {
+    grid-template-columns: 1fr;
+  }
+  .vacancy-overview {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .vacancy-overview > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .vacancy-overview dd {
+    margin: 0;
+    font-size: 17px;
+  }
+  .vacancy-steps {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .vacancy-steps button {
+    min-height: 40px;
+  }
+  .vacancy-list button {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .vacancy-history li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .vacancy-section-heading .vacancy-actions {
+    width: 100%;
+  }
+  .vacancy-actions button {
+    flex-grow: 1;
+  }
+  .vacancy-review {
+    max-width: calc(100vw - 24px);
+  }
+  .vacancy-status {
+    flex-shrink: 1;
+  }
+}

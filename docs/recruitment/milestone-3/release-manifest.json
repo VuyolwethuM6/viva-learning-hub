@@ -1,0 +1,45 @@
+{
+  "acceptedBaseline": "3cf6af5c882305e2ea8777cf5a0646b8e970c0a5",
+  "branch": "work",
+  "productionAuthorized": false,
+  "rolloutFlagsEnabled": false,
+  "retainsM31Interlock": true,
+  "newTables": 12,
+  "totalM3Tables": 25,
+  "migrations": [
+    {
+      "path": "supabase/migrations/20261111010000_recruitment_intake_foundation.sql",
+      "sha256": "77acdaff19f4a621a7e077b61d4f5e419ba9d35dc622d9fea5ae5d021233d795",
+      "status": "accepted prerequisite"
+    },
+    {
+      "path": "supabase/migrations/20261111020000_recruitment_intake_acceptance.sql",
+      "sha256": "a8076db574006eff3a0b21ee322479ad9821f6158713a934af767347647c5e35",
+      "status": "accepted prerequisite"
+    },
+    {
+      "path": "supabase/migrations/20261111030000_recruitment_applicants.sql",
+      "sha256": "4c8d6c6e6b9575320ae2bd225f2a6de8bf154dc11f70c9b76b1d6aad35301465",
+      "status": "new additive, not applied to production"
+    },
+    {
+      "path": "supabase/migrations/20261111040000_recruitment_documents_submissions.sql",
+      "sha256": "9ae31e46c4941be654521fcc31d99bb27a44b6ee4687efea7f6fdac2cfcb1369",
+      "status": "new additive, not applied to production"
+    },
+    {
+      "path": "supabase/migrations/20261111050000_recruitment_case_operations.sql",
+      "sha256": "bb7615d2742a91b46c08e9d599f31f71cad5f99c365288bbe6b46fae0d9dd441",
+      "status": "new additive, not applied to production"
+    },
+    {
+      "path": "supabase/migrations/20261111060000_recruitment_runtime_guards.sql",
+      "sha256": "522902502c068465f1e2b174cba11b4c3e9686e3f9b350b8e9881b50f6f8c6f9",
+      "status": "new additive, not applied to production"
+    }
+  ],
+  "bundle": {
+    "path": "docs/recruitment/milestone-3/migration.sql",
+    "sha256": "e167797b4fd6da59b073e998c5a66813be6ee8b3dcda29270105de9717878e99"
+  }
+}

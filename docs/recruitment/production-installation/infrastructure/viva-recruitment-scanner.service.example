@@ -1,0 +1,20 @@
+[Unit]
+Description=Viva recruitment signed ClamAV gateway
+After=network-online.target clamav-daemon.service
+Wants=network-online.target
+[Service]
+Type=simple
+User=viva-recruitment
+Group=viva-recruitment
+WorkingDirectory=/opt/viva-recruitment
+EnvironmentFile=/etc/viva-recruitment/scanner.env
+ExecStart=/usr/bin/node /opt/viva-recruitment/recruitment-clamav-gateway.mjs
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+UMask=0077
+[Install]
+WantedBy=multi-user.target

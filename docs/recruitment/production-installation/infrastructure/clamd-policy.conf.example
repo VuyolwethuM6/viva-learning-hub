@@ -1,0 +1,20 @@
+# REVIEWED CONFIGURATION FRAGMENT, NOT A COMPLETE DAEMON CONFIG.
+# Merge with the approved distribution's config; validate actual supported directives.
+# Keep existing database/log/socket/user paths appropriate to the host.
+TCPAddr 127.0.0.1
+TCPSocket 3310
+ScanPDF yes
+HeuristicAlerts yes
+AlertEncryptedDoc yes
+AlertExceedsMax yes
+AlertBrokenMedia yes
+StreamMaxLength 11M
+MaxFileSize 11M
+MaxScanSize 100M
+MaxScanTime 30000
+MaxRecursion 16
+MaxFiles 1000
+MaxThreads 2
+# Enable and monitor freshclam/signature updates. Gateway rejects definitions >48 hours old.
+# Real tests must prove detection and fail-closed behavior, including parser/embedded-content
+# and scan-limit cases. A config fragment does not certify detection effectiveness.

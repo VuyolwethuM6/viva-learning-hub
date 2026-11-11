@@ -1,0 +1,335 @@
+.recruitment-shell {
+  min-height: 100vh;
+  background: #f7f5fc;
+  color: #1a0b2e;
+}
+.recruitment-shell > header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e6dff5;
+  background: white;
+}
+.recruitment-shell > header img {
+  object-fit: contain;
+}
+.recruitment-shell > header > span {
+  font-weight: 700;
+  flex: 1;
+}
+.recruitment-main {
+  max-width: 1120px;
+  margin: auto;
+  padding: 32px 20px 64px;
+  display: grid;
+  gap: 24px;
+}
+.recruitment-login {
+  max-width: 520px;
+  padding: 40px 20px;
+  margin: auto;
+}
+.recruitment-card {
+  background: white;
+  border: 1px solid #e6dff5;
+  border-radius: 24px;
+  padding: 24px;
+  min-width: 0;
+  box-shadow: 0 8px 24px #5428cc05;
+}
+.recruitment-card h1,
+.recruitment-title h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 8px 0 16px;
+}
+.recruitment-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.recruitment-card p {
+  line-height: 1.6;
+  margin-bottom: 14px;
+  color: #475569;
+}
+.recruitment-card form,
+.recruitment-review form {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+.recruitment-card label,
+.recruitment-review label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.recruitment-card input,
+.recruitment-card select,
+.recruitment-review input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid #94a3b8;
+  border-radius: 10px;
+  background: white;
+  color: #1a0b2e;
+  min-width: 0;
+}
+.recruitment-card input:focus-visible,
+.recruitment-card select:focus-visible,
+.recruitment-review input:focus-visible {
+  outline: 3px solid #7949fe;
+  outline-offset: 2px;
+}
+.recruitment-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.recruitment-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.recruitment-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  color: #5428cc !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.recruitment-card li {
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.recruitment-note {
+  font-size: 13px;
+  margin-top: 20px;
+}
+.recruitment-warning {
+  padding: 12px;
+  border-left: 4px solid #ff7849;
+  background: #fff7ed;
+  color: #7c2d12 !important;
+}
+.recruitment-facts {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.recruitment-facts dt {
+  font-weight: 700;
+}
+.recruitment-facts dd {
+  color: #475569;
+}
+.recruitment-review {
+  max-height: 90dvh;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.recruitment-review dl {
+  font-size: 14px;
+  display: grid;
+  gap: 8px;
+}
+.recruitment-review dt {
+  font-weight: 700;
+}
+.recruitment-review dd {
+  overflow-wrap: anywhere;
+}
+.recruitment-card pre {
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  background: #f7f5fc;
+  padding: 12px;
+}
+.recruitment-card [role="alert"],
+.recruitment-review [role="alert"] {
+  color: #b91c1c;
+}
+.recruitment-card summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 10px 0;
+}
+.recruitment-card a {
+  color: #5428cc;
+  text-decoration: underline;
+}
+.recruitment-shell button {
+  min-height: 44px;
+}
+@media (max-width: 720px) {
+  .recruitment-grid {
+    grid-template-columns: 1fr;
+  }
+  .recruitment-shell > header {
+    padding: 12px;
+    gap: 12px;
+  }
+  .recruitment-shell > header img {
+    width: 80px;
+  }
+  .recruitment-main {
+    padding: 24px 12px 48px;
+  }
+  .recruitment-card {
+    padding: 20px;
+  }
+  .recruitment-title {
+    align-items: flex-start;
+  }
+  .recruitment-title h1 {
+    font-size: 24px;
+  }
+}
+
+/* Shared private applicant and case workspace controls. */
+.recruitment-card textarea {
+  width: 100%;
+  min-height: 88px;
+  padding: 12px;
+  border: 1px solid #94a3b8;
+  border-radius: 10px;
+  background: white;
+}
+.recruitment-card textarea:focus-visible {
+  outline: 3px solid #7949fe;
+  outline-offset: 2px;
+}
+.recruitment-card input[type="checkbox"] {
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+  accent-color: #6a3ab2;
+}
+.recruitment-card label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 12px;
+}
+.recruitment-card fieldset {
+  min-width: 0;
+}
+.recruitment-card h2,
+.recruitment-card h3 {
+  overflow-wrap: anywhere;
+}
+.recruitment-card details > summary {
+  cursor: pointer;
+  padding: 12px 0;
+  font-weight: 600;
+}
+.recruitment-card dl dd {
+  margin: 0;
+}
+.recruitment-card button {
+  white-space: normal;
+  height: auto;
+  min-height: 44px;
+}
+@media print {
+  .recruitment-shell > header,
+  .recruitment-card button,
+  .recruitment-card details {
+    display: none;
+  }
+}
+/* Owner deployment preparation: code is text, never executable markup. */
+.deployment-workspace {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.deployment-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  margin: 1rem 0;
+}
+.deployment-workspace h2 {
+  color: #6a3ab2;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+.deployment-workspace h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+.deployment-workspace h4 {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.deployment-workspace .recruitment-card {
+  margin-bottom: 1rem;
+}
+.deployment-workspace li {
+  margin-bottom: 0.65rem;
+  overflow-wrap: anywhere;
+}
+.deployment-workspace p {
+  margin-bottom: 0.7rem;
+}
+.deployment-hash {
+  font-family: monospace;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.deployment-workspace .deployment-source {
+  background: #21172f;
+  color: #fff;
+  padding: 1rem;
+  border-radius: 0.6rem;
+  max-width: 100%;
+  max-height: 32rem;
+  overflow: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  margin-top: 0.7rem;
+}
+.deployment-source:focus {
+  outline: 3px solid #ff6f00;
+  outline-offset: 2px;
+}
+.deployment-source .sql-comment {
+  color: #b7cab0;
+}
+.deployment-source .sql-string {
+  color: #ffd1aa;
+}
+.deployment-source .sql-keyword {
+  color: #d4b6ff;
+  font-weight: 600;
+}
+.deployment-checklist label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-weight: 400;
+}
+.deployment-checklist input {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+  accent-color: #6a3ab2;
+}
+.deployment-doc-link {
+  color: #6a3ab2;
+  text-decoration: underline;
+  text-align: left;
+  overflow-wrap: anywhere;
+}

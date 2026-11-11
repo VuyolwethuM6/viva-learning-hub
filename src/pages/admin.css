@@ -984,14 +984,16 @@
   gap: 7px;
   padding-top: 5px;
 }
-.admin-shell .more-sections > button {
+.admin-shell .more-sections > button,
+.admin-shell .more-sections > .recruitment-nav-link {
   width: 100%;
   justify-content: flex-start;
   background: #f7f4fc;
   border: 0;
   padding: 14px;
 }
-.more-sections > button > span:first-of-type {
+.more-sections > button > span:first-of-type,
+.more-sections > .recruitment-nav-link > span:first-of-type {
   flex: 1;
   text-align: left;
 }
@@ -2406,7 +2408,8 @@
     display: grid;
     gap: 4px;
   }
-  .admin-sidebar nav > button {
+  .admin-sidebar nav > button,
+  .admin-sidebar nav > .recruitment-nav-link {
     width: 100%;
     justify-content: flex-start;
     gap: 11px;
@@ -2418,7 +2421,8 @@
     min-height: 44px;
     padding: 10px 12px;
   }
-  .admin-sidebar nav > button > span:first-of-type {
+  .admin-sidebar nav > button > span:first-of-type,
+  .admin-sidebar nav > .recruitment-nav-link > span:first-of-type {
     flex: 1;
   }
   .admin-sidebar nav > button[aria-current="page"] {
