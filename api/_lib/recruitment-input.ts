@@ -53,6 +53,34 @@ const vacancySchemas = {
     .strict(),
 };
 const schemas = {
+  intake_policy: z
+    .object({
+      ...base,
+      noticeVersion: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/),
+      noticeText: z.string().min(100).max(20000),
+      approvalReference: z
+        .string()
+        .regex(/^[A-Za-z0-9][A-Za-z0-9._/-]{2,159}$/),
+      evidenceDays: z.number().int().min(1).max(3650),
+    })
+    .strict(),
+  intake_form_approve: z
+    .object({
+      ...base,
+      purpose: z.enum(["vacancy", "talent_pool"]),
+      vacancyId: z.string().uuid().nullable(),
+      versionId: z.string().uuid().nullable(),
+      noticeVersion: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/),
+    })
+    .strict(),
+  intake_form_bind: z
+    .object({
+      ...base,
+      formId: z.string().uuid(),
+      expectedRevision: revision,
+      enabled: z.boolean(),
+    })
+    .strict(),
   staff_grant: z
     .object({
       ...base,

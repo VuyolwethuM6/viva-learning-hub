@@ -246,9 +246,10 @@ export type PublicVacancy = {
   version: number;
   publishedAt: string;
   availability: "opening_soon" | "open" | "closed";
-  acceptingApplications: false;
+  acceptingApplications: boolean;
 };
 export type PublicVacancyResponse = {
+  talentPoolEnabled?: boolean;
   enabled: boolean;
   generation: number;
   vacancies: PublicVacancy[];

@@ -10,6 +10,8 @@ import {
   type PublicVacancyResponse,
 } from "../src/lib/recruitment-vacancies.js";
 
+import { configured, intakeRpc } from "./_lib/recruitment-intake.js";
+
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const vacancyEnvelope = z.object({
   id: z.string().uuid(),
@@ -143,6 +145,18 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
       total: state.enabled ? state.total : 0,
       nextOffset: state.enabled ? (state.nextOffset as number | null) : null,
     };
+    if (configured()) {
+      const intake = await intakeRpc<{
+        vacancies: Record<string, boolean>;
+        talentPool: boolean;
+      }>("recruitment_public_intake", {
+        p_ids: body.vacancies.map((v) => v.id),
+      });
+      for (const v of body.vacancies)
+        v.acceptingApplications =
+          v.availability === "open" && intake.vacancies[v.id] === true;
+      if (intake.talentPool) body.talentPoolEnabled = true;
+    }
     if (
       category &&
       body.vacancies.some((row) => row.content.category !== category)

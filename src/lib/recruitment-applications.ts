@@ -6,7 +6,7 @@ import {
   type VacancyContent,
 } from "./recruitment-vacancies";
 
-/** M3.1 contracts only. No applicant routes, sessions or intake are enabled. */
+/** Immutable reviewed M3.1 template, reused by the gated M3 intake runtime. */
 export const intakeTemplateVersion = "m3.1-v1" as const;
 export const documentPolicy = {
   mimeTypes: ["application/pdf"],

@@ -138,7 +138,8 @@ export async function recruitmentChange(
   if (
     !result ||
     typeof result !== "object" ||
-    (input.operation.startsWith("vacancy_")
+    (input.operation.startsWith("vacancy_") ||
+    input.operation.startsWith("intake_")
       ? result.saved !== true
       : input.operation === "scope_create"
         ? typeof result.scopeId !== "string"

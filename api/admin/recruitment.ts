@@ -1,4 +1,5 @@
 import { rpc } from "../_lib/admin.js";
+import { handleRecruitmentCases } from "../_lib/recruitment-case-service.js";
 import type { ServerResponse } from "node:http";
 import { privateResponse, sameOrigin } from "../_lib/admin.js";
 import {
@@ -35,6 +36,16 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
         "mutate",
         "recover",
         "vacancies",
+        "forms",
+        "applications",
+        "privacy",
+        "case-stage",
+        "case-reauthenticate",
+        "case-mutate",
+        "case-recover",
+        "case-documents",
+        "case-step-up",
+        "case-messages",
       ].includes(route)
     )
       throw new HttpError(404, "Recruitment operation unavailable.");
@@ -90,6 +101,22 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
       return sendJson(res, 200, { user });
     }
     const user = await requireRecruitment(req);
+    if (
+      [
+        "forms",
+        "applications",
+        "privacy",
+        "case-stage",
+        "case-reauthenticate",
+        "case-mutate",
+        "case-recover",
+        "case-documents",
+        "case-step-up",
+        "case-messages",
+      ].includes(route)
+    ) {
+      return await handleRecruitmentCases(req, res, user, route, url);
+    }
     if (req.method === "GET") {
       if (route === "session") return sendJson(res, 200, { user });
       if (route === "snapshot") return await recruitmentSnapshot(res, user);
@@ -161,7 +188,8 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
     const body = await readJsonBody(req, 131072, "Recruitment security");
     if (
       (typeof body.operation !== "string" ||
-        !body.operation.startsWith("vacancy_")) &&
+        (!body.operation.startsWith("vacancy_") &&
+          body.operation !== "intake_policy")) &&
       Buffer.byteLength(JSON.stringify(body)) > 8192
     )
       throw new HttpError(413, "Request body is too large.");

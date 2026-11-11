@@ -61,6 +61,9 @@ export type RecruitmentOperation =
   | "scope_create"
   | "scope_grant"
   | "settings"
+  | "intake_policy"
+  | "intake_form_approve"
+  | "intake_form_bind"
   | VacancyOperation;
 export type RecruitmentChoices = Record<string, unknown> & {
   requestId: string;
