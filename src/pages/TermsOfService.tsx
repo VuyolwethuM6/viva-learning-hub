@@ -1,4 +1,4 @@
-import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { ContactButton } from "@/components/ContactButton";
 import { motion } from "framer-motion";
 import { TopBar, StickyHeader } from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -368,7 +368,7 @@ export default function TermsOfService() {
                 Read these terms together with our{" "}
                 <a href="/privacy-policy" className="font-semibold text-[#5a4ecf] underline-offset-2 hover:underline">Privacy Policy</a>.
                 {" "}For questions about our services or these terms, please{" "}
-                <WhatsAppButton message="Hello Viva Tutorials, I have a question about your tutoring terms.">WhatsApp Viva</WhatsAppButton>.
+                <ContactButton>Contact us</ContactButton>.
               </p>
             </aside>
           </div>
@@ -380,7 +380,7 @@ export default function TermsOfService() {
             <p className="mx-auto mb-7 max-w-2xl text-base leading-7 text-white/70 sm:text-lg">
               Contact Viva Tutorials if you have a question about our tutoring services, packages, or policies.
             </p>
-            <WhatsAppButton message="Hello Viva Tutorials, I have a question about your tutoring terms.">WhatsApp Viva</WhatsAppButton>
+            <ContactButton>Contact us</ContactButton>
           </div>
         </section>
       </main>

@@ -1,5 +1,4 @@
-import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { whatsappHref } from "@/lib/whatsapp";
+import { ContactButton } from "@/components/ContactButton";
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Facebook, Twitter, Linkedin, Youtube, ArrowUp } from 'lucide-react';
@@ -9,25 +8,25 @@ export default function Footer() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const footerLinks: Record<string, { name: string; href?: string; message?: string }[]> = {
+  const footerLinks: Record<string, { name: string; href: string }[]> = {
     services: [
       { name: "In-Person Tutoring", href: "/services" },
       { name: "Mobile Learning", href: "/services" },
       { name: "Mentor Support", href: "/services" },
       { name: "Exam Prep", href: "/services" },
-      { name: "Holiday Classes", message: "Hello Viva Tutorials, I would like assistance with holiday classes." }
+      { name: "Holiday Classes", href: "/contact" }
     ],
     subjects: [
       { name: "Mathematics", href: "/mathematics" },
       { name: "Physical Sciences", href: "/physical-science" },
       { name: "Life Sciences", href: "/life-sciences" },
       { name: "Accounting", href: "/accounting" },
-      { name: "Economics", message: "Hello Viva Tutorials, I would like assistance with economics." }
+      { name: "Economics", href: "/contact" }
     ],
     company: [
       { name: "About Us", href: "/about" },
       { name: "Our Tutors", href: "/tutors" },
-      { name: "Locations", message: "Hello Viva Tutorials, I would like assistance with locations." },
+      { name: "Locations", href: "/contact" },
       { name: "Success Stories", href: "/success-stories" },
       { name: "Careers", href: "/careers" }
     ]
@@ -72,7 +71,7 @@ export default function Footer() {
             
             {/* Contact Info */}
             <div className="space-y-3">
-              <WhatsAppButton />
+              <ContactButton />
               <div className="flex items-center gap-3 text-slate-400">
                 <Phone className="w-4 h-4 text-violet-400" />
                 <a href="tel:+27733913206" className="hover:text-white">+27 73 391 3206</a>
@@ -108,9 +107,7 @@ export default function Footer() {
               {footerLinks.services.map((link, index) => (
                 <li key={index}>
                   <a
-                    href={link.message ? whatsappHref(link.message) : link.href}
-                    target={link.message ? "_blank" : undefined}
-                    rel={link.message ? "noopener noreferrer" : undefined}
+                    href={link.href}
                     className="text-slate-400 hover:text-violet-400 transition-colors"
                   >
                     {link.name}
@@ -126,9 +123,7 @@ export default function Footer() {
               {footerLinks.subjects.map((link, index) => (
                 <li key={index}>
                   <a
-                    href={link.message ? whatsappHref(link.message) : link.href}
-                    target={link.message ? "_blank" : undefined}
-                    rel={link.message ? "noopener noreferrer" : undefined}
+                    href={link.href}
                     className="text-slate-400 hover:text-violet-400 transition-colors"
                   >
                     {link.name}
@@ -144,9 +139,7 @@ export default function Footer() {
               {footerLinks.company.map((link, index) => (
                 <li key={index}>
                   <a
-                    href={link.message ? whatsappHref(link.message) : link.href}
-                    target={link.message ? "_blank" : undefined}
-                    rel={link.message ? "noopener noreferrer" : undefined}
+                    href={link.href}
                     className="text-slate-400 hover:text-violet-400 transition-colors"
                   >
                     {link.name}

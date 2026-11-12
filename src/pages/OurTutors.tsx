@@ -1,4 +1,4 @@
-import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { ContactButton } from "@/components/ContactButton";
 import { motion } from 'framer-motion';
 import { Star, Award, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -201,7 +201,7 @@ export default function OurTutors() {
           <p className="text-white/60 text-lg mb-8 max-w-2xl mx-auto">
             Connect with our expert tutors and start your journey to academic excellence.
           </p>
-          <WhatsAppButton message="Hello Viva Tutorials, I would like help choosing a tutor.">Schedule Your Session</WhatsAppButton>
+          <ContactButton href="/enroll">Enrol now</ContactButton>
         </div>
       </section>
 

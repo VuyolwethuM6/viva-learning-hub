@@ -5,7 +5,7 @@ import "./whatsapp-button.css";
 
 export function WhatsAppButton({
   message,
-  children = "WhatsApp Viva",
+  children = "Chat on WhatsApp",
   className = "",
   onClick,
 }: {

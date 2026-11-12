@@ -73,8 +73,8 @@
   "runtimeSources": [
     {
       "path": "vercel.json",
-      "sha256": "ca9862202840f3696d9b21cc334421a1d17f59370aef1525fd6933abc551bb4e",
-      "bytes": 8887
+      "sha256": "703155fdaae9d44f12dd30a6f1ddb58476bf502aadefe7dbb8dd340ab8a8e606",
+      "bytes": 8788
     },
     {
       "path": "package.json",

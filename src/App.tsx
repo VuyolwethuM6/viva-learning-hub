@@ -10,7 +10,6 @@ import { lazy, Suspense } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import RouteMetadata from "./components/RouteMetadata";
 import Analytics from "./components/Analytics";
-import { WhatsAppRedirect } from "./components/WhatsAppRedirect";
 
 const Student = lazy(() => import("./pages/Student"));
 const Tutor = lazy(() => import("./pages/Tutor"));
@@ -21,6 +20,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/About"));
 const RecruitmentApplicant = lazy(() => import("./pages/RecruitmentApplicant"));
 const RecruitmentAdmin = lazy(() => import("./pages/RecruitmentAdmin"));
+const Contact = lazy(() => import("./pages/Contact"));
 const Careers = lazy(() => import("./pages/Careers"));
 const VacancyDetail = lazy(() => import("./pages/VacancyDetail"));
 const Services = lazy(() => import("./pages/Services"));
@@ -80,7 +80,7 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
           <Route path="/careers/:slug" element={<VacancyDetail />} />
           <Route path="/services" element={<Services />} />
           <Route path="/pricing" element={<Pricing />} />
-          <Route path="/contact" element={<WhatsAppRedirect />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/enroll" element={<Enrollment />} />
           <Route path="/admin" element={<Admin />} />
           <Route

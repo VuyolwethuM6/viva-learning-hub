@@ -1,4 +1,4 @@
-import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { ContactButton } from "@/components/ContactButton";
 import { useState, useEffect } from "react";
 import { motion } from 'framer-motion';
 import { CheckCircle, Target, Heart, Zap } from 'lucide-react';
@@ -81,7 +81,7 @@ export default function About() {
             </motion.div>
 
             {/* CTA */}
-            <WhatsAppButton message="Hello Viva Tutorials, I would like to know more about your tutoring programmes." className="mt-6">Get Started Today</WhatsAppButton>
+            <ContactButton href="/enroll" className="mt-6">Enrol now</ContactButton>
           </div>
         </section>
 
@@ -215,7 +215,7 @@ export default function About() {
             <p className="text-white/60 text-lg mb-8 max-w-2xl mx-auto">
               Join hundreds of students achieving their goals with Viva Tutorials.
             </p>
-            <WhatsAppButton message="Hello Viva Tutorials, I would like to know more about your tutoring programmes.">Get Started Today</WhatsAppButton>
+            <ContactButton href="/enroll">Enrol now</ContactButton>
           </div>
         </section>
 

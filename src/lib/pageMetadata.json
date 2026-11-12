@@ -78,5 +78,9 @@
     "title": "Payment Cancelled | Viva Tutorials",
     "description": "Your Viva Tutorials payment was not completed.",
     "indexable": false
+  },
+  "/contact": {
+    "title": "Contact Viva Tutorials | Tutoring Enquiries and Support",
+    "description": "Contact Viva Tutorials about tutoring, fees, enrollment and portal support. Reach our team by email, phone or WhatsApp in Mfuleni, Cape Town, and online."
   }
 }

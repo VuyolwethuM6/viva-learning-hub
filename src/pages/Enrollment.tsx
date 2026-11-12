@@ -1036,7 +1036,7 @@ export default function Enrollment() {
                 <p className="mt-5 text-xs leading-5 text-slate-500">Save or print this confirmation for your records. It contains personal information, so keep it private. This page is not a learner portal and is not saved after you leave or refresh.</p>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row print:hidden">
                   <Button type="button" onClick={() => window.print()} variant="secondary" className="min-h-12 rounded-xl">Print confirmation</Button>
-                  <WhatsAppButton message="Hello Viva Tutorials, I need help with an enrollment application.">WhatsApp Viva</WhatsAppButton>
+                  <WhatsAppButton message="Hello Viva Tutorials, I need help with an enrollment application.">Get help on WhatsApp</WhatsAppButton>
                   <a href="/" className="inline-flex min-h-12 items-center justify-center px-3 text-sm font-semibold text-violet-700 underline">Back to home</a>
                 </div>
               </section>

@@ -1,4 +1,4 @@
-import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { ContactButton } from "@/components/ContactButton";
 import { motion } from 'framer-motion';
 import { CheckCircle, Target, Award, Users, BookOpen, Clock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -96,7 +96,7 @@ export default function LifeSciences() {
       <section className="py-20 px-6 bg-[#1a0b2e] rounded-[3rem] mx-6 md:mx-24">
         <div className="text-center">
           <h2 className="text-4xl font-bold text-white mb-6">Master Life Sciences</h2>
-          <WhatsAppButton message="Hello Viva Tutorials, I would like to enquire about Life Sciences tutoring.">Book Your Tutor</WhatsAppButton>
+          <ContactButton href="/enroll">Enrol now</ContactButton>
         </div>
       </section>
 

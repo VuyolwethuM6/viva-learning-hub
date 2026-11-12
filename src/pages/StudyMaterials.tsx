@@ -1,4 +1,4 @@
-import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { ContactButton } from "@/components/ContactButton";
 import { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
@@ -277,14 +277,14 @@ export default function StudyMaterials() {
                 </p>
                 <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
                   <button type="button" onClick={clearFilters} className="min-h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Clear filters</button>
-                  <WhatsAppButton message="Hello Viva Tutorials, I need help choosing or requesting study materials.">Request a resource</WhatsAppButton>
+                  <ContactButton>Request a resource</ContactButton>
                 </div>
               </div>
             )}
 
             <div className="flex flex-col gap-4 border-t border-slate-200 py-6 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-slate-600">Need help choosing a resource?</p>
-              <WhatsAppButton message="Hello Viva Tutorials, I need help choosing or requesting study materials.">Contact Viva Tutorials <ArrowRight className="h-4 w-4" /></WhatsAppButton>
+              <ContactButton>Contact Viva Tutorials</ContactButton>
             </div>
           </section>
         </main>

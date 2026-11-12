@@ -265,6 +265,10 @@
       "destination": "/pricing/index.html"
     },
     {
+      "source": "/contact",
+      "destination": "/contact/index.html"
+    },
+    {
       "source": "/enroll",
       "destination": "/enroll/index.html"
     },
@@ -351,11 +355,5 @@
       "schedule": "5 6 * * *"
     }
   ],
-  "redirects": [
-    {
-      "source": "/contact",
-      "destination": "https://wa.me/27733913206?text=Hello%20Viva%20Tutorials%2C%20I%20would%20like%20assistance.",
-      "permanent": true
-    }
-  ]
+  "redirects": []
 }

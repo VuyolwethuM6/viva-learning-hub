@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Mail, MapPin, Menu, Phone, X } from "lucide-react";
 import { FaFacebook, FaTiktok, FaYoutube } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
-import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { ContactButton } from "@/components/ContactButton";
 
 const navItems = [
   { label: "Home", path: "/" },
@@ -136,7 +136,7 @@ export const StickyHeader = () => {
                 <span className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#7949fe] transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
-            <WhatsAppButton />
+            <ContactButton />
           </nav>
 
           <div className="hidden items-center gap-4 lg:flex">
@@ -222,7 +222,7 @@ export const StickyHeader = () => {
                       {item.label}
                     </a>
                   ))}
-                  <WhatsAppButton onClick={() => setIsMobileMenuOpen(false)} />
+                  <ContactButton onClick={() => setIsMobileMenuOpen(false)} />
                 </nav>
 
                 <div className="mt-8 space-y-4 border-t border-gray-200 pt-8">
