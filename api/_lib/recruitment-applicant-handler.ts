@@ -1,3 +1,6 @@
+import { handleLifecycleCancel } from "./recruitment-lifecycle-recovery.js";
+import { recruitmentLifecycle } from "./recruitment-lifecycle-worker.js";
+import { handleApplicantEngagement } from "./recruitment-engagement.js";
 import type { ServerResponse } from "node:http";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -77,6 +80,8 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
         "documents",
         "messages",
         "worker",
+        "selection",
+        "engagement",
       ].includes(route)
     )
       throw new IntakeError("case_unavailable", 404);
@@ -86,7 +91,7 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
       workerAuthorized(req);
       const body = z
         .object({
-          action: z.enum(["mail", "scan", "retention"]),
+          action: z.enum(["mail", "scan", "retention", "lifecycle"]),
           limit: z.number().int().min(1).max(10).default(5),
         })
         .strict()
@@ -94,7 +99,9 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
       return sendJson(
         res,
         200,
-        body.action === "mail"
+        body.action === "lifecycle"
+          ? await recruitmentLifecycle(body.limit)
+          : body.action === "mail"
           ? await recruitmentMail(body.limit)
           : body.action === "scan"
             ? await recruitmentScan()
@@ -176,6 +183,15 @@ export default async function handler(req: ApiRequest, res: ServerResponse) {
       return sendJson(res, 202, result);
     }
     const hash = applicantHash(req);
+    if (route === "engagement") return await handleApplicantEngagement(req, res, hash, url);
+    if (route === "selection") {
+      if (req.method === "GET") { const requestId=url.searchParams.get("requestId"); return sendJson(res, 200, await intakeRpc(requestId ? "recruitment_selection_applicant_recover" : "recruitment_selection_applicant", { p_hash: hash, ...(requestId ? { p_request:id.parse(requestId) } : {}) })); }
+      if (req.method !== "POST") throw new IntakeError("method_not_allowed", 405);
+      const input=await readJsonBody(req,4096,"Interview response");
+      if(input.action === "cancel_pending") return await handleLifecycleCancel(req,res,hash,"selection",input);
+      const d = z.object({requestId:id,interviewId:id,response:z.enum(["confirmed","reschedule_requested"])}).strict().parse(input);
+      return sendJson(res,200,await intakeRpc("recruitment_selection_response",{p_hash:hash,d}));
+    }
     if (route === "messages" && req.method === "GET")
       return sendJson(
         res,
