@@ -69,6 +69,7 @@ A	docs/recruitment/milestone-4-5/visual/vacancies-320.png
 A	docs/recruitment/milestone-4-5/visual/vacancies-375.png
 A	docs/recruitment/milestone-4-5/visual/vacancies-768.png
 M	docs/recruitment/production-installation/manifest.json
+M	scripts/check-vercel-api.mjs
 A	scripts/recruitment-lifecycle-ui-browser.py
 A	scripts/recruitment-m45-package.mjs
 A	scripts/recruitment-ui-browser-review.py
@@ -98,9 +99,12 @@ A	src/test/recruitment-lifecycle-worker.test.ts
 A	src/test/recruitment-m45-package.test.ts
 A	src/test/recruitment-offer-document.test.ts
 A	src/test/recruitment-onboarding-documents.test.ts
+M	src/test/recruitment-production-package.test.ts
 A	src/test/recruitment-selection-api.test.ts
 A	src/test/recruitment-selection-database.test.ts
 A	src/test/recruitment-selection-ui.test.tsx
+A	src/test/vercel-bundled-assets.test.ts
+M	src/test/vercel-recruitment-routing.test.ts
 A	supabase/migrations/20261115010000_recruitment_selection.sql
 A	supabase/migrations/20261115020000_recruitment_engagement.sql
 A	supabase/migrations/20261115025000_recruitment_onboarding_documents.sql

@@ -73,8 +73,8 @@
   "runtimeSources": [
     {
       "path": "vercel.json",
-      "sha256": "6b2528ee64af3b0c585a631d933f64d4d53d557371e2eabf162885e50d5066ec",
-      "bytes": 8993
+      "sha256": "6f0ffb9164855bec7cd9e8a8cdec48ea4f310f8b5a34296c26cc35dd9809161e",
+      "bytes": 8867
     },
     {
       "path": "package.json",
@@ -93,8 +93,8 @@
     },
     {
       "path": "scripts/check-vercel-api.mjs",
-      "sha256": "69d303f17c954b813d85faaadea3ce917b91166ebedbd0af6ad2fc4ef1eac36f",
-      "bytes": 1678
+      "sha256": "5628a2c3dd708051924291b3652422410ee476ced6c48d74ad9569260917dd96",
+      "bytes": 2130
     },
     {
       "path": "scripts/recruitment-clamav-gateway.mjs",

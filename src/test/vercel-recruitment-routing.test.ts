@@ -1,3 +1,4 @@
+import { matchesGlob } from "node:path";
 // @vitest-environment node
 import { beforeEach, expect, it, vi } from "vitest";
 import { Readable } from "node:stream";
@@ -122,9 +123,7 @@ it("keeps the actual Vercel rewrites narrow and the recruitment worker duration 
     destination: "/api/recruitment?__viva_recruitment=careers",
   });
   expect(config.functions["api/recruitment.ts"].maxDuration).toBe(300);
-  expect(config.functions["api/recruitment.ts"].includeFiles).toContain(
-    "docs/recruitment/production-installation/**",
-  );
+  expect(matchesGlob("docs/recruitment/production-installation/manifest.json", config.functions["api/recruitment.ts"].includeFiles)).toBe(true);
   const pkg = JSON.parse(readFileSync("package.json", "utf8"));
   expect(pkg.scripts.prebuild).toBe("npm run check:vercel");
 });
