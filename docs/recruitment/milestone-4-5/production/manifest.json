@@ -1,0 +1,221 @@
+{
+  "status": "PREPARED_INCREMENTAL_EXECUTION_REQUIRES_SEPARATE_APPROVAL",
+  "baselineSourceSetSha256": "6262989e8a7ce90ce6431e15b0c9f2923dbde84be48079dfc05b50517f6553e3",
+  "sourceSetSha256": "6fd2750319dcb4af826b5ea98c6a5231f55baf1fcc53fefac38fa1c0c1477cd6",
+  "localSchemaBaseline": "supabase/schema.sql (M1–M3); apply sourceMigrations in order for M4/M5",
+  "installationMode": "incremental-on-populated-M1-M3-only",
+  "executionApprovalRequired": true,
+  "sourceMigrations": [
+    {
+      "order": 1,
+      "path": "supabase/migrations/20261115010000_recruitment_selection.sql",
+      "bytes": 45171,
+      "sha256": "e50393e253cd245b9ee736ad3f8aad1da306370754f0de43d78c903a5c156e68"
+    },
+    {
+      "order": 2,
+      "path": "supabase/migrations/20261115020000_recruitment_engagement.sql",
+      "bytes": 58922,
+      "sha256": "6cfa200dad4fcdf84c9dbcea0fb3b9dc8c83bc6b94c3979c3d19e3c0a2f0beb6"
+    },
+    {
+      "order": 3,
+      "path": "supabase/migrations/20261115025000_recruitment_onboarding_documents.sql",
+      "bytes": 20551,
+      "sha256": "815edb89a7ae80c3e0a2c8749fd3b240887f5f561886e5886da1f19b9ec61343"
+    },
+    {
+      "order": 4,
+      "path": "supabase/migrations/20261115030000_recruitment_lifecycle_workers.sql",
+      "bytes": 18633,
+      "sha256": "c7d6462d7f319f0962b4ad486de583f0b17a981a5b21997594d83345557d9e89"
+    },
+    {
+      "order": 5,
+      "path": "supabase/migrations/20261115040000_recruitment_lifecycle_recovery.sql",
+      "bytes": 8006,
+      "sha256": "b30eeb2171342d8a37737a582976a9c63c0d6a1cab8962f5001e0df18b6d85fe"
+    }
+  ],
+  "guardedFunctions": [
+    {
+      "name": "accounting_document_data",
+      "sha256": "ec5ea4629543c57aa8dd51e9d9c763619a6dea83bb4cf7b69071ea96cd066acc"
+    },
+    {
+      "name": "accounting_export_rows",
+      "sha256": "beba3b95f78c9f565ea1ca2b54e6c4c534ab51a4b2d75211bd492410d0caf86a"
+    },
+    {
+      "name": "accounting_snapshot",
+      "sha256": "13b1a8b66fc0d73368203979f91890914a00da048bba8ddb755926b753d073d9"
+    },
+    {
+      "name": "recruitment_discard_complete",
+      "sha256": "f78063ceb2a1d5e25eca62f1513d50d6939fd995598254afeeacfa63df1cc3e0"
+    },
+    {
+      "name": "recruitment_discarded_documents",
+      "sha256": "892a2dfb855bfe1ed6786fb03739acaa0e93418afb18f01c83327ebbac1b2fb2"
+    },
+    {
+      "name": "recruitment_document_mutate",
+      "sha256": "25247b0540ca769603c36cc758d53d27ed9b9b8c5bdaefeb652a79cd03ddbcd8"
+    },
+    {
+      "name": "recruitment_guard_access",
+      "sha256": "697303667e37399c321126f5688b54304089d5c81ef33908f5a553674bfa1699"
+    },
+    {
+      "name": "recruitment_guard_case",
+      "sha256": "3f436ad599c8ebf6ac08df6f2dbfb35577aa957fe715040ecfae78b1a82acfe0"
+    },
+    {
+      "name": "recruitment_mail_authorize",
+      "sha256": "be1bd94d2991023e7ad1e9438d6df84dbe626c0b383d7354ac4c228288f86b00"
+    },
+    {
+      "name": "recruitment_scan_claim",
+      "sha256": "282c558d2622af1f239cf3a4c49eb9eaab92f8b15617aac6028fa73a27362c7d"
+    },
+    {
+      "name": "recruitment_scan_complete",
+      "sha256": "fb66d9f081cdf3efdc1898d95f7c902361618878787ffba07ee332c0163907ec"
+    },
+    {
+      "name": "recruitment_scan_promote",
+      "sha256": "ca97dd3daf62f741679455fc53eb872256cfa9133da910b688cc2343a6c4f06c"
+    },
+    {
+      "name": "recruitment_snapshot",
+      "sha256": "44b079966837469a8cc602d53ba66ae8c3051cd7ce488afb2f7de140cc42333c"
+    }
+  ],
+  "newTables": [
+    "recruitment_agreement_acceptances",
+    "recruitment_agreement_templates",
+    "recruitment_engagement_cases",
+    "recruitment_engagement_events",
+    "recruitment_engagement_requests",
+    "recruitment_lifecycle_cancellations",
+    "recruitment_lifecycle_notifications",
+    "recruitment_offer_versions",
+    "recruitment_offers",
+    "recruitment_onboarding_document_links",
+    "recruitment_onboarding_tasks",
+    "recruitment_selection_assessment_results",
+    "recruitment_selection_assessments",
+    "recruitment_selection_cases",
+    "recruitment_selection_confirmations",
+    "recruitment_selection_decisions",
+    "recruitment_selection_evaluations",
+    "recruitment_selection_events",
+    "recruitment_selection_interview_history",
+    "recruitment_selection_interviews",
+    "recruitment_selection_recommendations",
+    "recruitment_selection_requests",
+    "recruitment_selection_screenings",
+    "recruitment_staff_engagements",
+    "recruitment_tutor_session_payments"
+  ],
+  "expectedServiceRpcs": [
+    "public.recruitment_applicant_documents(text)",
+    "public.recruitment_applicant_logout(text)",
+    "public.recruitment_applicant_messages(text)",
+    "public.recruitment_applicant_mutate(text,text,jsonb,text,integer)",
+    "public.recruitment_applicant_read(text,uuid)",
+    "public.recruitment_applicant_reply(text,jsonb,text,integer)",
+    "public.recruitment_case_mutate(uuid,text,text,jsonb,text,text,integer,text)",
+    "public.recruitment_case_prepare(uuid,text,text,text,jsonb,text,text,text)",
+    "public.recruitment_case_recover(uuid,uuid)",
+    "public.recruitment_case_stage(uuid,text,uuid,integer,text,jsonb,text)",
+    "public.recruitment_cases_read(uuid,uuid,text,text,timestamptz,uuid,text)",
+    "public.recruitment_context(uuid)",
+    "public.recruitment_deletion_claim(uuid)",
+    "public.recruitment_deletion_complete(uuid,uuid,boolean)",
+    "public.recruitment_discard_complete(uuid)",
+    "public.recruitment_discarded_documents()",
+    "public.recruitment_document_access(text,uuid,uuid,text)",
+    "public.recruitment_document_mutate(text,text,jsonb,text,integer)",
+    "public.recruitment_email_exchange(uuid,text,text,text)",
+    "public.recruitment_email_inspect(uuid,text)",
+    "public.recruitment_email_request(jsonb,uuid,text,text,integer,jsonb,text,text,text)",
+    "public.recruitment_engagement_applicant(text,text,jsonb)",
+    "public.recruitment_engagement_mutate(uuid,text,jsonb,text)",
+    "public.recruitment_engagement_personnel_list(uuid,text)",
+    "public.recruitment_engagement_personnel_read(uuid,uuid,text)",
+    "public.recruitment_engagement_read(uuid,uuid,text)",
+    "public.recruitment_engagement_recover(uuid,uuid,uuid,text)",
+    "public.recruitment_erasure_checked(uuid)",
+    "public.recruitment_erasure_manifest()",
+    "public.recruitment_form_read(text,text)",
+    "public.recruitment_intake_count(text,integer,integer)",
+    "public.recruitment_intake_workspace(uuid)",
+    "public.recruitment_issue_challenge(uuid,text,text,jsonb,text,text)",
+    "public.recruitment_lifecycle_cancel(text,uuid,uuid,text,text)",
+    "public.recruitment_lifecycle_summary(uuid,text)",
+    "public.recruitment_lifecycle_tick(integer)",
+    "public.recruitment_mail_authorize(uuid,uuid)",
+    "public.recruitment_mail_claim(uuid)",
+    "public.recruitment_mail_complete(uuid,uuid,boolean,text)",
+    "public.recruitment_messages_page(text,uuid,uuid,timestamptz,uuid,text)",
+    "public.recruitment_mutate(uuid,text,jsonb,text,text,text)",
+    "public.recruitment_policy_read()",
+    "public.recruitment_privacy_command(text,text,jsonb,text,integer)",
+    "public.recruitment_privacy_read(uuid,uuid,text)",
+    "public.recruitment_public_intake(uuid[])",
+    "public.recruitment_public_vacancies(text,integer,text)",
+    "public.recruitment_rate_limit(text,integer)",
+    "public.recruitment_reapply(text,jsonb,text,text,integer)",
+    "public.recruitment_receipt(text)",
+    "public.recruitment_recover_request(uuid,uuid)",
+    "public.recruitment_retention_prune()",
+    "public.recruitment_retention_schedule()",
+    "public.recruitment_scan_claim(uuid)",
+    "public.recruitment_scan_complete(uuid,uuid,jsonb)",
+    "public.recruitment_scan_promote(uuid,uuid)",
+    "public.recruitment_selection_applicant(text)",
+    "public.recruitment_selection_applicant_recover(text,uuid)",
+    "public.recruitment_selection_mutate(uuid,uuid,text,jsonb,text,text,text)",
+    "public.recruitment_selection_prepare(uuid,uuid,text,jsonb,text,text,text)",
+    "public.recruitment_selection_read(uuid,uuid,text,text,text,integer,uuid)",
+    "public.recruitment_selection_recover(uuid,uuid,text)",
+    "public.recruitment_selection_response(text,jsonb)",
+    "public.recruitment_selection_summary(uuid,text)",
+    "public.recruitment_snapshot(uuid)",
+    "public.recruitment_submit(text,jsonb,text,integer)",
+    "public.recruitment_vacancy_workspace(uuid,uuid,integer,integer,text,text,text)",
+    "public.recruitment_worker_settings()"
+  ],
+  "newFlags": [
+    "selection_enabled",
+    "onboarding_enabled",
+    "activation_enabled"
+  ],
+  "productionSqlExecuted": false,
+  "liveFeatureFlagsChanged": false,
+  "environmentVariablesChanged": false,
+  "supabaseMigrationHistoryCreated": false,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 6710,
+      "sha256": "1bd1d136764a44791870c4e542aa8600c3b694200d99051e56e83ca3c542cdcd"
+    },
+    {
+      "path": "preflight.sql",
+      "bytes": 2189,
+      "sha256": "50db2059bb0790f3fabe35496131ee757fd9403930a3e7e7020d820fc8007ae2"
+    },
+    {
+      "path": "verify.sql",
+      "bytes": 1808,
+      "sha256": "69f2b98b4896ed6f59a73a07834ad1ced4792dedfab042eae8dc455d77342ce2"
+    },
+    {
+      "path": "migration.sql",
+      "bytes": 177047,
+      "sha256": "0f6f424520716b6f3f856d69a5e1aff004a664b3d8d4c5039e7ab3e3f79460d3"
+    }
+  ]
+}
