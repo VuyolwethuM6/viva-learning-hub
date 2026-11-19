@@ -1,0 +1,122 @@
+import { lifecyclePendingKey } from "@/lib/recruitment-lifecycle-client";
+import { useCallback, useEffect, useState, type ReactNode, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/admin/AdminPrimitives";
+import { recruitmentRequest } from "@/lib/recruitment-client";
+import type { RecruitmentSnapshot } from "@/lib/recruitment-types";
+import { engagementInput, type EngagementSnapshot as Engagement } from "@/lib/recruitment-engagement";
+import { RecruitmentActionDialog, RecruitmentPendingAction } from "./RecruitmentActionDialog";
+
+type Candidate = { id: string; reference: string; name: string; stage: string };
+type Personnel = { case_id: string; category: string; status: string; user_id: string; tutor_id: string | null };
+type Document = { id: string; key: string; name: string; state: string };
+type StaffOption = { id: string; email: string; role: string };
+const human = (s: string) => s.replace(/([A-Z])/g, " $1").replaceAll("_", " ");
+const split = (s: string) => s.split(",").map(v => v.trim()).filter(Boolean);
+function Field({ label, children }: { label: string; children: ReactNode }) { return <label>{label}{children}</label>; }
+const initial = {
+  title: "", start: "", expires: "", compensation: "", arrangement: "", reporting: "", conditions: "", engagement: "employee", template: "", sessionRate: "0",
+  reason: "", evidence: "", userId: "", displayName: "", tutorId: "", subjects: "", grades: "", holdReview: "", replacementTutorId: "", effectiveDate: "",
+  agreementTitle: "", agreementBody: "", agreementType: "employment", agreementApproval: "", policyTemplate: "", taskKey: "", taskLabel: "", taskKind: "document", taskDue: "", assignee: "", documentId: "", sessionIds: "", issuedOn: "", dueOn: "", engagementChangeApproval: "",
+};
+
+export function RecruitmentEngagementWorkspace({ snapshot }: { snapshot: RecruitmentSnapshot }) {
+  const [rows, setRows] = useState<Candidate[]>([]), [personnel, setPersonnel] = useState<Personnel[]>([]),
+    [view, setView] = useState<"applications" | "personnel">("applications"), [caseId, setCaseId] = useState(() => new URLSearchParams(window.location.search).get("caseId") || ""),
+    [detail, setDetail] = useState<Engagement | null>(null), [tab, setTab] = useState("offers"), [error, setError] = useState(""),
+    [busy, setBusy] = useState(false), [message, setMessage] = useState(""), [search, setSearch] = useState(""), [offset, setOffset] = useState(0), [more, setMore] = useState(false),
+    [documents, setDocuments] = useState<Document[]>([]), [eligibleStaff, setEligibleStaff] = useState<StaffOption[]>([]), [values, setValues] = useState(initial),
+    [permission, setPermission] = useState(false), [review, setReview] = useState<{ operation: string; data: Record<string, unknown> } | null>(null),
+    [password, setPassword] = useState(""), [code, setCode] = useState("");
+  const owner = snapshot.user.role === "owner";
+  const set = (key: keyof typeof initial, value: string) => setValues(v => ({ ...v, [key]: value }));
+  const input = (key: keyof typeof initial, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => <Field label={label}><input value={values[key]} onChange={e => set(key, e.target.value)} {...props} /></Field>;
+  const area = (key: keyof typeof initial, label: string, props: React.TextareaHTMLAttributes<HTMLTextAreaElement> = {}) => <Field label={label}><textarea value={values[key]} onChange={e => set(key, e.target.value)} maxLength={4000} {...props} /></Field>;
+  async function run(fn: () => Promise<void>) {
+    if (busy) return;
+    setBusy(true); setError("");
+    try { await fn(); } catch (e) { setError(e instanceof Error ? e.message : "Unable to load engagement."); } finally { setBusy(false); }
+  }
+  const loadList = useCallback(async (next = 0, query = "") => {
+    const r = await recruitmentRequest<{ items?: Candidate[]; hasMore?: boolean }>("selection", { action: "list", search: query, status: "", offset: next });
+    setRows(r.items || []); setMore(Boolean(r.hasMore)); setOffset(next);
+  }, []);
+  async function listPersonnel() {
+    setPersonnel(await recruitmentRequest<Personnel[]>("engagement", undefined, "GET", true, undefined, { view: "personnel" }));
+  }
+  async function load(id = caseId, mode = view) {
+    if (!id) return;
+    const r = await recruitmentRequest<Engagement>("engagement", undefined, "GET", true, undefined, { caseId: id, ...(mode === "personnel" ? { view: "personnel" } : {}) });
+    setDetail(r); setCaseId(id); setDocuments([]); setEligibleStaff([]);
+    if (mode === "applications") {
+      const profile = await recruitmentRequest<{ documents: Document[]; eligibleStaff: StaffOption[] }>("applications", undefined, "GET", true, undefined, { caseId: id });
+      setDocuments(profile.documents || []); setEligibleStaff(profile.eligibleStaff || []);
+    }
+  }
+  useEffect(() => { void loadList().catch(e => setError(e.message)); }, [loadList]);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("caseId");
+    if (id) void load(id, "applications").catch(e => setError(e.message));
+    // Initial deep-link context only; later choices are explicit user actions.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  function prepare(operation: string, data: Record<string, unknown> = {}) {
+    if (!detail) return;
+    if (sessionStorage.getItem(lifecyclePendingKey("engagement"))) { setError("Resolve the previous request before another change."); return; }
+    try {
+      const c = engagementInput(operation, { requestId: crypto.randomUUID(), caseId: detail.caseId, expectedRevision: detail.revision, ...data });
+      setReview({ operation: c.operation, data: c.data }); setError("");
+    } catch { setError("Complete the required fields and use valid evidence references before reviewing this action."); }
+  }
+  function submit(e: FormEvent, operation: string, data: () => Record<string, unknown>) {
+    e.preventDefault();
+    try { prepare(operation, data()); } catch { setError("Choose valid dates and complete every required field."); }
+  }
+  async function switchView(mode: "applications" | "personnel") {
+    setView(mode); setDetail(null); setCaseId(""); setValues(initial); setPermission(false); setTab(mode === "personnel" ? "activation" : "offers");
+    await run(() => mode === "personnel" ? listPersonnel() : loadList(0, search));
+  }
+  const accepted = detail?.offers.find(o => o.status === "accepted"), cleanDocuments = documents.filter(d => d.state === "clean"),
+    tabs = view === "personnel" ? ["activation", "payments", "offboarding"] : ["offers", "agreements", "onboarding", "activation", "payments", "offboarding", "history"];
+  return <>
+    <section className="recruitment-card">
+      <p className="recruitment-eyebrow">Recruitment · Engagement</p><h1>Offers, onboarding and staff</h1>
+      <p>Accepted offers progress through verified onboarding and explicit owner activation. Existing teaching and financial history remains authoritative.</p>
+      {error && <p role="alert">{error}</p>}{message && <p role="status">{message}</p>}
+      {owner && <nav aria-label="Engagement records" className="flex flex-wrap gap-3"><Button variant={view === "applications" ? "default" : "outline"} disabled={busy} onClick={() => void switchView("applications")}>Applications</Button><Button variant={view === "personnel" ? "default" : "outline"} disabled={busy} onClick={() => void switchView("personnel")}>Staff management</Button></nav>}
+      {owner && <details className="my-4"><summary>Verify owner session assurance</summary><p>Confirm your password and authenticator before private personnel reads.</p><Field label="Password"><input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></Field><Field label="Authenticator code"><input inputMode="numeric" pattern="[0-9]{6}" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value)} /></Field><Button disabled={busy || !password || !code} onClick={() => void run(async () => { await recruitmentRequest("case-step-up", { password, code, factorId: snapshot.user.mfaFactors?.[0]?.id }); setPassword(""); setCode(""); if (view === "personnel") await listPersonnel(); else await loadList(); })}>Verify session</Button></details>}
+      {view === "applications" ? <>
+        <form onSubmit={e => { e.preventDefault(); void run(() => loadList(0, search)); }}><Field label="Search submitted applications"><input value={search} maxLength={160} onChange={e => setSearch(e.target.value)} /></Field><Button disabled={busy}>Search applications</Button></form>
+        <form onSubmit={e => { e.preventDefault(); setValues(initial); setPermission(false); void run(() => load()); }} className="flex flex-wrap items-end gap-3"><Field label="Candidate"><select value={caseId} onChange={e => { setCaseId(e.target.value); setDetail(null); setDocuments([]); setValues(initial); setPermission(false); }} required><option value="">Select a submitted application</option>{rows.map(r => <option key={r.id} value={r.id}>{r.reference} · {r.name || human(r.stage)}</option>)}{caseId && !rows.some(r => r.id === caseId) && <option value={caseId}>Selected application</option>}</select></Field><Button disabled={busy}>Open engagement</Button></form>
+        <div className="flex gap-3 my-3"><Button disabled={busy || offset === 0} variant="outline" onClick={() => void run(() => loadList(Math.max(0, offset - 30), search))}>Previous applications</Button><Button disabled={busy || !more} variant="outline" onClick={() => void run(() => loadList(offset + 30, search))}>More applications</Button></div>
+        {!rows.length && <p>No accessible submitted applications are available. Production intake and lifecycle controls may still be disabled.</p>}
+      </> : <><p>Staff access controls remain available after application review ends. This list excludes applicant answers, offers and documents.</p><div className="overflow-x-auto" role="region" aria-label="Staff engagement table; scroll horizontally for all columns" tabIndex={0}><table className="w-full min-w-[620px] whitespace-nowrap text-left"><thead><tr><th>Platform identity</th><th>Role category</th><th>Status</th><th>Action</th></tr></thead><tbody>{personnel.map(p => <tr key={p.case_id}><td>{p.user_id}</td><td>{human(p.category)}</td><td>{human(p.status)}</td><td><Button variant="outline" disabled={busy} onClick={() => void run(() => load(p.case_id, "personnel"))}>Manage staff access</Button></td></tr>)}</tbody></table></div>{!personnel.length && <p>No accessible staff engagements are available.</p>}</>}
+    </section>
+    <RecruitmentPendingAction route="engagement" onRecovered={() => load()} />
+    {detail && <section className="recruitment-card">
+      <p>Record: {rows.find(r => r.id === detail.caseId)?.reference || detail.caseId}</p><div className="recruitment-title"><h2>{view === "personnel" ? "Staff access and offboarding" : "Candidate engagement"}</h2><Badge value={detail.activation?.status || "not_activated"} /></div>
+      <nav className="flex flex-wrap gap-2" aria-label="Engagement sections">{tabs.map(t => <Button key={t} variant={tab === t ? "default" : "outline"} onClick={() => setTab(t)} aria-pressed={tab === t}>{human(t)}</Button>)}</nav>
+      {tab === "offers" && <div className="grid gap-5 mt-5"><h3>Offer history</h3>{detail.offers.map(o => <article className="border rounded-xl p-4" key={o.id}><h4>Version {o.version} · {human(o.status)}</h4><dl>{Object.entries(o.terms).filter(([key]) => key !== "agreementTemplateId").map(([key, value]) => <div key={key}><dt className="font-semibold">{human(key)}</dt><dd className="whitespace-pre-wrap break-words">{String(value ?? "")}</dd></div>)}</dl>{owner && <div className="flex flex-wrap gap-2 mt-3">{o.status === "draft" && <Button onClick={() => prepare("offer_approve", { offerId: o.id })}>Approve offer</Button>}{o.status === "approved" && <Button onClick={() => prepare("offer_issue", { offerId: o.id })}>Issue approved offer</Button>}{["issued", "approved", "draft"].includes(o.status) && <Button variant="outline" onClick={() => prepare("offer_withdraw", { offerId: o.id, reason: values.reason })} disabled={values.reason.trim().length < 3}>Withdraw offer</Button>}</div>}</article>)}
+        <form onSubmit={e => submit(e, "offer_create", () => ({ terms: { positionTitle: values.title, engagementType: values.engagement, startDate: values.start, workArrangement: values.arrangement, reportingArrangements: values.reporting, compensationTerms: values.compensation, sessionRateCents: Number(values.sessionRate), conditions: values.conditions, expiresAt: new Date(values.expires).toISOString(), agreementTemplateId: values.template }, ...(values.engagementChangeApproval ? { engagementChangeApprovalReference: values.engagementChangeApproval } : {}) }))}><h3>Create a versioned offer</h3><p>Only candidates approved for an offer are eligible. An engagement change requires explicit owner approval.</p>
+          {input("title", "Position title", { required: true, maxLength: 180 })}<Field label="Engagement type"><select value={values.engagement} onChange={e => set("engagement", e.target.value)}>{["employee", "independent_contractor", "volunteer"].map(v => <option key={v} value={v}>{human(v)}</option>)}</select></Field>
+          {input("start", "Start date", { required: true, type: "date" })}{input("expires", "Offer expires", { required: true, type: "datetime-local" })}{input("arrangement", "Working arrangement", { required: true, maxLength: 4000 })}{input("reporting", "Reporting arrangements", { required: true, maxLength: 4000 })}{input("sessionRate", "Tutor session rate (cents, 0 when not applicable)", { required: true, type: "number", min: 0, max: 100000000 })}{area("compensation", "Compensation terms", { required: true })}{area("conditions", "Conditions")}
+          <Field label="Approved agreement"><select required value={values.template} onChange={e => set("template", e.target.value)}><option value="">Select approved template</option>{detail.templates.filter(t => t.engagement_type === values.engagement && ["employment", "independent_contractor", "volunteer"].includes(t.agreement_type)).map(t => <option value={t.id} key={t.id}>{t.title}</option>)}</select></Field>{owner && input("engagementChangeApproval", "Engagement change approval reference (only when changing the advertised type)", { maxLength: 160 })}<Button>Review new offer</Button>
+        </form>
+      </div>}
+      {tab === "agreements" && <div className="mt-5 grid gap-5"><h3>Approved agreement templates</h3>{detail.templates.map(t => <details key={t.id}><summary>{t.title} · {human(t.engagement_type)}</summary><p className="whitespace-pre-wrap">{t.body}</p><p>Legal approval: {t.legal_approval_reference}</p></details>)}{owner && <form onSubmit={e => submit(e, "template_approve", () => ({ agreementType: values.agreementType, engagementType: values.engagement, title: values.agreementTitle, body: values.agreementBody, legalApprovalReference: values.agreementApproval }))}><h3>Register a legally reviewed template</h3><p>No agreement wording is pre-approved. Review South African employment, contracting, privacy and electronic acceptance requirements before approval.</p>{input("agreementTitle", "Title", { required: true, maxLength: 180 })}<Field label="Agreement type"><select value={values.agreementType} onChange={e => set("agreementType", e.target.value)}>{["employment", "independent_contractor", "volunteer", "confidentiality", "code_of_conduct", "role_policy"].map(v => <option key={v} value={v}>{human(v)}</option>)}</select></Field><Field label="Engagement type"><select value={values.engagement} onChange={e => set("engagement", e.target.value)}>{["employee", "independent_contractor", "volunteer"].map(v => <option key={v} value={v}>{human(v)}</option>)}</select></Field>{area("agreementBody", "Reviewed agreement wording", { required: true, minLength: 20, maxLength: 24000, rows: 12 })}{input("agreementApproval", "Legal approval reference", { required: true, maxLength: 160 })}<Button>Review template approval</Button></form>}</div>}
+      {tab === "onboarding" && <div className="mt-5 grid gap-4"><h3>Onboarding requirements</h3><p>Candidate acknowledgements are separate from staff verification. Documents must be scanned clean before verification.</p><Button disabled={!accepted} onClick={() => prepare("onboarding_start", { offerId: accepted?.id })}>Start role-specific onboarding</Button>
+        {detail.tasks.map(t => <article key={t.id} className="border rounded-xl p-4"><h4>{t.label}{t.required ? " · Required" : ""}</h4><Badge value={t.status} /><p>{human(t.kind)}</p>{t.kind === "document" && <Field label={`Verified document for ${t.label}`}><select value={values.documentId} onChange={e => set("documentId", e.target.value)}><option value="">Select clean same-case document</option>{cleanDocuments.filter(d => d.key === t.key.replace(/^document:/, "")).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></Field>}<Button disabled={!values.evidence.trim() || t.status === "verified" || (t.kind === "document" && !values.documentId)} variant="outline" onClick={() => prepare("task_verify", { taskId: t.id, documentId: t.kind === "document" ? values.documentId || null : null, evidenceReference: values.evidence })}>Verify {t.label}</Button>
+          <form onSubmit={e => submit(e, "task_assign", () => ({ taskId: t.id, userId: values.assignee, dueAt: new Date(values.taskDue).toISOString() }))}><Field label={`Assign ${t.label} to`}><select required value={values.assignee} onChange={e => set("assignee", e.target.value)}><option value="">Select authorised reviewer</option>{[{ id: snapshot.user.id, email: snapshot.user.email, role: snapshot.user.role }, ...eligibleStaff.filter(s => s.id !== snapshot.user.id)].map(s => <option key={s.id} value={s.id}>{s.email} · {s.role}</option>)}</select></Field>{input("taskDue", `Due date for ${t.label}`, { required: true, type: "datetime-local" })}<Button variant="outline">Assign {t.label}</Button></form>
+        </article>)}
+        {owner && <><form onSubmit={e => submit(e, "task_require", () => ({ key: values.taskKey, label: values.taskLabel, kind: values.taskKind, required: true, dueAt: new Date(values.taskDue).toISOString() }))}><h3>Add a role-specific requirement</h3>{input("taskKey", "Requirement key", { required: true, pattern: "[a-z][a-z0-9_-]{0,59}", maxLength: 60 })}{input("taskLabel", "Requirement label", { required: true, maxLength: 180 })}<Field label="Requirement type"><select value={values.taskKind} onChange={e => set("taskKind", e.target.value)}><option value="document">Document</option><option value="declaration">Declaration</option><option value="required_check">Internal verification</option></select></Field>{input("taskDue", "Requirement due date", { required: true, type: "datetime-local" })}<Button>Review additional requirement</Button></form>
+          <form onSubmit={e => submit(e, "policy_require", () => ({ templateId: values.policyTemplate }))}><h3>Require an approved policy</h3><p>Activation requires acceptance of an approved code of conduct. Assign any other legally reviewed role policies here.</p><Field label="Approved policy"><select required value={values.policyTemplate} onChange={e => set("policyTemplate", e.target.value)}><option value="">Select legally reviewed policy</option>{detail.templates.filter(t => ["confidentiality", "code_of_conduct", "role_policy"].includes(t.agreement_type)).map(t => <option key={t.id} value={t.id}>{t.title}</option>)}</select></Field><Button>Review policy requirement</Button></form></>}
+      </div>}
+      {tab === "activation" && <div className="mt-5"><h3>Owner activation review</h3>{!detail.activation && view === "applications" ? <form onSubmit={e => submit(e, "activation_approve", () => ({ userId: values.userId, tutorId: values.tutorId || null, displayName: values.displayName, subjects: split(values.subjects), grades: split(values.grades), permissions: permission ? ["administration"] : [], evidenceReference: values.evidence, personnelRetentionReviewAt: new Date(values.holdReview).toISOString() }))}><p>Requires owner hiring approval, accepted offer and agreement, verified documents and completed onboarding. Recruitment access is never inherited.</p>{input("displayName", "Staff display name", { required: true, maxLength: 120 })}{input("userId", "Verified platform identity ID", { required: true, pattern: "[0-9a-fA-F-]{36}" })}{detail.category === "tutor" && <>{input("tutorId", "Existing tutor identity ID (optional)", { pattern: "[0-9a-fA-F-]{36}" })}{input("subjects", "Approved subjects (comma separated)", { required: true })}{input("grades", "Approved grades (comma separated)", { required: true })}</>}{detail.category === "administrator" && <label><input type="checkbox" checked={permission} onChange={e => setPermission(e.target.checked)} />Explicitly approve administration access</label>}{input("holdReview", "Lawful employment-record retention review date", { required: true, type: "datetime-local" })}<Button disabled={!owner || !values.evidence.trim()}>Review owner activation</Button></form> : detail.activation && <><p>Operational access: {human(detail.activation.status)}. Recruitment and finance privileges are never inferred.</p>{owner && <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={detail.activation.status !== "active" || values.reason.trim().length < 3} onClick={() => prepare("access_suspend", { reason: values.reason })}>Suspend access</Button><Button variant="outline" disabled={detail.activation.status !== "suspended" || values.reason.trim().length < 3} onClick={() => prepare("access_resume", { reason: values.reason })}>Resume access</Button></div>}</>}</div>}
+      {tab === "payments" && <div className="mt-5"><h3>Approved tutor session payments</h3>{detail.category === "tutor" && owner ? <form onSubmit={e => submit(e, "session_payment_prepare", () => ({ sessionIds: split(values.sessionIds), issuedOn: values.issuedOn, dueOn: values.dueOn, approvalReference: values.evidence }))}><p>Prepare an accounting bill for completed authorised teaching sessions at the accepted rate. Existing accounting permission is required. This does not execute a payment.</p>{area("sessionIds", "Completed teaching session references (comma separated)", { required: true })}{input("issuedOn", "Bill issue date", { type: "date", required: true })}{input("dueOn", "Bill due date", { type: "date", required: true })}<Button disabled={!values.evidence.trim()}>Review tutor payment preparation</Button></form> : <p>Tutor payment preparation is available only to an authorised owner with accounting permission.</p>}</div>}
+      {tab === "offboarding" && <form className="mt-5" onSubmit={e => submit(e, "offboard", () => ({ reason: values.reason, reconciliationReference: values.evidence, effectiveDate: values.effectiveDate, replacementTutorId: values.replacementTutorId || null }))}><h3>Controlled offboarding</h3><p>Access revocation preserves teaching and financial history. Active classes and completed payable sessions must be reconciled before completion.</p>{input("replacementTutorId", "Replacement tutor ID (where class reassignment is required)", { pattern: "[0-9a-fA-F-]{36}" })}{input("effectiveDate", "Engagement end date", { required: true, type: "date" })}<Button disabled={!owner || !detail.activation || detail.activation.status === "ended" || values.reason.trim().length < 3 || !values.evidence.trim()}>Review owner offboarding</Button></form>}
+      {tab === "history" && <ol className="mt-5">{detail.events.map(e => <li key={`${e.created_at}-${e.action}`}>{human(e.action)} · {new Date(e.created_at).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })} (SAST)</li>)}</ol>}
+      <div className="grid gap-3 mt-6">{area("reason", "Reason for controlled changes")}{input("evidence", "Verification or approval evidence reference", { maxLength: 160 })}</div>
+    </section>}
+    {review && <RecruitmentActionDialog route="engagement" operation={review.operation} data={review.data} snapshot={snapshot} onClose={() => setReview(null)} onSuccess={async () => { await load(); if (view === "personnel") await listPersonnel(); setMessage("Engagement change confirmed."); }} />}
+  </>;
+}

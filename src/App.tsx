@@ -108,7 +108,7 @@ const App = ({ staticLocation, helmetContext }: AppProps = {}) => {
             }
           />
           <Route
-            path="/admin/recruitment/deployment"
+            path="/admin/recruitment/*"
             element={
               <RecruitmentPrivacyBoundary>
                 <RecruitmentAdmin />

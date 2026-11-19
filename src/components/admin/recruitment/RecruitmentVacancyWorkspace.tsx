@@ -407,8 +407,7 @@ export function RecruitmentVacancyWorkspace({
             <p className="recruitment-eyebrow">Vacancy management</p>
             <h2 id="vacancy-management-heading">Opportunities at Viva</h2>
             <p>
-              Draft, review and publish vacancies. Applications, uploads and
-              hiring remain unavailable.
+              Draft, review and publish vacancies. Public vacancy visibility is {s.settings.public_vacancies_enabled === true ? "enabled" : s.settings.public_vacancies_enabled === false ? "disabled" : "not verified"}. Application intake and document uploads require their separate approved controls.
             </p>
           </div>
           <div className="vacancy-actions">

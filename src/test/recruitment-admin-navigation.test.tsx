@@ -17,6 +17,18 @@ vi.mock("@/lib/recruitment-client", async (original) => ({
 vi.mock("@/components/admin/recruitment/RecruitmentVacancyWorkspace", () => ({
   RecruitmentVacancyWorkspace: () => <p>Vacancy workspace is accessible</p>,
 }));
+vi.mock("@/components/admin/recruitment/RecruitmentSelectionWorkspace", () => ({
+  RecruitmentSelectionWorkspace: ({ section }: { section?: string }) => <p>{section === "reports" ? "Scoped recruitment reporting" : "Selection workspace is accessible"}</p>,
+}));
+vi.mock("@/components/admin/recruitment/RecruitmentEngagementWorkspace", () => ({
+  RecruitmentEngagementWorkspace: () => <p>Engagement workspace is accessible</p>,
+}));
+vi.mock("@/components/admin/recruitment/RecruitmentCasesWorkspace", () => ({
+  RecruitmentCasesWorkspace: () => <p>Scoped case messaging</p>,
+}));
+vi.mock("@/components/admin/recruitment/RecruitmentFormsWorkspace", () => ({
+  RecruitmentFormsWorkspace: () => <p>Owner intake policy workspace</p>,
+}));
 const snapshot: RecruitmentSnapshot = {
   user: {
     id: "11111111-1111-4111-8111-111111111111",
@@ -74,5 +86,57 @@ describe("recruitment navigation after request recovery", () => {
       screen.getByText("Vacancy workspace is accessible"),
     ).toBeInTheDocument();
     expect(send.mock.calls.filter((c) => c[0] === "snapshot")).toHaveLength(1);
+  });
+});
+
+describe("integrated recruitment dashboard navigation", () => {
+  it("uses the Admin shell and preserves the official brand with owner settings", async () => {
+    send.mockResolvedValue(snapshot);
+    const { container } = render(<MemoryRouter initialEntries={["/admin/recruitment/overview"]}><RecruitmentAdmin /></MemoryRouter>);
+    expect(await screen.findByRole("heading", { name: "Recruitment overview", level: 1 })).toBeInTheDocument();
+    expect(container.querySelector(".admin-shell .admin-sidebar")).not.toBeNull();
+    expect(container.querySelector(".admin-workspace .admin-topbar")).not.toBeNull();
+    expect(screen.getByRole("link", {name: "Admin Dashboard"})).toHaveAttribute("href", "/admin");
+    expect(screen.getAllByAltText("Viva Tutorials")[0]).toHaveAttribute("src", "/viva-tutorials-logo.png");
+    expect(screen.getByRole("button", {name: "Forms and intake"})).toBeInTheDocument();
+    expect(screen.getByRole("link", {name: "Deployment dashboard"})).toBeInTheDocument();
+    expect(screen.getByText("Public visibility and application intake have separate controls. Intake remains subject to privacy, form, security and operational approvals.")).toBeInTheDocument();
+  });
+  it("routes desktop and mobile navigation through the same workspaces", async () => {
+    send.mockResolvedValue(snapshot);
+    render(<MemoryRouter initialEntries={["/admin/recruitment/selection"]}><RecruitmentAdmin /></MemoryRouter>);
+    expect(await screen.findByText("Selection workspace is accessible")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Recruitment section"), {target: {value: "engagement"}});
+    expect(await screen.findByText("Engagement workspace is accessible")).toBeInTheDocument();
+    expect(screen.getByRole("button", {name: "Offers, onboarding and staff"})).toHaveAttribute("aria-current", "page");
+    fireEvent.click(screen.getByRole("button", {name: "Recruitment reports"}));
+    expect(await screen.findByText("Scoped recruitment reporting")).toBeInTheDocument();
+    expect(screen.getByLabelText("Recruitment section")).toHaveValue("reports");
+  });
+  it("preserves the applications deep link used by candidate messaging", async () => {
+    send.mockResolvedValue(snapshot);
+    render(<MemoryRouter initialEntries={["/admin/recruitment/applications"]}><RecruitmentAdmin /></MemoryRouter>);
+    expect(await screen.findByText("Scoped case messaging")).toBeInTheDocument();
+    expect(screen.getByRole("button", {name: "Applications and talent pool"})).toHaveAttribute("aria-current", "page");
+  });
+  it("does not expose owner settings or render forms through a manager deep link", async () => {
+    send.mockResolvedValue({...snapshot, user: {...snapshot.user, role: "manager"}});
+    render(<MemoryRouter initialEntries={["/admin/recruitment/forms"]}><RecruitmentAdmin /></MemoryRouter>);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Recruitment owner access is required");
+    expect(screen.queryByRole("button", {name: "Forms and intake"})).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", {name: "Deployment dashboard"})).not.toBeInTheDocument();
+    expect(screen.queryByText("Owner intake policy workspace")).not.toBeInTheDocument();
+  });
+  it("keeps deployment preparation owner only for a direct officer URL", async () => {
+    send.mockResolvedValue({...snapshot, user: {...snapshot.user, role: "officer"}});
+    render(<MemoryRouter initialEntries={["/admin/recruitment/deployment"]}><RecruitmentAdmin /></MemoryRouter>);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Recruitment owner access is required for deployment preparation");
+    expect(screen.queryByRole("option", {name: "Deployment dashboard"})).not.toBeInTheDocument();
+  });
+  it("does not render staff navigation when recruitment authentication fails", async () => {
+    send.mockRejectedValue(new Error("Sign in to recruitment."));
+    render(<MemoryRouter initialEntries={["/admin/recruitment/engagement"]}><RecruitmentAdmin /></MemoryRouter>);
+    expect(await screen.findByRole("heading", {name: "Recruitment staff sign-in"})).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", {name: "Recruitment workspace"})).not.toBeInTheDocument();
   });
 });

@@ -1,3 +1,4 @@
+import { ApplicantLifecycle } from "@/components/careers/ApplicantLifecycle";
 import { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useLocation, useParams } from "react-router-dom";
@@ -469,13 +470,14 @@ export default function RecruitmentApplicant() {
                   </p>
                   <p>
                     This confirms receipt. Human recruitment staff review
-                    applications; no hiring decision has been made.
+                    applications. Check your current progress below for any later updates.
                   </p>
                   <Button variant="outline" onClick={() => window.print()}>
                     Print receipt
                   </Button>
                 </div>
               )}
+              {c.receipt && !pending && ["submitted", "under_review", "recommendation_recorded"].includes(c.state) && c.purpose === "vacancy" && <ApplicantLifecycle onDocumentPendingChange={() => setPending(applicantPending())} />}
               {c.state === "draft" && c.definition && (
                 <>
                   <nav
