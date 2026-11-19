@@ -119,3 +119,8 @@ Engineering readiness and live acceptance are separate. Recommend controlled own
 ## Code-promotion configuration handover
 
 The owner subsequently requested merging to main and end-to-end configuration instructions. `production/end-to-end-configuration.md` and the four-action `worker-invoke.mjs.example` provide the concrete handover without executing production configuration. The configuration additions change no application API or database source; the original 594-test application verification remains the implementation baseline. Publishing/merge status must be confirmed separately in the task response.
+
+
+## Vercel schema correction after initial promotion
+
+The hosted build rejected the recruitment function includeFiles string because it exceeded Vercel's 256-character schema limit. The asset pattern is now an equivalent nested brace glob of 220 characters. Tests check every required deployment artifact and supplementary document plus the official logo/regular/bold fonts remain matched, and unrelated materials/screenshots remain excluded. The local prebuild check now rejects oversized includeFiles values before compiling APIs. The deployment manifest was regenerated without changing SQL or live settings. Verification: 36 focused tests passed across five files; application TypeScript passed, lint passed with the seven existing warnings, and production build/root API check passed with 12/12 functions. External deployment acceptance is recorded separately in the task response.

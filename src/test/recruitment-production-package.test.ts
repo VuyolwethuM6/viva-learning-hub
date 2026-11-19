@@ -1,3 +1,4 @@
+import { matchesGlob } from "node:path";
 // @vitest-environment node
 import { it, expect } from "vitest";
 import { readFileSync } from "node:fs";
@@ -61,9 +62,7 @@ it("requires binding references and keeps installation separate from release SQL
 });
 it("packages files server-side with an explicit private route and preserves accounting cron", () => {
   const config = JSON.parse(readFileSync("vercel.json", "utf8"));
-  expect(config.functions["api/recruitment.ts"].includeFiles).toContain(
-    "docs/recruitment/production-installation/**",
-  );
+  expect(matchesGlob("docs/recruitment/production-installation/manifest.json", config.functions["api/recruitment.ts"].includeFiles)).toBe(true);
   expect(config.rewrites).toContainEqual({
     source: "/admin/recruitment/deployment",
     destination: "/index.html",

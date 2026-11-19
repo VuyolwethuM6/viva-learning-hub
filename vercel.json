@@ -26,7 +26,7 @@
     },
     "api/recruitment.ts": {
       "maxDuration": 300,
-      "includeFiles": "{docs/recruitment/production-installation/**,docs/recruitment/owner-recovery-runbook.md,docs/recruitment/milestone-3/operations.md,docs/recruitment/milestone-3/api-and-security.md,docs/recruitment/milestone-3/implementation-report.md,public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-Regular.ttf,private/fonts/PlusJakartaSans-Bold.ttf}"
+      "includeFiles": "{docs/recruitment/{production-installation/**,owner-recovery-runbook.md,milestone-3/{operations,api-and-security,implementation-report}.md},public/viva-tutorials-logo.png,private/fonts/PlusJakartaSans-{Regular,Bold}.ttf}"
     }
   },
   "headers": [
