@@ -136,7 +136,7 @@ function emit(path, text) {
   } else writeFileSync(path, text);
 }
 emit(directory + '/migration.sql', sql);
-const artifacts = ['README.md', 'preflight.sql', 'verify.sql', 'migration.sql'].map((path) => {
+const artifacts = ['README.md', 'preflight.sql', 'verify.sql', 'migration.sql', 'end-to-end-configuration.md', 'worker-invoke.mjs.example'].map((path) => {
   const bytes = path === 'migration.sql' ? Buffer.from(sql) : readFileSync(directory + '/' + path);
   return { path, bytes: bytes.length, sha256: sha(bytes) };
 });

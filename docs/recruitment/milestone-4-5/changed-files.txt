@@ -16,10 +16,12 @@ A	docs/recruitment/milestone-4-5/changed-files.txt
 A	docs/recruitment/milestone-4-5/implementation-report.md
 A	docs/recruitment/milestone-4-5/onboarding-documents.md
 A	docs/recruitment/milestone-4-5/production/README.md
+A	docs/recruitment/milestone-4-5/production/end-to-end-configuration.md
 A	docs/recruitment/milestone-4-5/production/manifest.json
 A	docs/recruitment/milestone-4-5/production/migration.sql
 A	docs/recruitment/milestone-4-5/production/preflight.sql
 A	docs/recruitment/milestone-4-5/production/verify.sql
+A	docs/recruitment/milestone-4-5/production/worker-invoke.mjs.example
 A	docs/recruitment/milestone-4-5/review-guide.md
 A	docs/recruitment/milestone-4-5/ui-standardisation.md
 A	docs/recruitment/milestone-4-5/visual/admin-1440.png

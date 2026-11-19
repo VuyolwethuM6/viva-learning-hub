@@ -114,3 +114,8 @@ The PDF limits remain eight files/40 MiB total and 10 MiB per file across applic
 Start with `review-guide.md`, `ui-standardisation.md` and `onboarding-documents.md`. Use the isolated tests/browser scripts to review enabled flows without production configuration. The guide includes navigation, setup, actions, expected results and negative checks. The incremental execution package is `production/migration.sql`; `production/preflight.sql`, `verify.sql`, `manifest.json` and `README.md` provide the exact review/recovery boundary. Source-file inventory is in `changed-files.txt`.
 
 Engineering readiness and live acceptance are separate. Recommend controlled owner review of this implementation and incremental package, followed by target-specific operational acceptance and explicit approvals. Do not enable intake, promote code, run production migrations or activate real staff based solely on passing local tests.
+
+
+## Code-promotion configuration handover
+
+The owner subsequently requested merging to main and end-to-end configuration instructions. `production/end-to-end-configuration.md` and the four-action `worker-invoke.mjs.example` provide the concrete handover without executing production configuration. The configuration additions change no application API or database source; the original 594-test application verification remains the implementation baseline. Publishing/merge status must be confirmed separately in the task response.

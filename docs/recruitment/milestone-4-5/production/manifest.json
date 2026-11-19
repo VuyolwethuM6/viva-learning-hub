@@ -199,8 +199,8 @@
   "files": [
     {
       "path": "README.md",
-      "bytes": 6710,
-      "sha256": "1bd1d136764a44791870c4e542aa8600c3b694200d99051e56e83ca3c542cdcd"
+      "bytes": 7152,
+      "sha256": "55e595fb060746fc358a98d87be1def682f2d1cbeec30649f2c4abfab9686507"
     },
     {
       "path": "preflight.sql",
@@ -216,6 +216,16 @@
       "path": "migration.sql",
       "bytes": 177047,
       "sha256": "0f6f424520716b6f3f856d69a5e1aff004a664b3d8d4c5039e7ab3e3f79460d3"
+    },
+    {
+      "path": "end-to-end-configuration.md",
+      "bytes": 14761,
+      "sha256": "c407a902345e63116efa3ef13322add3a126b4a8b04797afa7bc51eba57a78ac"
+    },
+    {
+      "path": "worker-invoke.mjs.example",
+      "bytes": 1284,
+      "sha256": "b3ba63469d9e58e8a3034aa7a37d42391a44b889a8e69a7607a4a3cd27d40a2f"
     }
   ]
 }

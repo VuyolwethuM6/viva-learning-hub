@@ -38,3 +38,8 @@ The final five sources also update historical snapshot feature labels to backend
 The package also pins the existing bodies of `accounting_snapshot`, `accounting_document_data` and `accounting_export_rows` before adding a narrowly scoped read guard for newly recruited administration-only users. Legacy financial viewers retain existing access. Review those dependencies in the actual target before approval. New recruiter access does not create finance-owner/bookkeeper permissions.
 
 `supabase/schema.sql` is the documented M1–M3 local baseline for this release. For a fresh disposable local environment, load that baseline and the five ordered sources; the populated production database receives only the separately approved incremental transaction. Installation adds 25 RLS tables to the reported 42-table baseline; verify 67 total alongside the exact per-table manifest, not solely a count. The existing private bucket names and four legacy buckets are preserved.
+
+
+## Owner setup after code promotion
+
+Use [end-to-end-configuration.md](end-to-end-configuration.md) for the ordered Vercel, incremental Supabase, MFA/recovery, email, private scanner/Storage, all four workers, privacy/forms and phased activation checklist. The local `worker-invoke.mjs.example` supports the new `lifecycle` action; the historical M3 runner does not. These are instructions and examples, not executed configuration changes.
