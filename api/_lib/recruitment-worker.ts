@@ -16,6 +16,7 @@ import {
   validatePdf,
 } from "./recruitment-storage.js";
 import { escapeHtml } from "./email.js";
+import { lifecycleNotification } from "./recruitment-lifecycle-worker.js";
 
 type MailJob = {
   id: string;
@@ -66,6 +67,8 @@ export async function recruitmentMail(limit = 5) {
         text = `Confirm your email for Viva Tutorials recruitment. Open this link, check the purpose and confirm your address. The link expires after 15 minutes.\n\n${publicOrigin()}/recruitment/verify#intent=${e.intent}&proof=${e.proof}\n\nIf you did not request this, ignore this email.`;
       } else if (job.template === "receipt")
         text = `Viva Tutorials received your application. Receipt: ${job.data.receipt}. Submitted: ${job.data.submittedAt}. This is confirmation of receipt, not a hiring decision. Recover your application at ${publicOrigin()}/recruitment/recover.`;
+      else if (lifecycleNotification(job.template, publicOrigin()))
+        text = lifecycleNotification(job.template, publicOrigin())!;
       else if (job.template.startsWith("staff_"))
         text = `A recruitment case requires your attention. Sign in to the private recruitment workspace: ${publicOrigin()}/admin/recruitment`;
       else

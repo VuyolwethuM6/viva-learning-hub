@@ -73,8 +73,8 @@
   "runtimeSources": [
     {
       "path": "vercel.json",
-      "sha256": "703155fdaae9d44f12dd30a6f1ddb58476bf502aadefe7dbb8dd340ab8a8e606",
-      "bytes": 8788
+      "sha256": "6b2528ee64af3b0c585a631d933f64d4d53d557371e2eabf162885e50d5066ec",
+      "bytes": 8993
     },
     {
       "path": "package.json",
@@ -113,13 +113,13 @@
     },
     {
       "path": "api/_lib/recruitment-admin-handler.ts",
-      "sha256": "ebe155feda5f8b0ceb853995e782a37e8bc32d135d7db2a65f3814aeaf3d535c",
-      "bytes": 7247
+      "sha256": "0df9e672b3e066f38bddccfe0ac174dd04c3cf3ff94c1fce459d0c05a22fa0dd",
+      "bytes": 7626
     },
     {
       "path": "api/_lib/recruitment-applicant-handler.ts",
-      "sha256": "23b3d8ba2079b867a00ff655f8812313462d6be1c98804fa6bfd375f13850143",
-      "bytes": 13322
+      "sha256": "18780f6b8bae8578ddb3515125574f9147ce803d2ffd3042e5e7fc528df80064",
+      "bytes": 14617
     },
     {
       "path": "api/_lib/recruitment-careers-handler.ts",

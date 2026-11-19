@@ -95,3 +95,7 @@ The recovery release addresses F01–F04: current-month invoice gap recovery plu
 ## Recruitment Milestone 1
 
 Implemented on `work`: isolated recruitment staff authentication, explicit recruitment ownership, scoped delegation, action-specific reauthentication, audit/idempotency, disabled rollout controls and opt-in legacy access fences. No public intake, recruitment documents, hiring decisions, onboarding, activation or compensation processing is released. Production migration/configuration is unchanged. See [architecture](recruitment/architecture.md), [isolated setup](recruitment/milestone-1-setup.md) and [acceptance guide](recruitment/milestone-1-test-guide.md).
+
+## Recruitment M4/M5 — engineering delivery on work
+
+Selection, interviews/assessments, independent evaluations and owner decisions now connect to versioned offers/agreements, onboarding, explicit activation, existing tutor/accounting integration and controlled offboarding. Authenticated M1–M5 recruitment surfaces share Admin Dashboard conventions. Incremental migrations, scoped reporting, lifecycle reminders, safe uncertain-request cancellation, tests and local browser evidence are included. [Engineering report](recruitment/milestone-4-5/implementation-report.md) distinguishes local verification from hosted operational acceptance. Production SQL, flags, environment configuration, real communications/accounts, pushing, merge and deployment remain unchanged. Existing M3 independent-owner and service-acceptance gates remain in force.

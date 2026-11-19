@@ -88,7 +88,7 @@ const credentials = z.object({
     .optional(),
 });
 /** Same provider/password/TOTP/session-rotation semantics as M1; no new identity provider. */
-async function fresh<T>(
+export async function fresh<T>(
   req: ApiRequest,
   res: ServerResponse,
   user: RecruitmentUser,
@@ -98,6 +98,7 @@ async function fresh<T>(
     newHash: string,
     oldHash: string,
   ) => Promise<T>,
+  forceAal2 = false,
 ) {
   await limitRecruitment(req, user.id);
   let session = await recruitmentSession(
@@ -110,7 +111,7 @@ async function fresh<T>(
   try {
     let verified = await recruitmentIdentity(session.access_token);
     if (verified.id !== user.id) throw new IntakeError("access_denied", 403);
-    if (verified.role === "owner" && verified.ownerAal2Required) {
+    if (verified.role === "owner" && (verified.ownerAal2Required || forceAal2)) {
       if (
         !authInput.factorId ||
         !authInput.code ||

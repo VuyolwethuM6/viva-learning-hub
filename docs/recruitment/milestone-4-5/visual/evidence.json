@@ -1,0 +1,407 @@
+{
+  "kind": "local-ui-only-synthetic-fixture",
+  "passed": true,
+  "hostedServicesVerified": false,
+  "outboundRequestsBlocked": true,
+  "environmentSettingsChanged": false,
+  "checks": [
+    {
+      "section": "admin",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "path": "/admin",
+      "screenshot": "admin-1440.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "overview",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "path": "/admin/recruitment/overview",
+      "screenshot": "overview-1440.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "vacancies",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "path": "/admin/recruitment/vacancies",
+      "screenshot": "vacancies-1440.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "cases",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "path": "/admin/recruitment/cases",
+      "screenshot": "cases-1440.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "security",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "path": "/admin/recruitment/security",
+      "screenshot": "security-1440.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "forms",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "path": "/admin/recruitment/forms",
+      "screenshot": "forms-1440.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "selection",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "path": "/admin/recruitment/selection",
+      "screenshot": "selection-1440.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "engagement",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "path": "/admin/recruitment/engagement",
+      "screenshot": "engagement-1440.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "reports",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "path": "/admin/recruitment/reports",
+      "screenshot": "reports-1440.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "admin",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "path": "/admin",
+      "screenshot": "admin-768.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "overview",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "path": "/admin/recruitment/overview",
+      "screenshot": "overview-768.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "vacancies",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "path": "/admin/recruitment/vacancies",
+      "screenshot": "vacancies-768.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "cases",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "path": "/admin/recruitment/cases",
+      "screenshot": "cases-768.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "security",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "path": "/admin/recruitment/security",
+      "screenshot": "security-768.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "forms",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "path": "/admin/recruitment/forms",
+      "screenshot": "forms-768.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "selection",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "path": "/admin/recruitment/selection",
+      "screenshot": "selection-768.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "engagement",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "path": "/admin/recruitment/engagement",
+      "screenshot": "engagement-768.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "reports",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "path": "/admin/recruitment/reports",
+      "screenshot": "reports-768.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "admin",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "path": "/admin",
+      "screenshot": "admin-375.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "overview",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "path": "/admin/recruitment/overview",
+      "screenshot": "overview-375.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "vacancies",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "path": "/admin/recruitment/vacancies",
+      "screenshot": "vacancies-375.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "cases",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "path": "/admin/recruitment/cases",
+      "screenshot": "cases-375.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "security",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "path": "/admin/recruitment/security",
+      "screenshot": "security-375.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "forms",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "path": "/admin/recruitment/forms",
+      "screenshot": "forms-375.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "selection",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "path": "/admin/recruitment/selection",
+      "screenshot": "selection-375.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "engagement",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "path": "/admin/recruitment/engagement",
+      "screenshot": "engagement-375.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "reports",
+      "viewport": {
+        "width": 375,
+        "height": 812
+      },
+      "path": "/admin/recruitment/reports",
+      "screenshot": "reports-375.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "admin",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "path": "/admin",
+      "screenshot": "admin-320.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "overview",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "path": "/admin/recruitment/overview",
+      "screenshot": "overview-320.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "vacancies",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "path": "/admin/recruitment/vacancies",
+      "screenshot": "vacancies-320.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "cases",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "path": "/admin/recruitment/cases",
+      "screenshot": "cases-320.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "security",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "path": "/admin/recruitment/security",
+      "screenshot": "security-320.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "forms",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "path": "/admin/recruitment/forms",
+      "screenshot": "forms-320.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "selection",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "path": "/admin/recruitment/selection",
+      "screenshot": "selection-320.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "engagement",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "path": "/admin/recruitment/engagement",
+      "screenshot": "engagement-320.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    },
+    {
+      "section": "reports",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "path": "/admin/recruitment/reports",
+      "screenshot": "reports-320.png",
+      "horizontalOverflow": false,
+      "topbarMatchesAdmin": true
+    }
+  ],
+  "browserExceptions": [],
+  "scope": "Admin/recruitment shell, sidebar/topbar parity, official logo, responsive navigation, no horizontal overflow, fixture rendering. Does not verify backend state transitions, RLS, email, scanner or production readiness."
+}

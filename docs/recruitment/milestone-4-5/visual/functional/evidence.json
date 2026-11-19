@@ -1,0 +1,109 @@
+{
+  "kind": "functional-ui-only-mutable-synthetic-fixture",
+  "passed": true,
+  "observedAtUTC": "2026-11-17T17:44:19.912628+00:00",
+  "hostedServicesVerified": false,
+  "environmentSettingsChanged": false,
+  "outboundBrowserRequestsBlocked": true,
+  "steps": [
+    "screening validation and human completeness record",
+    "shortlist and interview scheduling",
+    "accountless candidate interview response and authoritative camelCase dates",
+    "independent evaluation with no automatic hiring decision",
+    "human recommendation and owner confirmation UI with synthetic credentials",
+    "candidate context preserved through offer creation approval and issue",
+    "candidate offer and agreement acceptance without staff activation",
+    "onboarding acknowledgement and distinct staff verification",
+    "explicit owner activation after independent prerequisites",
+    "mobile focus no overflow and owner offboarding through private personnel view"
+  ],
+  "operations": [
+    {
+      "actor": "staff",
+      "operation": "screen"
+    },
+    {
+      "actor": "staff",
+      "operation": "shortlist"
+    },
+    {
+      "actor": "staff",
+      "operation": "interview_schedule"
+    },
+    {
+      "actor": "candidate",
+      "operation": "interview_response"
+    },
+    {
+      "actor": "staff",
+      "operation": "interview_update"
+    },
+    {
+      "actor": "staff",
+      "operation": "evaluate"
+    },
+    {
+      "actor": "staff",
+      "operation": "recommend"
+    },
+    {
+      "actor": "staff",
+      "operation": "decide"
+    },
+    {
+      "actor": "staff",
+      "operation": "offer_create"
+    },
+    {
+      "actor": "staff",
+      "operation": "offer_approve"
+    },
+    {
+      "actor": "staff",
+      "operation": "offer_issue"
+    },
+    {
+      "actor": "candidate",
+      "operation": "offer_accept"
+    },
+    {
+      "actor": "candidate",
+      "operation": "agreement_accept"
+    },
+    {
+      "actor": "staff",
+      "operation": "onboarding_start"
+    },
+    {
+      "actor": "staff",
+      "operation": "policy_require"
+    },
+    {
+      "actor": "candidate",
+      "operation": "agreement_accept"
+    },
+    {
+      "actor": "candidate",
+      "operation": "task_complete"
+    },
+    {
+      "actor": "staff",
+      "operation": "task_verify"
+    },
+    {
+      "actor": "staff",
+      "operation": "task_verify"
+    },
+    {
+      "actor": "staff",
+      "operation": "activation_approve"
+    },
+    {
+      "actor": "staff",
+      "operation": "offboard"
+    }
+  ],
+  "fixtureErrors": [],
+  "browserExceptions": [],
+  "limits": "Browser UI and client payload integration only; no real backend, SQL, RLS, email, scanner, legal approval, hosted identity or production access provisioning is exercised."
+}

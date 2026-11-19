@@ -1,0 +1,20 @@
+// M1–M5 operational runner. Copy only through an approved infrastructure change.
+// No database credentials are needed; never log the bearer key or response bodies.
+const action = process.argv[2];
+const endpoint = process.env.RECRUITMENT_WORKER_ENDPOINT || "";
+const key = process.env.RECRUITMENT_WORKER_KEY || "";
+if (!["mail", "scan", "retention", "lifecycle"].includes(action) || key.length < 32 || key.includes("__REPLACE")) throw Error("worker_configuration_missing");
+const url = new URL(endpoint);
+if (url.protocol !== "https:" || url.username || url.password || url.pathname !== "/api/recruitment" || url.search !== "?route=worker" || url.hash) throw Error("worker_endpoint_invalid");
+try {
+  const result = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ action, limit: 5 }),
+    signal: AbortSignal.timeout(275000), redirect: "error",
+  });
+  if (!result.ok) { console.error(JSON.stringify({ action, status: result.status, ok: false })); process.exitCode = 1; }
+  else console.log(JSON.stringify({ action, status: result.status, ok: true }));
+} catch {
+  console.error(JSON.stringify({ action, ok: false, error: "worker_transport_failure" })); process.exitCode = 1;
+}

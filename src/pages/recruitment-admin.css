@@ -333,3 +333,157 @@
   text-align: left;
   overflow-wrap: anywhere;
 }
+
+/* Authenticated recruitment shares the existing Admin Dashboard shell and tokens.
+   These scoped rules leave the accountless applicant layout independent. */
+.recruitment-admin-shell {
+  background: var(--bg);
+  color: var(--ink);
+}
+.recruitment-admin-shell .recruitment-main {
+  max-width: 1390px;
+  gap: 22px;
+  padding: 18px 14px 20px;
+}
+.recruitment-admin-shell .recruitment-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 2px 12px #58359105;
+}
+.recruitment-admin-shell .recruitment-title {
+  margin: 6px 0 0;
+}
+.recruitment-admin-shell .recruitment-title h1 {
+  font-size: clamp(25px, 3.4vw, 32px);
+  line-height: 1.25;
+  margin: 6px 0 8px;
+}
+.recruitment-admin-shell .recruitment-card h2 {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+.recruitment-admin-shell .recruitment-card h3 {
+  font-size: 15px;
+  line-height: 1.4;
+}
+.recruitment-admin-shell .recruitment-card p,
+.recruitment-admin-shell .recruitment-card dd,
+.recruitment-admin-shell .recruitment-title p {
+  color: var(--muted);
+}
+.recruitment-admin-shell .recruitment-eyebrow {
+  color: var(--purple-dark) !important;
+  font-size: 10px;
+}
+.recruitment-admin-shell :is(input, textarea, select) {
+  border-color: var(--border);
+  border-radius: 10px;
+  color: var(--ink);
+  font: inherit;
+  background: #fff;
+  min-height: 44px;
+  max-width: 100%;
+}
+.recruitment-admin-shell :is(input, textarea, select):focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 3px;
+}
+.recruitment-admin-shell .recruitment-card a {
+  color: var(--purple-dark);
+}
+.recruitment-admin-shell .recruitment-card pre {
+  border-radius: 10px;
+  background: var(--purple-pale);
+}
+.recruitment-admin-shell .admin-sidebar nav > a[aria-current="page"] {
+  background: var(--purple);
+  color: #fff;
+}
+.recruitment-login-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e2daf1;
+}
+.recruitment-login-header .admin-brand span { color: #5428cc; }
+.recruitment-mobile-navigation {
+  padding: 12px 14px 0;
+  display: grid;
+  gap: 6px;
+}
+.recruitment-mobile-navigation label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.recruitment-mobile-navigation select { width: 100%; padding: 10px 12px; }
+.recruitment-overview-facts {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  margin: 20px 0;
+}
+.recruitment-overview-facts > div {
+  background: var(--purple-pale);
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 14px;
+}
+.recruitment-overview-facts dt { font-size: 11px; font-weight: 700; }
+.recruitment-overview-facts dd { margin: 6px 0 0; font-weight: 800; }
+.recruitment-admin-shell .workspace-footer { padding-bottom: 24px; }
+.recruitment-admin-shell .admin-main > * { min-width: 0; }
+@media (min-width: 640px) {
+  .recruitment-admin-shell .recruitment-main { padding: 24px; }
+  .recruitment-admin-shell .recruitment-card { padding: 22px; }
+  .recruitment-mobile-navigation { padding-left: 24px; padding-right: 24px; }
+}
+@media (min-width: 960px) {
+  .recruitment-mobile-navigation { display: none; }
+  .recruitment-admin-shell .recruitment-main { padding: 28px; }
+}
+@media (max-width: 400px) {
+  .recruitment-login-header { padding: 12px; font-size: 12px; }
+  .recruitment-admin-shell .recruitment-card { padding: 16px; }
+  .recruitment-admin-shell .recruitment-title { flex-wrap: wrap; }
+}
+.recruitment-admin-shell .recruitment-card table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+.recruitment-admin-shell .recruitment-card th {
+  background: var(--purple-pale);
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.recruitment-admin-shell .recruitment-card :is(th, td) {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.recruitment-admin-shell .admin-sidebar nav svg { flex-shrink: 0; }
+/* Dashboard definition-list rows use flex; overview metrics are standalone cards. */
+.recruitment-admin-shell dl.recruitment-overview-facts > div {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+.recruitment-admin-shell dl.recruitment-overview-facts dd {
+  font-size: 18px;
+  text-align: left;
+  color: var(--purple-dark);
+}
+.recruitment-admin-shell .recruitment-card [role="alert"] { color: var(--red); }
+.recruitment-admin-shell .recruitment-card .admin-notice { color: #22643e; }
